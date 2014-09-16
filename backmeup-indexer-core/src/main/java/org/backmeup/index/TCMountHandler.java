@@ -1,0 +1,238 @@
+package org.backmeup.index;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+import org.backmeup.index.config.Configuration;
+
+//Note: There are windows specific elements used within this class
+//TODO solve issue windows restricted to 24 drive letters
+//TODO add linux support 
+
+public class TCMountHandler {
+
+	/**
+	 * @param tcVolume
+	 *            the truecrypt volume
+	 * @param password
+	 *            the volumes password
+	 * @param driveLetter
+	 *            suggestion where to mount the volume, if already in use the
+	 *            volume will get mounted on a different drive
+	 * @return returns the drive where the partition has been mounted
+	 */
+	public static String mount(File tcVolume, String password,
+			String driveLetter) throws IOException, InterruptedException,
+			ExceptionInInitializerError, IllegalArgumentException {
+
+		// 1. check if a driveLetter is given and if it's allowed according to
+		// config
+		boolean allowed = isAllowedDriveLetter(driveLetter);
+		if (!allowed) {
+			// get an allowed drive letter
+			driveLetter = getSupportedDriveLetters().get(0);
+		}
+
+		// 2. check if the drive is already mounted
+		boolean mounted = isDriveMounted(driveLetter);
+		if (mounted) {
+			boolean bFoundOne = false;
+			List<String> suppDrives = getSupportedDriveLetters();
+			for (String drive : suppDrives) {
+				// iterate over all supported drives and check their
+				// availability
+				boolean m = isDriveMounted(drive);
+				if ((!m) && (bFoundOne == false)) {
+					driveLetter = drive;
+					bFoundOne = true;
+				}
+			}
+
+			// if we still haven't found one we have a problem - we don't have
+			// any more
+			if (bFoundOne == false) {
+				throw new ExceptionInInitializerError(
+						"Cannot initialize mount process, no more unmounted drives left");
+			}
+		}
+
+		// 3. Now mount the container with Truecrypt
+		// If you want to specify a drive letter yourself use /l {drive letter}
+		// instead of /a
+		// @see http://andryou.com/truecrypt/docs/command-line-usage.php
+		// The executed command should looks something like this
+		// TrueCrypt.exe /q background /v
+		// "D:/temp/themis/userspace1/index-es/TestTCVol1.tc" /a /p 12345
+
+		String command = "\"" + getTrueCryptExe() + "\"" + " "
+				+ "/q background " + "/v " + "\"" + tcVolume.getAbsolutePath()
+				+ "\" " + "/l " + driveLetter + " /p " + password;
+		System.out.println(command);
+
+		try {
+			// Execute the call
+			Process p = Runtime.getRuntime().exec(command);
+			// cause this process to stop until process p is terminated
+			// TODO process.wait() - is an issue in headless mode, waits for
+			// human interaction! get rid!
+			p.waitFor();
+
+		} catch (IOException | InterruptedException e) {
+			System.out.println("Error executing: " + command + " "
+					+ e.toString());
+			throw e;
+		}
+
+		// now check if the drive got properly mounted
+		if (!isDriveMounted(driveLetter)) {
+			throw new IOException("Executing TrueCrypt on " + command
+					+ " did not mount the volume " + tcVolume.getAbsolutePath()
+					+ " on " + driveLetter);
+		}
+
+		// finally return the drive letter which has been used to mount the
+		// volume
+		return driveLetter;
+	}
+
+	/**
+	 * Checks if a given drive Letter is allowed as configured within the
+	 * properties file
+	 * 
+	 * @param driveLetter
+	 *            without any special chars, just e.g. H or K
+	 * @return
+	 */
+	private static boolean isAllowedDriveLetter(String driveLetter) {
+		List<String> allowed = Configuration
+				.getPropertyList("truecrypt.mountable.drives");
+		if (!allowed.isEmpty()) {
+			if (allowed.contains(driveLetter)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Returns a list of all supported drive letters which have been configured
+	 * to be used for mounting TrueCrypt files. See backmeup.indexer.properties
+	 * This does not state that a given drive or volume is already in use or not
+	 * 
+	 * @return
+	 */
+	public static List<String> getSupportedDriveLetters() {
+		return Configuration.getPropertyList("truecrypt.mountable.drives");
+	}
+
+	/**
+	 * Checks if a given drive exists.
+	 * 
+	 * @param driveLetter
+	 *            without any special chars, just e.g. H or K
+	 * @return
+	 */
+	public static boolean isDriveMounted(String driveLetter)
+			throws IllegalArgumentException {
+
+		if (driveLetter != null) {
+			// TODO add proper driveLetter handling - currently windows specific
+			File f;
+			if (driveLetter.contains(":")) {
+				f = new File(driveLetter);
+			} else {
+				f = new File(driveLetter + ":");
+			}
+			if (f.exists()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Sends the command TrueCrypt.exe /q background /d to unmount all TrueCrypt
+	 * volumes
+	 * 
+	 */
+	public static void unmountAll() throws IOException, InterruptedException {
+		String command = getTrueCryptExe() + " " + "/q background " + "/d";
+		System.out.println(command);
+
+		Process p;
+		try {
+			p = Runtime.getRuntime().exec(command);
+			p.waitFor();
+		} catch (IOException | InterruptedException e) {
+			System.out.println("Error executing: " + command + " "
+					+ e.toString());
+			throw e;
+		}
+	}
+
+	/**
+	 * 
+	 * @param driveLetter
+	 *            without any special chars, just e.g. H or K
+	 */
+	public static void unmount(String driveLetter)
+			throws IllegalArgumentException, ExceptionInInitializerError,
+			IOException, InterruptedException {
+
+		// check if drive is mounted, throw exception when illegal driveLetter
+		if (!isAllowedDriveLetter(driveLetter)) {
+			throw new IllegalArgumentException("drive letter " + driveLetter
+					+ " not in the range of supported drives:"
+					+ getSupportedDriveLetters());
+		}
+
+		if (isDriveMounted(driveLetter)) {
+
+			String command = getTrueCryptExe() + " " + "/q background " + "/d "
+					+ driveLetter;
+			System.out.println(command);
+
+			Process p;
+			try {
+				p = Runtime.getRuntime().exec(command);
+				p.waitFor();
+			} catch (IOException | InterruptedException e) {
+				System.out.println("Error executing: " + command + " "
+						+ e.toString());
+				throw e;
+			}
+		}
+
+	}
+
+	public static boolean checkTrueCryptAvailable() {
+		String s = Configuration.getProperty("truecrypt.home.dir");
+		if (s != null && s.length() > 0 && !s.contains("\"")) {
+			File f = new File(s);
+			if (f.isDirectory() && f.exists()) {
+				String tcexe = f.getAbsolutePath() + "/TrueCrypt.exe";
+				File tc = new File(tcexe);
+				if (tc.isFile() && tc.exists()) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public static String getTrueCryptExe() throws ExceptionInInitializerError {
+		String s = Configuration.getProperty("truecrypt.home.dir");
+		if (s != null && s.length() > 0 && !s.contains("\"")) {
+			File f = new File(s);
+			if (f.isDirectory() && f.exists()) {
+				String tcexe = f.getAbsolutePath() + "/TrueCrypt.exe";
+				File tc = new File(tcexe);
+				if (tc.isFile() && tc.exists()) {
+					return tc.getAbsolutePath();
+				}
+			}
+		}
+		throw new ExceptionInInitializerError("Error finding TrueCrypt in " + s);
+	}
+}
