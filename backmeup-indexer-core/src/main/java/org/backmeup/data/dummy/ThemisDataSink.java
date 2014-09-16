@@ -18,10 +18,6 @@ public class ThemisDataSink {
 	/**
 	 * Fetches the user specific TrueCrypt container file which is stored within
 	 * the user space
-	 * 
-	 * @param userID
-	 * @return
-	 * @throws IOException
 	 */
 	public static File getIndexTrueCryptContainer(int userID)
 			throws IOException {
@@ -30,10 +26,9 @@ public class ThemisDataSink {
 		File f = new File(s);
 		if (f.exists() && f.canRead()) {
 			return f;
-		} else {
-			throw new IOException("Truecrypt Data Container for user " + userID
-					+ " not found");
 		}
+        throw new IOException("Truecrypt Data Container for user " + userID
+        		+ " not found");
 	}
 
 	/**
@@ -43,7 +38,6 @@ public class ThemisDataSink {
 	 * 
 	 * @param f
 	 *            the user specific yml ES startup file
-	 * @param userID
 	 */
 	public static void saveIndexTrueCryptContainer(File f, int userID)
 			throws IOException {
@@ -63,9 +57,6 @@ public class ThemisDataSink {
 
 	/**
 	 * Removes the user specific TrueCrypt volume from the users file space
-	 * 
-	 * @param userID
-	 * @throws IOException
 	 */
 	public static void deleteIndexTrueCryptContainer(int userID)
 			throws IOException {
@@ -76,9 +67,6 @@ public class ThemisDataSink {
 
 	/**
 	 * Returns the root directory for the Themis Datensenke dummy implementation
-	 * 
-	 * @param userID
-	 * @return
 	 */
 	private static String getDataSinkHome(int userID) {
 		String s = Configuration.getProperty("themis-datasink.home.dir");
@@ -86,12 +74,11 @@ public class ThemisDataSink {
 			File f = new File(s);
 			if (f.isDirectory() && f.exists()) {
 				return f.getAbsolutePath();
-			} else {
-				f.mkdirs();
-				if (f.isDirectory() && f.exists()) {
-					return f.getAbsolutePath();
-				}
 			}
+            f.mkdirs();
+            if (f.isDirectory() && f.exists()) {
+            	return f.getAbsolutePath();
+            }
 			throw new ExceptionInInitializerError(
 					"user home dir does not exist or is not accessible to system");
 		}

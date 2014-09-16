@@ -2,7 +2,7 @@ package org.backmeup.tests.index.config;
 
 import java.util.List;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.backmeup.index.config.Configuration;
 import org.junit.Test;

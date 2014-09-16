@@ -11,11 +11,6 @@ public class FileUtils {
 	/**
 	 * Copies a file from source to dest using FileChannels and creates the file
 	 * and directory if it does not already exist.
-	 * 
-	 * @param source
-	 * @param dest
-	 * @return
-	 * @throws IOException
 	 */
 	public static File copyFileUsingChannel(File source, File dest)
 			throws IOException {
@@ -43,9 +38,6 @@ public class FileUtils {
 
 	/**
 	 * Recursively deletes a directory including all files.
-	 * 
-	 * @param path
-	 * @return
 	 */
 	static public boolean deleteDirectory(File path) {
 		if (path.exists()) {

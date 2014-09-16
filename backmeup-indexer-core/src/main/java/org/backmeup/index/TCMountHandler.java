@@ -102,7 +102,6 @@ public class TCMountHandler {
 	 * 
 	 * @param driveLetter
 	 *            without any special chars, just e.g. H or K
-	 * @return
 	 */
 	private static boolean isAllowedDriveLetter(String driveLetter) {
 		List<String> allowed = Configuration
@@ -119,8 +118,6 @@ public class TCMountHandler {
 	 * Returns a list of all supported drive letters which have been configured
 	 * to be used for mounting TrueCrypt files. See backmeup.indexer.properties
 	 * This does not state that a given drive or volume is already in use or not
-	 * 
-	 * @return
 	 */
 	public static List<String> getSupportedDriveLetters() {
 		return Configuration.getPropertyList("truecrypt.mountable.drives");
@@ -131,7 +128,6 @@ public class TCMountHandler {
 	 * 
 	 * @param driveLetter
 	 *            without any special chars, just e.g. H or K
-	 * @return
 	 */
 	public static boolean isDriveMounted(String driveLetter)
 			throws IllegalArgumentException {

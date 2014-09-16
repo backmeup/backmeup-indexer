@@ -16,9 +16,9 @@ import org.junit.Test;
 public class TokenReplaceReaderTest {
 
 	@Test
-	public void replaceTokensInStringsByMapTokenResolver() {
+	public void replaceTokensInStringsByMapTokenResolver() throws IOException {
 
-		Map<String, String> tokens = new HashMap<String, String>();
+		Map<String, String> tokens = new HashMap<>();
 		tokens.put("token1", "value1");
 		tokens.put("token2", "JJ ROCKS!!!");
 
@@ -38,9 +38,10 @@ public class TokenReplaceReaderTest {
 				data = reader.read();
 			}
 			Assert.assertEquals(result, expresult);
-			reader.close();
 		} catch (IOException e) {
 			fail("unexpected behaviour");
+		} finally {
+		    reader.close();
 		}
 	}
 }

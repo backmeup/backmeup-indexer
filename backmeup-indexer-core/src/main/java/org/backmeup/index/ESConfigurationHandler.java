@@ -23,12 +23,10 @@ public class ESConfigurationHandler {
 	 * directory (written in the config file) is either a standard working dir
 	 * or a mounted truecrypt container (if one is available)
 	 * 
-	 * @param UserID
 	 * @param tcpport
 	 *            accepted port range from 9300 to 9399
 	 * @param httpport
 	 *            accepted port range from 9200 to 9299
-	 * @throws IOException
 	 * @returns file pointer to the created configuration file
 	 */
 	public static File createUserYMLStartupFile(int userID, int tcpport,
@@ -38,7 +36,7 @@ public class ESConfigurationHandler {
 		checkPortRangeAccepted(tcpport, httpport);
 
 		// the tokens within the elasticsearch_template.yml file to replace
-		Map<String, String> tokens = new HashMap<String, String>();
+		Map<String, String> tokens = new HashMap<>();
 		tokens.put("tcpport", tcpport + "");
 		tokens.put("httpport", httpport + "");
 		tokens.put("clustername", "user" + userID);
@@ -90,10 +88,6 @@ public class ESConfigurationHandler {
 
 	/**
 	 * Starts an elastic search instance for an existing configuration
-	 * 
-	 * @param userID
-	 * @throws IOException
-	 * @throws InterruptedException
 	 */
 	public static void startElasticSearch(int userID) throws IOException,
 			InterruptedException {

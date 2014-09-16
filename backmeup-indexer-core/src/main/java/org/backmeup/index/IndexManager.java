@@ -18,12 +18,12 @@ public class IndexManager {
 
 	// Note: @see ESConfigurationHandler.checkPortRangeAccepted - these values
 	// are currently hardcoded there
-	private List<Integer> availableTCPPorts = new ArrayList<Integer>();
-	private List<Integer> usedTCPPorts = new ArrayList<Integer>();
-	private List<Integer> availableHttpPorts = new ArrayList<Integer>();
-	private List<Integer> usedHttpPorts = new ArrayList<Integer>();
+	private List<Integer> availableTCPPorts = new ArrayList<>();
+	private List<Integer> usedTCPPorts = new ArrayList<>();
+	private List<Integer> availableHttpPorts = new ArrayList<>();
+	private List<Integer> usedHttpPorts = new ArrayList<>();
 	// keeps a userId to Port and DriveLetter mapping
-	private HashMap<Integer, HashMap<String, String>> userPortMapping = new HashMap<Integer, HashMap<String, String>>();
+	private HashMap<Integer, HashMap<String, String>> userPortMapping = new HashMap<>();
 
 	private static IndexManager im = new IndexManager();
 
@@ -52,7 +52,6 @@ public class IndexManager {
 	 * Runs the ES configuration, index data mounting from TrueCrypt and powers
 	 * on a ES instance for a given user.
 	 * 
-	 * @param userID
 	 * @throws IOException
 	 *             when the required artifact files are not properly created
 	 * @throws NumberFormatException
@@ -140,25 +139,16 @@ public class IndexManager {
 		String driveLetter = getTCMountedVolume(userID);
 
 		// whipe the data and yml configuration file
-		try {
-			deleteLocalWorkingDir(userID);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		deleteLocalWorkingDir(userID);
 	}
 
 	/**
 	 * Keeps a record which ports have been used for the ElasticSearch
 	 * configuration and which DriveLetter has been mounted with Truecrypt
-	 * 
-	 * @param userID
-	 * @param httpPort
-	 * @param tcpPort
-	 * @param driveLetter
 	 */
 	private void setUserPortMapping(int userID, int httpPort, int tcpPort,
 			String driveLetter) {
-		HashMap<String, String> m = new HashMap<String, String>();
+		HashMap<String, String> m = new HashMap<>();
 		m.put("httpPort", httpPort + "");
 		m.put("tcpPort", tcpPort + "");
 		m.put("tcDriveLetter", driveLetter);
@@ -183,9 +173,6 @@ public class IndexManager {
 
 	/**
 	 * Returns the mounted volume's drive letter for a given userID
-	 * 
-	 * @param userID
-	 * @return
 	 */
 	public String getTCMountedVolume(int userID) {
 		System.out.println("getting Mounted Drive for user" + userID);
@@ -233,8 +220,6 @@ public class IndexManager {
 	/**
 	 * Inits a user specific elasticsearch instance i.e. copies the container
 	 * file and registers it within the themis-datasink
-	 * 
-	 * @param userID
 	 */
 	public void init(int userID) {
 		// TODO fix weakness currently all copied TC container files have the
@@ -255,8 +240,6 @@ public class IndexManager {
 	/**
 	 * 
 	 * Gets the root directory (for index operations) for all users done.
-	 * 
-	 * @return
 	 */
 	public static String getUserDataWorkingDirRoot() {
 		String s = Configuration.getProperty("index.temp.data.home.dir");
@@ -280,9 +263,6 @@ public class IndexManager {
 	/**
 	 * Gets the user's working directory on the temporary file share to operate
 	 * the index upon
-	 * 
-	 * @param userID
-	 * @return
 	 */
 	public static String getUserDataWorkingDir(int userID) {
 		return getUserDataWorkingDirRoot() + "/user" + userID;
@@ -298,13 +278,10 @@ public class IndexManager {
 	/**
 	 * Deletes the working directory for a given user including all files within
 	 * it
-	 * 
-	 * @param userID
-	 * @throws IOException
 	 */
-	private void deleteLocalWorkingDir(int userID) throws IOException {
+	private void deleteLocalWorkingDir(int userID) {
 		File f = new File(getUserDataWorkingDir(userID));
-		if (f != null && f.exists()) {
+		if (f.exists()) {
 			FileUtils.deleteDirectory(f);
 		}
 

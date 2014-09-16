@@ -56,7 +56,7 @@ public final class Configuration {
 	}
 
 	public static List<String> getPropertyList(String key) {
-		List<String> result = new ArrayList<String>();
+		List<String> result = new ArrayList<>();
 		if (key != null) {
 			String str = getProperty(key);
 			if (str != null) {
