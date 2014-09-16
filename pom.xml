@@ -25,6 +25,7 @@
 		<project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
 		<java.compiler.source>1.7</java.compiler.source>
 		<java.compiler.target>1.7</java.compiler.target>
+		<project.build.java.target>1.7</project.build.java.target>
 
 		<!-- Configuration -->
 		<config.tomcat.manager.url>http://127.0.0.1:8080/manager/text</config.tomcat.manager.url>
@@ -51,6 +52,7 @@
 		<version.org.apache.maven.plugins.maven-dependency-plugin>2.8</version.org.apache.maven.plugins.maven-dependency-plugin>
 		<version.org.apache.maven.plugins.maven-failsafe-plugin>2.16</version.org.apache.maven.plugins.maven-failsafe-plugin>
 		<version.org.apache.maven.plugins.maven-resources-plugin>2.6</version.org.apache.maven.plugins.maven-resources-plugin>
+        <version.org.apache.maven.plugins.maven-source-plugin>2.2</version.org.apache.maven.plugins.maven-source-plugin>
 		<version.org.apache.maven.plugins.maven-shade-plugin>2.3</version.org.apache.maven.plugins.maven-shade-plugin>
 		<version.org.apache.tomcat.maven>2.2</version.org.apache.tomcat.maven>
 	</properties>
@@ -61,6 +63,19 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>${version.org.apache.maven.plugins.maven-source-plugin}</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -100,5 +115,21 @@
 			</plugin>
 		</plugins>
 	</build>
+
+    <!-- all modules use -->
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${version.junit}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>1.9.5</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
 </project>
