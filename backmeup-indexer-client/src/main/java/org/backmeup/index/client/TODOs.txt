@@ -1,7 +1,2 @@
-1) neue componente in indexer, indexer-client
-2) alle indexer logic von serciee-core dortrein schieben
-3) somit ist indexer logic in neuem OSGI bundle
 4) dependency von dem schlank machen damit es geht, ev. nur TransportClient
-5) core depends on index-client
 6) keine dependency auf elastic search im service mehr
-7) module wird sauberes bundle, siehe plugins (das sind ja alles bundles). verwenden blueprint für das config-zeugs
