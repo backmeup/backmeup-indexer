@@ -41,7 +41,7 @@ public class TokenReplaceReaderTest {
 		} catch (IOException e) {
 			fail("unexpected behaviour");
 		} finally {
-		    reader.close();
+			reader.close();
 		}
 	}
 }

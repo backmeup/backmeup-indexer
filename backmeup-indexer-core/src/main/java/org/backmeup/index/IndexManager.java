@@ -31,12 +31,12 @@ public class IndexManager {
 	private IndexManager() {
 		// init the available port range on elasticsearch
 		// Note: @see ESConfigurationHandler.checkPortRangeAccepted - these
-		// values
-		// are currently also hardcoded there
-		for (int i = 9300; i <= 9399; i++) {
+		// values are currently also hardcoded there
+		// TODO reset the port range
+		for (int i = 9360; i <= 9399; i++) {
 			availableTCPPorts.add(i);
 		}
-		for (int i = 9200; i <= 9299; i++) {
+		for (int i = 9260; i <= 9299; i++) {
 			availableHttpPorts.add(i);
 		}
 
@@ -98,6 +98,8 @@ public class IndexManager {
 		tcMountedDriveLetter = TCMountHandler.mount(fTCContainer, "12345",
 				TCMountHandler.getSupportedDriveLetters().get(0));
 
+		System.out.println("Mounted Drive Letter: " + tcMountedDriveLetter);
+
 		// 4) crate a user specific ElasticSearch startup configuration file
 		// TODO currently when all available ports are in use the system will
 		// throw a NumberFormatException
@@ -112,6 +114,9 @@ public class IndexManager {
 		// keep a record of this configuration
 		this.setUserPortMapping(userID, httpPort, tcpPort, tcMountedDriveLetter);
 
+		// just of testing:
+		System.out.println("using Drive: " + this.getTCMountedVolume(userID));
+
 		// 5) now power on elasticsearch
 		ESConfigurationHandler.startElasticSearch(userID);
 		System.out.println("started ES Instance? on port: "
@@ -121,25 +126,42 @@ public class IndexManager {
 		// import waiting index files (shared data)
 	}
 
-	public void shutdown(int userID) {
-		// TODO
-		// shudown ES instance for user
-		// remove user specific ES launch configuration (yml file)
-		// unmount truecrypt container
-		// persist the index data files
-		// remove the temporary working dir
+	public void shutdown(int userID) throws IllegalArgumentException,
+			ExceptionInInitializerError, IOException, InterruptedException {
+		// TODO persist the index data files and write back to data store
+
+		// shutdown the ElasticSearch Instance
+		ESConfigurationHandler.stopElasticSearch(userID);
 
 		// release the ES ports
-		int tcpPort = getESTcpPort(userID);
-		int httpPort = getESTHttpPort(userID);
-		this.releaseESHttpPort(httpPort);
-		this.releaseESTCPPort(tcpPort);
+		this.releaseESHttpPort(getESTHttpPort(userID));
+		this.releaseESTCPPort(getESTcpPort(userID));
 
 		// unmount the truecrypt volume
 		String driveLetter = getTCMountedVolume(userID);
+		TCMountHandler.unmount(driveLetter);
+
+		// remove the port mapping to user history
+		removeUserPortMapping(userID);
 
 		// whipe the data and yml configuration file
 		deleteLocalWorkingDir(userID);
+	}
+
+	/**
+	 * Cleanup - stops all running ES instances, removes all mounted TC
+	 * container
+	 * 
+	 * @throws InterruptedException
+	 * @throws IOException
+	 */
+	public void cleanup() throws IOException, InterruptedException {
+		// TODO IMPLEMENT
+		// unmount all open TrueCrypt volumes
+		TCMountHandler.unmountAll();
+		// shutdown all elastic search instances
+		ESConfigurationHandler.stopAll();
+		// TODO delete all working directories
 	}
 
 	/**
@@ -153,6 +175,17 @@ public class IndexManager {
 		m.put("tcpPort", tcpPort + "");
 		m.put("tcDriveLetter", driveLetter);
 		this.userPortMapping.put(userID, m);
+	}
+
+	/**
+	 * Removes the record of which ES ports and TrueCrypt volume has been used
+	 * 
+	 * @param userID
+	 */
+	private void removeUserPortMapping(int userID) {
+		if (this.userPortMapping.containsKey(userID)) {
+			this.userPortMapping.remove(userID);
+		}
 	}
 
 	public int getESTcpPort(int userID) {
@@ -175,13 +208,12 @@ public class IndexManager {
 	 * Returns the mounted volume's drive letter for a given userID
 	 */
 	public String getTCMountedVolume(int userID) {
-		System.out.println("getting Mounted Drive for user" + userID);
 		HashMap<String, String> m = this.userPortMapping.get(userID);
+
 		if (m != null && m.containsKey("tcDriveLetter")) {
-			System.out.println("returning " + m.get("tcDriveLetter"));
+			// note the return value can also be null
 			return m.get("tcDriveLetter");
 		}
-		System.out.println("returning null");
 		return null;
 	}
 
@@ -214,6 +246,14 @@ public class IndexManager {
 		if (i != -1) {
 			this.usedTCPPorts.remove(i);
 			this.availableTCPPorts.add(port);
+		}
+	}
+
+	private void releaseTCMountedVolume(int port) {
+		int i = this.usedHttpPorts.indexOf(port);
+		if (i != -1) {
+			this.usedHttpPorts.remove(i);
+			this.availableHttpPorts.add(port);
 		}
 	}
 

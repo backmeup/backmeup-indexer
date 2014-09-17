@@ -10,11 +10,21 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.backmeup.index.config.Configuration;
 import org.backmeup.index.utils.tokenreader.MapTokenResolver;
 import org.backmeup.index.utils.tokenreader.TokenReplaceReader;
 
 public class ESConfigurationHandler {
+
+	public static int TCPPORT_MIN = 9300;
+	public static int TCPPORT_MAX = 9399;
+
+	public static int HTTPPORT_MIN = 9200;
+	public static int HTTPPORT_MAX = 9299;
 
 	/**
 	 * The elasticsearch_template.yml file contains tokens for http and tcp port
@@ -43,11 +53,15 @@ public class ESConfigurationHandler {
 		// check if a Troucrypt Volume has been mounted, if not use the default
 		// working dir path
 		if (IndexManager.getInstance().getTCMountedVolume(userID) != null) {
+			// TODO we're having problems with the IndexManager here -
+			// .getTCMountedVolume(userID) returns null here when it shouldn't
+			System.out.println("creating data + log on mounted TC Volume");
 			tokens.put("pathtologs", IndexManager.getInstance()
 					.getTCMountedVolume(userID) + "/index/index-logs");
 			tokens.put("pathtodata", IndexManager.getInstance()
 					.getTCMountedVolume(userID) + "/index/index-data");
 		} else {
+			System.out.println("creating data + log on standard Volume");
 			tokens.put("pathtologs", IndexManager.getUserDataWorkingDir(userID)
 					+ "/index/index-logs");
 			tokens.put("pathtodata", IndexManager.getUserDataWorkingDir(userID)
@@ -91,27 +105,83 @@ public class ESConfigurationHandler {
 	 */
 	public static void startElasticSearch(int userID) throws IOException,
 			InterruptedException {
+
+		// TODO add -server to the command line to not use the client vm (better
+		// performance)
 		String command = "\"" + getElasticSearchExecutable() + "\"" + " "
 				+ "-Des.config=" + IndexManager.getUserDataWorkingDir(userID)
 				+ "/index/elasticsearch.config.user" + userID + ".yml";
 		System.out.println(command);
 
 		try {
+			// TODO use ProcessBuilder instead and assign a dedicated amount of
+			// memory
 			Process p = Runtime.getRuntime().exec(command);
-			p.waitFor();
+			Thread.currentThread();
+			// give ES a chance to startup before returning - wait 10 seconds
+			Thread.sleep(10000);
+			// p.waitFor();
+			// TODO need to kill this process when shutdown / cleanup is called?
 
-		} catch (IOException | InterruptedException e) {
+		} catch (IOException e) {
 			System.out.println("Error executing: " + command + " "
 					+ e.toString());
 			throw e;
 		}
-
-		// TODO add test if instance is running or check for errors on the
-		// console
 	}
 
-	public static void stopElasticSearch(int userID) {
+	public static void stopElasticSearch(int userID)
+			throws ClientProtocolException, IOException {
 		// TODO need to implement. get Process and call quit.
+		int httpPort = IndexManager.getInstance().getESTHttpPort(userID);
+		// TODO change server host - pick it up from config or determine it
+		HttpGet shutdownRequest = new HttpGet("http://localhost:" + httpPort
+				+ "/_shutdown");
+		shutdownElasticSearch(shutdownRequest);
+	}
+
+	private static void shutdownElasticSearch(HttpGet shutdownRequest)
+			throws IOException {
+		DefaultHttpClient httpClient = new DefaultHttpClient();
+		System.out.println("Issuing shutdown request: " + shutdownRequest);
+		HttpResponse response = httpClient.execute(shutdownRequest);
+		if (response.getStatusLine().getStatusCode() != 201) {
+			throw new IOException("ES shutdown command failed, statuscode:"
+					+ response.getStatusLine().getStatusCode());
+		}
+	}
+
+	/**
+	 * Issues the shutdown command to all running elastic search instances
+	 */
+	public static void stopAll() {
+		// iterate over the range of all possible ports
+		for (int i = HTTPPORT_MIN; i <= HTTPPORT_MAX; i++) {
+			HttpGet shutdownRequest = new HttpGet("http://localhost:" + i
+					+ "/_shutdown");
+			try {
+				shutdownElasticSearch(shutdownRequest);
+			} catch (IOException e) {
+			}
+		}
+	}
+
+	public static boolean isElasticSearchInstanceRunning(int httpPort)
+			throws IOException {
+
+		DefaultHttpClient httpClient = new DefaultHttpClient();
+		HttpGet healthyRequest = new HttpGet("http://localhost:" + httpPort
+				+ "/_cluster/health?pretty=true");
+		HttpResponse response;
+		System.out.println("calling: " + healthyRequest);
+
+		response = httpClient.execute(healthyRequest);
+		System.out.println(response.toString());
+
+		if (response.getStatusLine().getStatusCode() == 200) {
+			return true;
+		}
+		return false;
 	}
 
 	public static String getElasticSearchExecutable()
@@ -148,13 +218,15 @@ public class ESConfigurationHandler {
 
 	private static void checkPortRangeAccepted(int tcpport, int httpport)
 			throws NumberFormatException {
-		if (tcpport < 9300 || tcpport > 9399) {
+		if (tcpport < TCPPORT_MIN || tcpport > TCPPORT_MAX) {
 			throw new NumberFormatException("Provided ElasticSearch tcpport "
-					+ tcpport + " is out of accepted range 9300-9399.");
+					+ tcpport + " is out of accepted range " + TCPPORT_MIN
+					+ "-" + TCPPORT_MAX);
 		}
-		if (httpport < 9200 || httpport > 9299) {
+		if (httpport < HTTPPORT_MIN || httpport > HTTPPORT_MAX) {
 			throw new NumberFormatException("Provided ElasticSearch httpport "
-					+ httpport + " is out of accepted range 9200-9299.");
+					+ httpport + " is out of accepted range " + HTTPPORT_MIN
+					+ "-" + HTTPPORT_MAX);
 		}
 	}
 
