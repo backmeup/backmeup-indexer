@@ -15,5 +15,11 @@
     <name>Backmeup Index Client</name>
 
     <dependencies>
+        <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>${version.org.elasticsearch}</version>
+        </dependency>
+
     </dependencies>
 </project>
