@@ -58,6 +58,7 @@
 	</properties>
 
 	<modules>
+		<module>backmeup-indexer-model</module>
 		<module>backmeup-indexer-core</module>
 		<module>backmeup-indexer-client</module>
 	</modules>

@@ -15,6 +15,12 @@
 	<name>Backmeup Indexer Core</name>
 
 	<dependencies>
+        <dependency>
+            <groupId>org.backmeup</groupId>
+            <artifactId>backmeup-indexer-model</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
