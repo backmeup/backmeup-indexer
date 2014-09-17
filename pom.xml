@@ -59,6 +59,7 @@
 
 	<modules>
 		<module>backmeup-indexer-core</module>
+		<module>backmeup-indexer-client</module>
 	</modules>
 
 	<build>
