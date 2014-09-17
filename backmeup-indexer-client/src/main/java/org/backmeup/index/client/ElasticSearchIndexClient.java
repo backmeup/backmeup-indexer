@@ -28,14 +28,16 @@ public class ElasticSearchIndexClient implements Closeable {
 	
 	private static final String CLUSTER_NAME = "es-backmeup-cluster";
 	
+	private final Long userId;
 	private final Client client;
 	
-	public ElasticSearchIndexClient(String host, int port) {
-		//host = NetworkUtils.getLocalAddress().getHostName();
+	public ElasticSearchIndexClient(Long userId) {
+		this.userId = userId;
+        //host = NetworkUtils.getLocalAddress().getHostName();
 		//Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", "es-cluster-" + NetworkUtils.getLocalAddress().getHostName()).build();
 		Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", CLUSTER_NAME).build();
 		client = new TransportClient(settings)
-			.addTransportAddress(new InetSocketTransportAddress(host, port));
+			.addTransportAddress(new InetSocketTransportAddress("host", 9999));
 		
 		// Check if index exists and if not create it.   
 	    IndicesExistsResponse existsResponse = client.admin().indices().prepareExists(INDEX_NAME).execute().actionGet();
@@ -50,16 +52,32 @@ public class ElasticSearchIndexClient implements Closeable {
 		
 	}
 	
-	public ElasticSearchIndexClient(Client client) {
-		this.client = client;
+	public SearchResponse queryBackup(String query) {
+		return queryBackup(query, null);
 	}
 	
-	public SearchResponse queryBackup(Long userId, String query) {
-		return queryBackup(userId, query, null);
+	public SearchResponse queryBackup(String query, Map<String, List<String>> filters) {		
+		String queryString = buildQuery(query);
+		
+		/*
+		QueryBuilder qBuilder = QueryBuilders.queryString(queryString);
+		*/
+		
+        QueryBuilder qBuilder = IndexUtils.buildQuery (userId, queryString, filters);
+		logger.debug("#######################################");
+		logger.debug("QueryString:\n" + qBuilder.toString ());
+		logger.debug("#######################################");
+		
+		return client.prepareSearch(INDEX_NAME)
+				.setQuery(qBuilder)
+				.addSort("backup_at", SortOrder.DESC)
+				.addHighlightedField(IndexUtils.FIELD_FULLTEXT)
+				.setSize(100)
+				.execute().actionGet();
 	}
-	
-	public SearchResponse queryBackup(Long userId, String query, Map<String, List<String>> filters) {		
-		String queryString = null;
+
+    private String buildQuery(String query) {
+        String queryString = null;
 		String[] tokens = query.split(" ");
 		if (tokens.length == 0) {
 			queryString = "*";
@@ -80,34 +98,18 @@ public class ElasticSearchIndexClient implements Closeable {
 			}
 		}
 		
-		/*
-		queryString = IndexUtils.getFilterSuffix(filters) + "owner_id:" + user.getUserId() + " AND " + queryString;
-		logger.debug("QueryString = " + queryString);
-		QueryBuilder qBuilder = QueryBuilders.queryString(queryString);
-		*/
-		
-        QueryBuilder qBuilder = IndexUtils.buildQuery (userId, queryString, filters);
-		
-		logger.debug("#######################################");
-		logger.debug("QueryString:\n" + qBuilder.toString ());
-		logger.debug("#######################################");
-		
-		
-		
-		return client.prepareSearch(INDEX_NAME)
-				.setQuery(qBuilder)
-				.addSort("backup_at", SortOrder.DESC)
-				.addHighlightedField(IndexUtils.FIELD_FULLTEXT)
-				.setSize(100)
-				.execute().actionGet();
-	}
+	    // queryString = IndexUtils.getFilterSuffix(filters) + "owner_id:" + user.getUserId() + " AND " + queryString;
+	    // logger.debug("QueryString = " + queryString);
+
+        return queryString;
+    }
 	
 	public SearchResponse searchByJobId(long jobId) {
 		QueryBuilder qBuilder = QueryBuilders.matchQuery(IndexUtils.FIELD_JOB_ID, jobId);
 		return client.prepareSearch(INDEX_NAME).setQuery(qBuilder).execute().actionGet();
 	}
 	
-	public SearchResponse getFileById(Long userId, String fileId) {
+	public SearchResponse getFileById(String fileId) {
 		// IDs in backmeup are "owner:hash:timestamp"
 		String[] bmuId = fileId.split(":");
 		if (bmuId.length != 3) {
@@ -126,14 +128,14 @@ public class ElasticSearchIndexClient implements Closeable {
 			return client.prepareSearch(INDEX_NAME).setQuery(qBuilder).execute().actionGet();
 	}
 	
-	public String getThumbnailPathForFile(Long userId, String fileId) {
-		SearchResponse response = getFileById(userId, fileId);
+	public String getThumbnailPathForFile(String fileId) {
+		SearchResponse response = getFileById(fileId);
 		SearchHit hit = response.getHits().getHits()[0];
 		Map<String, Object> source = hit.getSource();
 		return source.get(IndexUtils.FIELD_THUMBNAIL_PATH).toString();
 	}
 	
-	public void deleteRecordsForUser(Long userId) {
+	public void deleteRecordsForUser() {
 		boolean hasIndex = client.admin().indices().exists(
 				new IndicesExistsRequest("indexName")).actionGet().isExists();
 		if(hasIndex){
