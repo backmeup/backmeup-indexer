@@ -54,10 +54,12 @@
 		<version.org.apache.maven.plugins.maven-resources-plugin>2.6</version.org.apache.maven.plugins.maven-resources-plugin>
         <version.org.apache.maven.plugins.maven-source-plugin>2.2</version.org.apache.maven.plugins.maven-source-plugin>
 		<version.org.apache.maven.plugins.maven-shade-plugin>2.3</version.org.apache.maven.plugins.maven-shade-plugin>
+        <version.org.apache.maven.plugins.maven-surefire-plugin>2.6</version.org.apache.maven.plugins.maven-surefire-plugin>
 		<version.org.apache.tomcat.maven>2.2</version.org.apache.tomcat.maven>
 	</properties>
 
 	<modules>
+		<module>backmeup-indexer-model</module>
 		<module>backmeup-indexer-core</module>
 		<module>backmeup-indexer-client</module>
 	</modules>
