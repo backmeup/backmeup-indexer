@@ -1,2 +1,1 @@
 4) dependency von dem schlank machen damit es geht, ev. nur TransportClient
-6) keine dependency auf elastic search im service mehr

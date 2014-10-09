@@ -3,7 +3,11 @@ package org.backmeup.index.client;
 import java.io.Closeable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.backmeup.index.model.FileInfo;
+import org.backmeup.index.model.FileItem;
+import org.backmeup.index.model.SearchResultAccumulator;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
@@ -22,10 +26,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ElasticSearchIndexClient implements Closeable {
-	private final Logger logger = LoggerFactory.getLogger(ElasticSearchIndexClient.class);
+	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
 	private static final String INDEX_NAME = "backmeup";
-	
 	private static final String CLUSTER_NAME = "es-backmeup-cluster";
 	
 	private final Long userId;
@@ -52,11 +55,15 @@ public class ElasticSearchIndexClient implements Closeable {
 		
 	}
 	
-	public SearchResponse queryBackup(String query) {
-		return queryBackup(query, null);
-	}
+    public void queryBackup(String query, Map<String, List<String>> filters, String username, SearchResultAccumulator result) {
+        SearchResponse esResponse = queryBackup(query, filters);
+        result.setFiles(IndexUtils.convertSearchEntries(esResponse, username));
+        result.setBySource(IndexUtils.getBySource(esResponse));
+        result.setByType(IndexUtils.getByType(esResponse));
+        result.setByJob(IndexUtils.getByJob(esResponse));
+    }
 	
-	public SearchResponse queryBackup(String query, Map<String, List<String>> filters) {		
+	private SearchResponse queryBackup(String query, Map<String, List<String>> filters) {		
 		String queryString = buildQuery(query);
 		
 		/*
@@ -104,12 +111,17 @@ public class ElasticSearchIndexClient implements Closeable {
         return queryString;
     }
 	
-	public SearchResponse searchByJobId(long jobId) {
+    public Set<FileItem> searchAllFileItemsForJob(Long jobId) {
+        SearchResponse esResponse = searchByJobId(jobId);
+        return IndexUtils.convertToFileItems(esResponse);
+    }
+
+	private SearchResponse searchByJobId(long jobId) {
 		QueryBuilder qBuilder = QueryBuilders.matchQuery(IndexUtils.FIELD_JOB_ID, jobId);
 		return client.prepareSearch(INDEX_NAME).setQuery(qBuilder).execute().actionGet();
 	}
 	
-	public SearchResponse getFileById(String fileId) {
+	private SearchResponse getFileById(String fileId) {
 		// IDs in backmeup are "owner:hash:timestamp"
 		String[] bmuId = fileId.split(":");
 		if (bmuId.length != 3) {
@@ -127,7 +139,12 @@ public class ElasticSearchIndexClient implements Closeable {
 		
 			return client.prepareSearch(INDEX_NAME).setQuery(qBuilder).execute().actionGet();
 	}
-	
+
+    public FileInfo getFileInfoForFile(String fileId) {
+        SearchResponse esResponse = getFileById(fileId);
+        return IndexUtils.convertToFileInfo(esResponse);
+    }
+    
 	public String getThumbnailPathForFile(String fileId) {
 		SearchResponse response = getFileById(fileId);
 		SearchHit hit = response.getHits().getHits()[0];
@@ -160,4 +177,5 @@ public class ElasticSearchIndexClient implements Closeable {
 			client.close();
 		}
 	}
+
 }
