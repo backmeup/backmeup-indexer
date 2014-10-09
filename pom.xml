@@ -15,7 +15,9 @@
 	<name>Backmeup Indexer</name>
 	<url>http://backmeup.at/</url>
 	<description>
-		The Backemup Indexer is responsible to handle all user specific index  operations as mount, ingest and query but also has hooks for encryption and data exchange
+		The Backemup Indexer is responsible to handle all user specific index
+		operations as mount, ingest and query but also has hooks for encryption
+		and data exchange
 	</description>
 
 	<properties>
@@ -34,7 +36,7 @@
 		<!-- Dependency versions
 			 Please keep alphabetical
 			 Properties should be in form "version.<groupId>", or in case where
-			 multiple artefacts of the same groupId are used  "version.<groupId>.<artifactId>"
+			 multiple artifacts of the same groupId are used  "version.<groupId>.<artifactId>"
 		-->
 		<version.ch.qos.logback>1.1.2</version.ch.qos.logback>
 		<version.com.rabbitmq>2.8.6</version.com.rabbitmq>
