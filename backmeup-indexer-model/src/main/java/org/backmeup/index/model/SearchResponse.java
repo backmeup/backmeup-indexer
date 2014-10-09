@@ -7,11 +7,8 @@ import java.util.List;
 
 /**
  * Contains the result of a search when calling BusinessLogic#queryBackup.
- * 
  */
 public class SearchResponse implements SearchResultAccumulator {
-	
-	private long id;
 	
 	private int progress;
 	
@@ -51,16 +48,15 @@ public class SearchResponse implements SearchResultAccumulator {
 		this.setFilters(join(filters, ","));
 	}	
 	
-	public SearchResponse(long id, int status, String query, List<SearchEntry> files) {
-		this(id, status, query, files, null, null, null);
+	public SearchResponse(int status, String query, List<SearchEntry> files) {
+		this(status, query, files, null, null, null);
 	}
 	
-	public SearchResponse(long id, int status, String query, List<CountedEntry> bySource, List<CountedEntry> byType, List<CountedEntry> byJob) {
-		this(id, status, query, null, bySource, byType, byJob);
+	public SearchResponse(int status, String query, List<CountedEntry> bySource, List<CountedEntry> byType, List<CountedEntry> byJob) {
+		this(status, query, null, bySource, byType, byJob);
 	}
 	
-	public SearchResponse(long id, int status, String query, List<SearchEntry> files, List<CountedEntry> bySource, List<CountedEntry> byType, List<CountedEntry> byJob) {
-		this.id = id;
+	public SearchResponse(int status, String query, List<SearchEntry> files, List<CountedEntry> bySource, List<CountedEntry> byType, List<CountedEntry> byJob) {
 		this.progress = status;
 		this.query = query;
 		this.files = files;
@@ -104,15 +100,6 @@ public class SearchResponse implements SearchResultAccumulator {
 		this.byJob = byJob;
 	}
 
-	public long getId() {
-		return id;
-	}
-
-	public void setId(long id) {
-		this.id = id;
-	}
-	
-	
 	public int getProgress() {
 		return progress;
 	}
