@@ -70,34 +70,26 @@ public class ESConfigurationHandler {
 
 		MapTokenResolver resolver = new MapTokenResolver(tokens);
 
-		Reader inputReader = new FileReader(new File(
-				"src/main/resources/elasticsearch_template.yml"));
-		Reader tokenReplaceReader = new TokenReplaceReader(inputReader,
-				resolver);
-		String outputFile = IndexManager.getUserDataWorkingDir(userID)
-				+ "/index/elasticsearch.config.user" + userID + ".yml";
-		File file = new File(outputFile);
-		file.getParentFile().mkdirs();
+		try (Reader inputReader = new FileReader(new File(
+				"src/main/resources/elasticsearch_template.yml"))) {
+		    
+    		try (Reader tokenReplaceReader = new TokenReplaceReader(inputReader,
+    				resolver)) {
+        		String outputFile = IndexManager.getUserDataWorkingDir(userID)
+        				+ "/index/elasticsearch.config.user" + userID + ".yml";
 
-		Writer outputStream = new FileWriter(file);
-		try {
-			int c;
-			while ((c = tokenReplaceReader.read()) != -1) {
-				outputStream.write(c);
-			}
-		} finally {
-			if (tokenReplaceReader != null) {
-				tokenReplaceReader.close();
-			}
-			if (inputReader != null) {
-				inputReader.close();
-			}
-			if (outputStream != null) {
-				outputStream.close();
-			}
-		}
-		return file;
-
+        		File file = new File(outputFile);
+        		file.getParentFile().mkdirs();
+        
+        		try (Writer outputStream = new FileWriter(file)){
+        			int c;
+        			while ((c = tokenReplaceReader.read()) != -1) {
+        				outputStream.write(c);
+        			}
+        			return file;
+        		}
+    		}
+        }
 	}
 
 	/**
@@ -117,7 +109,6 @@ public class ESConfigurationHandler {
 			// TODO use ProcessBuilder instead and assign a dedicated amount of
 			// memory
 			Process p = Runtime.getRuntime().exec(command);
-			Thread.currentThread();
 			// give ES a chance to startup before returning - wait 10 seconds
 			Thread.sleep(10000);
 			// p.waitFor();
