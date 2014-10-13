@@ -41,17 +41,20 @@ public class ThemisDataSink {
 	 */
 	public static void saveIndexTrueCryptContainer(File f, int userID)
 			throws IOException {
-
-		if ((f != null) && (userID > -1) && (f.exists()) && (f.canRead())) {
+	    if (f == null) {
+            throw new IOException("file f is null");
+	    }
+	    
+		if (userID > -1 && (f.exists() && f.canRead())) {
 			FileUtils.copyFileUsingChannel(f, new File(getDataSinkHome(userID)
 					+ "/user" + userID
 					+ "/index/elasticsearch_userdata_TC_150MB.tc"));
 		} else {
 			throw new IOException(
-					"Error storing Index TrueCrypt Container file: "
-							+ f.getAbsolutePath() + " isNull?" + (f != null)
-							+ (userID > -1) + "file exists?: " + (f.exists())
-							+ "file is readable? " + (f.canRead()));
+					"Error storing Index TrueCrypt Container file "
+							+ f.getAbsolutePath() + ": userID: " 
+							+ userID + ", file exists? " + f.exists()
+							+ ", file is readable? " + f.canRead());
 		}
 	}
 
