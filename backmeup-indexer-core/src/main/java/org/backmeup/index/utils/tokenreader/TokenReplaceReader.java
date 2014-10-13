@@ -20,8 +20,8 @@ public class TokenReplaceReader extends Reader {
 	}
 
 	@Override
-    public int read(CharBuffer target) throws IOException {
-		throw new RuntimeException("Operation Not Supported");
+    public int read(CharBuffer target) {
+		throw new UnsupportedOperationException("Operation Not Supported");
 	}
 
 	@Override
@@ -88,8 +88,8 @@ public class TokenReplaceReader extends Reader {
 	}
 
 	@Override
-    public long skip(long n) throws IOException {
-		throw new RuntimeException("Operation Not Supported");
+    public long skip(long n) {
+		throw new UnsupportedOperationException("Operation Not Supported");
 	}
 
 	@Override
@@ -103,12 +103,12 @@ public class TokenReplaceReader extends Reader {
 	}
 
 	@Override
-    public void mark(int readAheadLimit) throws IOException {
-		throw new RuntimeException("Operation Not Supported");
+    public void mark(int readAheadLimit) {
+		throw new UnsupportedOperationException("Operation Not Supported");
 	}
 
 	@Override
-    public void reset() throws IOException {
-		throw new RuntimeException("Operation Not Supported");
+    public void reset() {
+		throw new UnsupportedOperationException("Operation Not Supported");
 	}
 }

@@ -48,11 +48,10 @@ public final class Configuration {
 
 	public static String getProperty(String key, String defaultValue) {
 		String value = getProperty(key);
-		if (value != null) {
-			return value;
-		} else {
-			return defaultValue;
-		}
+		if (value == null) {
+		    return defaultValue;
+		} 
+	    return value;
 	}
 
 	public static List<String> getPropertyList(String key) {
