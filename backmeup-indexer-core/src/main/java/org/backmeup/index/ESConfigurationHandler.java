@@ -12,6 +12,7 @@ import java.util.Random;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.backmeup.index.config.Configuration;
@@ -163,16 +164,16 @@ public class ESConfigurationHandler {
 		DefaultHttpClient httpClient = new DefaultHttpClient();
 		HttpGet healthyRequest = new HttpGet("http://localhost:" + httpPort
 				+ "/_cluster/health?pretty=true");
-		HttpResponse response;
+
 		System.out.println("calling: " + healthyRequest);
-
-		response = httpClient.execute(healthyRequest);
-		System.out.println(response.toString());
-
-		if (response.getStatusLine().getStatusCode() == 200) {
-			return true;
+		try (CloseableHttpResponse response = httpClient.execute(healthyRequest)) {
+		    System.out.println(response.toString());
+		    
+		    if (response.getStatusLine().getStatusCode() == 200) {
+		        return true;
+		    }
+		    return false;
 		}
-		return false;
 	}
 
 	public static String getElasticSearchExecutable()

@@ -273,7 +273,6 @@ public class IndexManager {
 	}
 
 	/**
-	 * 
 	 * Gets the root directory (for index operations) for all users done.
 	 */
 	public static String getUserDataWorkingDirRoot() {
@@ -282,12 +281,13 @@ public class IndexManager {
 			File f = new File(s);
 			if (f.isDirectory() && f.exists()) {
 				return f.getAbsolutePath();
-			} else {
-				f.mkdirs();
-				if (f.isDirectory() && f.exists()) {
-					return f.getAbsolutePath();
-				}
 			}
+			
+            f.mkdirs();
+            if (f.isDirectory() && f.exists()) {
+            	return f.getAbsolutePath();
+            }
+            
 			throw new ExceptionInInitializerError(
 					"index.temp.data.home.dir does not exist or is not accessible to system");
 		}
