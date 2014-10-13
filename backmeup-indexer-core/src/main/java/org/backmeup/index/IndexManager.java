@@ -151,9 +151,6 @@ public class IndexManager {
 	/**
 	 * Cleanup - stops all running ES instances, removes all mounted TC
 	 * container
-	 * 
-	 * @throws InterruptedException
-	 * @throws IOException
 	 */
 	public void cleanup() throws IOException, InterruptedException {
 		// TODO IMPLEMENT
@@ -179,8 +176,6 @@ public class IndexManager {
 
 	/**
 	 * Removes the record of which ES ports and TrueCrypt volume has been used
-	 * 
-	 * @param userID
 	 */
 	private void removeUserPortMapping(int userID) {
 		if (this.userPortMapping.containsKey(userID)) {
