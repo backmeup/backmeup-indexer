@@ -1,5 +1,7 @@
 package org.backmeup.index.dal;
 
+import javax.persistence.EntityManager;
+
 /**
  * The DataAccessLayer provides access to any kind of database. It uses Data
  * Access Objects (e.g. IndexManagerDao) to store, retrieve and delete data of a
@@ -9,6 +11,6 @@ public interface DataAccessLayer {
 
 	IndexManagerDao createIndexManagerDao();
 
-	void setConnection(Object connection);
+	void setEntityManager(EntityManager connection);
 
 }

@@ -1,0 +1,14 @@
+Index-Rest Schnittstelle mit RestEasy
+Indexer-Client verwendet Rest-Client und fragt Schnittstelle ab
+Indexer-Model verwenden beide 
+Indexer-Client die KLassen die jetzt ES verwenden in den indexer-core verschieben und
+Signaturen vom ElasticSearchClient ändern sich für Aufrufer nicht
+
+---
+Migrationsplan
+Eigene Infrastruktur für indexer-core (zB CDI, Datenbank)
+
+----
+Zukunft
+Indexer-Core arbeitet mit mehreren Slaves, d.h. auf den Slaves ist wieder ein maven-modul,
+Miniservice mit Kommandozeilenaufrufen (interner Http Server von Java)
