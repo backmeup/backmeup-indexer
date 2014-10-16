@@ -27,11 +27,11 @@
 			<version>${version.org.slf4j}</version>
 		</dependency>
 
-		<dependency>
-  			<groupId>com.rabbitmq</groupId>
-  			<artifactId>amqp-client</artifactId>
-  			<version>${version.com.rabbitmq}</version>
-		</dependency>
+<!-- 		<dependency> -->
+<!--   			<groupId>com.rabbitmq</groupId> -->
+<!--   			<artifactId>amqp-client</artifactId> -->
+<!--   			<version>${version.com.rabbitmq}</version> -->
+<!-- 		</dependency> -->
 
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
@@ -46,15 +46,27 @@
 		</dependency>
 		
 		<dependency>
-      		<groupId>org.apache.felix</groupId>
-      		<artifactId>org.apache.felix.framework</artifactId>
-      		<version>${version.org.apache.felix}</version>
+      		<groupId>javax.enterprise</groupId>
+      		<artifactId>cdi-api</artifactId>
+      		<version>${version.javax.enterprise.cdi-api}</version>
     	</dependency>
+		
+<!-- 		<dependency> -->
+<!--       		<groupId>org.apache.felix</groupId> -->
+<!--       		<artifactId>org.apache.felix.framework</artifactId> -->
+<!--       		<version>${version.org.apache.felix}</version> -->
+<!--     	</dependency> -->
 
 		<dependency>
 			<groupId>org.codehaus.jackson</groupId>
 			<artifactId>jackson-mapper-asl</artifactId>
 			<version>${version.org.codehaus.jackson}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.hibernate.javax.persistence</groupId>
+			<artifactId>hibernate-jpa-2.0-api</artifactId>
+			<version>${version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api}</version>
 		</dependency>
 	</dependencies>
 
@@ -69,6 +81,37 @@
                     <skipTests>true</skipTests>
                 </configuration>
             </plugin>
+            <plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>${version.org.apache.maven.plugins.maven-dependency-plugin}</version>
+				<executions>
+					<execution>
+						<id>copy-packaged</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>${project.groupId}</groupId>
+									<artifactId>${project.artifactId}</artifactId>
+									<version>${project.version}</version>
+									<type>${project.packaging}</type>
+								</artifactItem>
+								<artifactItem>
+									<groupId>javax.persistence</groupId>
+    								<artifactId>com.springsource.javax.persistence</artifactId>
+    								<version>2.0.0.Beta1</version>
+									<type>${project.packaging}</type>
+								</artifactItem>
+							</artifactItems>
+							<outputDirectory>${config.localBuildArtefactDirectory}</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
         </plugins>
     </build>
 

@@ -14,7 +14,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.backmeup.index.ESConfigurationHandler;
 import org.backmeup.index.IndexManager;
-import org.elasticsearch.ElasticSearchException;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
@@ -139,7 +139,7 @@ public class IndexManagerTest {
 			Assert.assertTrue("Contains Type",
 					response.getType().equals("tweet"));
 
-		} catch (ElasticSearchException e) {
+		} catch (ElasticsearchException e) {
 			e.printStackTrace();
 			fail("Should not fail" + e);
 		} catch (IOException e) {

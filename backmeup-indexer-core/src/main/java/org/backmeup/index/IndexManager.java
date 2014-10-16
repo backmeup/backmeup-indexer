@@ -6,8 +6,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.backmeup.data.dummy.ThemisDataSink;
 import org.backmeup.index.config.Configuration;
+import org.backmeup.index.dal.Connection;
+import org.backmeup.index.dal.DataAccessLayer;
+import org.backmeup.index.db.RunningIndexUserConfig;
 import org.backmeup.index.utils.file.FileUtils;
 
 public class IndexManager {
@@ -18,12 +23,20 @@ public class IndexManager {
 
 	// Note: @see ESConfigurationHandler.checkPortRangeAccepted - these values
 	// are currently hardcoded there
-	private List<Integer> availableTCPPorts = new ArrayList<>();
-	private List<Integer> usedTCPPorts = new ArrayList<>();
-	private List<Integer> availableHttpPorts = new ArrayList<>();
-	private List<Integer> usedHttpPorts = new ArrayList<>();
-	// keeps a userId to Port and DriveLetter mapping
-	private HashMap<Integer, HashMap<String, String>> userPortMapping = new HashMap<>();
+	// private List<Integer> availableTCPPorts = new ArrayList<>();
+	// private List<Integer> usedTCPPorts = new ArrayList<>();
+	// private List<Integer> availableHttpPorts = new ArrayList<>();
+	// private List<Integer> usedHttpPorts = new ArrayList<>();
+	// // keeps a userId to Port and DriveLetter mapping
+	// private HashMap<Integer, HashMap<String, String>> userPortMapping = new
+	// HashMap<>();
+	@Inject
+	protected Connection conn;
+
+	@Inject
+	protected DataAccessLayer dal;
+
+	private List<RunningIndexUserConfig> indexInstances = new ArrayList<>();
 
 	private static IndexManager im = new IndexManager();
 
