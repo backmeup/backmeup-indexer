@@ -4,6 +4,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.util.Properties;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
@@ -23,6 +24,7 @@ public class DataAccessLayerTest {
 
 	private EntityManagerFactory entityManagerFactory;
 	private DataAccessLayer dal;
+	private EntityManager entityManager;
 
 	@Before
 	public void createEntityManager() {
@@ -30,8 +32,8 @@ public class DataAccessLayerTest {
 				"org.backmeup.index.jpa", overwrittenJPAProps());
 
 		this.dal = new DataAccessLayerImpl();
-		this.dal.setEntityManager(this.entityManagerFactory
-				.createEntityManager());
+		this.entityManager = this.entityManagerFactory.createEntityManager();
+		this.dal.setEntityManager(this.entityManager);
 	}
 
 	private Properties overwrittenJPAProps() {
@@ -62,12 +64,13 @@ public class DataAccessLayerTest {
 	public void shouldStorestoreConfigurationAndReadFromDB() {
 		RunningIndexUserConfig config = createConfig();
 
+		this.entityManager.getTransaction().begin();
 		IndexManagerDao im = this.dal.createIndexManagerDao();
 		im.save(config);
+		this.entityManager.getTransaction().commit();
 
-		// now check if we can read this information from DB
-		RunningIndexUserConfig found = im.findConfigByUserId(77L);
-		assertNotNull("config with UserId 77", found);
+		RunningIndexUserConfig found = im.findConfigByHttpPort(9999);
+		assertNotNull("config with port 9999", found);
 	}
 
 	private RunningIndexUserConfig createConfig() {
