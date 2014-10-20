@@ -4,8 +4,6 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -14,7 +12,7 @@ import javax.persistence.TemporalType;
 public class RunningIndexUserConfig {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	// @GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(nullable = false)
 	private Long userId;
 
@@ -47,7 +45,7 @@ public class RunningIndexUserConfig {
 	}
 
 	public String getMountedDriveLetter() {
-		return mountedDriveLetter;
+		return this.mountedDriveLetter;
 	}
 
 	public void setMountedDriveLetter(String mountedDriveLetter) {
@@ -55,7 +53,7 @@ public class RunningIndexUserConfig {
 	}
 
 	public Integer getTcpPort() {
-		return tcpPort;
+		return this.tcpPort;
 	}
 
 	public void setTcpPort(Integer tcpPort) {
@@ -63,7 +61,7 @@ public class RunningIndexUserConfig {
 	}
 
 	public Integer getHttpPort() {
-		return httpPort;
+		return this.httpPort;
 	}
 
 	public void setHttpPort(Integer httpPort) {
@@ -71,7 +69,7 @@ public class RunningIndexUserConfig {
 	}
 
 	public String getTransportaddress() {
-		return transportaddress;
+		return this.transportaddress;
 	}
 
 	public void setTransportaddress(String transportaddress) {
@@ -79,7 +77,7 @@ public class RunningIndexUserConfig {
 	}
 
 	public String getClusterName() {
-		return clusterName;
+		return this.clusterName;
 	}
 
 	public void setClusterName(String clusterName) {
