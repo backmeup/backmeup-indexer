@@ -1,6 +1,5 @@
 package org.backmeup.index.client;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +18,7 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -26,7 +26,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ElasticSearchIndexClient implements Closeable {
+public class ElasticSearchIndexClient implements IndexClient {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
 	private static final String INDEX_NAME = "backmeup";
@@ -65,6 +65,7 @@ public class ElasticSearchIndexClient implements Closeable {
         }
     }
 	
+    @Override
     public void queryBackup(String query, Map<String, List<String>> filters, String username, SearchResultAccumulator result) {
         SearchResponse esResponse = queryBackup(query, filters);
         result.setFiles(IndexUtils.convertSearchEntries(esResponse, username));
@@ -121,6 +122,7 @@ public class ElasticSearchIndexClient implements Closeable {
         return queryString;
     }
 	
+    @Override
     public Set<FileItem> searchAllFileItemsForJob(Long jobId) {
         SearchResponse esResponse = searchByJobId(jobId);
         return IndexUtils.convertToFileItems(esResponse);
@@ -150,19 +152,22 @@ public class ElasticSearchIndexClient implements Closeable {
 			return client.prepareSearch(INDEX_NAME).setQuery(qBuilder).execute().actionGet();
 	}
 
+    @Override
     public FileInfo getFileInfoForFile(String fileId) {
         SearchResponse esResponse = getFileById(fileId);
         return IndexUtils.convertToFileInfo(esResponse);
     }
     
-	public String getThumbnailPathForFile(String fileId) {
+	@Override
+    public String getThumbnailPathForFile(String fileId) {
 		SearchResponse response = getFileById(fileId);
 		SearchHit hit = response.getHits().getHits()[0];
 		Map<String, Object> source = hit.getSource();
 		return source.get(IndexFields.FIELD_THUMBNAIL_PATH).toString();
 	}
 	
-	public void deleteRecordsForUser() {
+	@Override
+    public void deleteRecordsForUser() {
 		boolean hasIndex = client.admin().indices().exists(
 				new IndicesExistsRequest("indexName")).actionGet().isExists();
 		if(hasIndex){
@@ -172,7 +177,8 @@ public class ElasticSearchIndexClient implements Closeable {
 		}
 	}
 	
-	public void deleteRecordsForJobAndTimestamp(Long jobId, Long timestamp) {
+	@Override
+    public void deleteRecordsForJobAndTimestamp(Long jobId, Long timestamp) {
 		QueryBuilder qBuilder = QueryBuilders.boolQuery()
 				.must(QueryBuilders.matchQuery(IndexFields.FIELD_JOB_ID, jobId))
 				.must(QueryBuilders.matchQuery(IndexFields.FIELD_BACKUP_AT, timestamp));
@@ -181,21 +187,18 @@ public class ElasticSearchIndexClient implements Closeable {
 			.setQuery(qBuilder).execute().actionGet();
 	}
 	
-	@Override
+    @Override
     public void close() {
 		if (client != null) {
 			client.close();
 		}
 	}
 
-	// TODO PK use interface when splitting
-    public IndexDocument createDocument() throws IOException {
-        return new IndexDocument();
-    }
-
-    public void index(IndexDocument contentBuilder) throws IOException {
+    @Override
+    public void index(IndexDocument document) throws IOException {
         logger.debug("Pushing to ES index...");
-        client.prepareIndex(INDEX_NAME, DOCUMENT_TYPE_BACKUP).setSource(contentBuilder.asElastic()).setRefresh(true).execute().actionGet();
+        XContentBuilder elasticBuilder = new ElasticContentBuilder(document).asElastic();
+        client.prepareIndex(INDEX_NAME, DOCUMENT_TYPE_BACKUP).setSource(elasticBuilder).setRefresh(true).execute().actionGet();
         logger.debug(" done.");
     }
 

@@ -1,37 +1,30 @@
 package org.backmeup.index.client;
 
-import java.io.IOException;
-
-import org.elasticsearch.common.text.StringText;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A document to put into index.
  */
 public class IndexDocument {
 
-    private final XContentBuilder contentBuilder;
+    private final Map<String, Object> fields = new HashMap<>();
+    private final Map<String, String> largeFields = new HashMap<>();
 
-    public IndexDocument() throws IOException {
-        contentBuilder = XContentFactory.jsonBuilder().startObject();
+    public void field(String key, Object value) {
+        fields.put(key, value);
     }
 
-    public void field(String key, Long value) throws IOException {
-        contentBuilder.field(key, value);
+    public void largeField(String key, String value) {
+        largeFields.put(key, value);
     }
 
-    public void field(String key, String value) throws IOException {
-        contentBuilder.field(key, value);
+    public Map<String, Object> getFields() {
+        return fields;
     }
 
-    public void longField(String key, String value) throws IOException {
-        contentBuilder.field(key, new StringText(value));
-    }
-
-    public XContentBuilder asElastic() throws IOException {
-        contentBuilder.endObject();
-        return contentBuilder;
+    public Map<String, String> getLargeFields() {
+        return largeFields;
     }
 
 }
