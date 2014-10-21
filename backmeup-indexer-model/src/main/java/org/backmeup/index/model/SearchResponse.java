@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * Contains the result of a search when calling BusinessLogic#queryBackup.
  */
-public class SearchResponse implements SearchResultAccumulator {
+public class SearchResponse {
 	
 	private int progress;
 	
@@ -16,13 +16,7 @@ public class SearchResponse implements SearchResultAccumulator {
 	
 	private String filters;
 	
-	private List<SearchEntry> files;
-	
-	private List<CountedEntry> bySource;
-	
-	private List<CountedEntry> byType;
-	
-	private List<CountedEntry> byJob;
+    private SearchResultAccumulator searchResults = new SearchResultAccumulator();
 	
 	public SearchResponse() { }
 	
@@ -59,10 +53,10 @@ public class SearchResponse implements SearchResultAccumulator {
 	public SearchResponse(int status, String query, List<SearchEntry> files, List<CountedEntry> bySource, List<CountedEntry> byType, List<CountedEntry> byJob) {
 		this.progress = status;
 		this.query = query;
-		this.files = files;
-		this.bySource = bySource;
-		this.byType = byType;
-		this.byJob = byJob;
+		setFiles(files);
+		setBySource(bySource);
+		setByType(byType);
+		setByJob(byJob);
 	}
 	
 	public String getQuery() {
@@ -73,34 +67,35 @@ public class SearchResponse implements SearchResultAccumulator {
 		this.query = query;
 	}
 	
+    public void setDetails(SearchResultAccumulator searchResults) {
+        this.searchResults = searchResults;
+    }
+
 	public List<CountedEntry> getBySource() {
-		return bySource;
-	}
+        return searchResults.getBySource();
+    }
 
-	@Override
     public void setBySource(List<CountedEntry> bySource) {
-		this.bySource = bySource;
-	}
+        searchResults.setBySource(bySource);
+    }
 
-	public List<CountedEntry> getByType() {
-		return byType;
-	}
+    public List<CountedEntry> getByType() {
+        return searchResults.getByType();
+    }
 
-	@Override
     public void setByType(List<CountedEntry> byType) {
-		this.byType = byType;
-	}
-	
-	public List<CountedEntry> getByJob() {
-		return byJob;
-	}
+        searchResults.setByType(byType);
+    }
 
-	@Override
+    public List<CountedEntry> getByJob() {
+        return searchResults.getByJob();
+    }
+
     public void setByJob(List<CountedEntry> byJob) {
-		this.byJob = byJob;
-	}
+        searchResults.setByJob(byJob);
+    }
 
-	public int getProgress() {
+    public int getProgress() {
 		return progress;
 	}
 
@@ -108,15 +103,14 @@ public class SearchResponse implements SearchResultAccumulator {
 		this.progress = progress;
 	}
 
-	public List<SearchEntry> getFiles() {
-		return files;
-	}
+    public List<SearchEntry> getFiles() {
+        return searchResults.getFiles();
+    }
 
-	@Override
     public void setFiles(List<SearchEntry> files) {
-		this.files = files;
-	} 
-	
+        searchResults.setFiles(files);
+    }
+
 	public String getFilters() {
 		return filters;
 	}
@@ -124,4 +118,5 @@ public class SearchResponse implements SearchResultAccumulator {
 	public void setFilters(String filters) {
 		this.filters = filters;
 	}
+
 }

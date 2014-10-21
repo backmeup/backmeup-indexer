@@ -2,14 +2,43 @@ package org.backmeup.index.model;
 
 import java.util.List;
 
-public interface SearchResultAccumulator {
+public class SearchResultAccumulator {
 
-    void setBySource(List<CountedEntry> bySource);
+    private List<CountedEntry> bySource;
+    private List<CountedEntry> byType;
+    private List<CountedEntry> byJob;
+    private List<SearchEntry> files;
 
-    void setByType(List<CountedEntry> byType);
+    public List<CountedEntry> getBySource() {
+        return bySource;
+    }
 
-    void setByJob(List<CountedEntry> byJob);
+    public void setBySource(List<CountedEntry> bySource) {
+        this.bySource = bySource;
+    }
 
-    void setFiles(List<SearchEntry> files);
+    public List<CountedEntry> getByType() {
+        return byType;
+    }
+
+    public void setByType(List<CountedEntry> byType) {
+        this.byType = byType;
+    }
+
+    public List<CountedEntry> getByJob() {
+        return byJob;
+    }
+
+    public void setByJob(List<CountedEntry> byJob) {
+        this.byJob = byJob;
+    }
+
+    public List<SearchEntry> getFiles() {
+        return files;
+    }
+
+    public void setFiles(List<SearchEntry> files) {
+        this.files = files;
+    }
 
 }

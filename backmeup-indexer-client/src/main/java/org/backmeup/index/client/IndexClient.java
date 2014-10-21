@@ -12,7 +12,7 @@ import org.backmeup.index.model.SearchResultAccumulator;
 
 public interface IndexClient extends Closeable {
 
-    void queryBackup(String query, Map<String, List<String>> filters, String username, SearchResultAccumulator result);
+    SearchResultAccumulator queryBackup(String query, Map<String, List<String>> filters, String username);
 
     Set<FileItem> searchAllFileItemsForJob(Long jobId);
 

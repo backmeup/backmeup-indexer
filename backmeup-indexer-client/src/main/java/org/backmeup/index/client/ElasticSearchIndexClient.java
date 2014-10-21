@@ -66,12 +66,14 @@ public class ElasticSearchIndexClient implements IndexClient {
     }
 	
     @Override
-    public void queryBackup(String query, Map<String, List<String>> filters, String username, SearchResultAccumulator result) {
+    public SearchResultAccumulator queryBackup(String query, Map<String, List<String>> filters, String username) {
         SearchResponse esResponse = queryBackup(query, filters);
+        SearchResultAccumulator result = new SearchResultAccumulator();
         result.setFiles(IndexUtils.convertSearchEntries(esResponse, username));
         result.setBySource(IndexUtils.getBySource(esResponse));
         result.setByType(IndexUtils.getByType(esResponse));
         result.setByJob(IndexUtils.getByJob(esResponse));
+        return result;
     }
 	
 	private SearchResponse queryBackup(String query, Map<String, List<String>> filters) {		
