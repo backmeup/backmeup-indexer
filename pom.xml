@@ -41,12 +41,18 @@
 		<version.ch.qos.logback>1.1.2</version.ch.qos.logback>
 		<version.com.rabbitmq>2.8.6</version.com.rabbitmq>
 		<version.com.miglayout>3.7.4</version.com.miglayout>
+		<version.javax.el>2.2</version.javax.el>
+		<version.javax.enterprise.cdi-api>1.1</version.javax.enterprise.cdi-api>
 		<version.javax.servlet>3.0.1</version.javax.servlet>
+		<version.jersey>1.12</version.jersey>
 		<version.junit>4.11</version.junit>
+		<version.net.sf.dozer>5.4.0</version.net.sf.dozer>
 		<version.org.apache.felix>4.0.2</version.org.apache.felix>
 		<version.org.apache.httpcomponents>4.3.4</version.org.apache.httpcomponents>
 		<version.org.codehaus.jackson>1.9.13</version.org.codehaus.jackson>
 		<version.org.elasticsearch>0.90.7</version.org.elasticsearch>
+		<version.org.jboss.resteasy>3.0.7.Final</version.org.jboss.resteasy>
+		<version.org.jboss.weld.servlet>2.1.0.Final</version.org.jboss.weld.servlet>
 		<version.org.slf4j>1.7.6</version.org.slf4j>
 
 		<!-- Maven Plugin versions -->
@@ -63,6 +69,7 @@
 	<modules>
 		<module>backmeup-indexer-model</module>
 		<module>backmeup-indexer-core</module>
+		<module>backmeup-indexer-rest</module>
 		<module>backmeup-indexer-client</module>
 	</modules>
 
