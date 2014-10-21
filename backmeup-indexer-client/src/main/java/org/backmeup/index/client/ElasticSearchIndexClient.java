@@ -1,6 +1,7 @@
 package org.backmeup.index.client;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,30 +31,39 @@ public class ElasticSearchIndexClient implements Closeable {
 	
 	private static final String INDEX_NAME = "backmeup";
 	private static final String CLUSTER_NAME = "es-backmeup-cluster";
-	
+    private static final String DOCUMENT_TYPE_BACKUP = "backup";
+
 	private final Long userId;
 	private final Client client;
-	
-	public ElasticSearchIndexClient(Long userId) {
-		this.userId = userId;
-        //host = NetworkUtils.getLocalAddress().getHostName();
-		//Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", "es-cluster-" + NetworkUtils.getLocalAddress().getHostName()).build();
-		Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", CLUSTER_NAME).build();
-		client = new TransportClient(settings)
-			.addTransportAddress(new InetSocketTransportAddress("host", 9999));
-		
-		// Check if index exists and if not create it.   
-	    IndicesExistsResponse existsResponse = client.admin().indices().prepareExists(INDEX_NAME).execute().actionGet();
+
+    public ElasticSearchIndexClient(Long userId) {
+        this(userId, createClusterTransferClient());
+    }
+
+    private static TransportClient createClusterTransferClient() {
+        // host = NetworkUtils.getLocalAddress().getHostName();
+        // Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", "es-cluster-" + NetworkUtils.getLocalAddress().getHostName()).build();
+        Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", CLUSTER_NAME).build();
+        return new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress("host", 9999));
+    }
+
+    public ElasticSearchIndexClient(Long userId, Client client) {
+        this.userId = userId;
+        this.client = client;
+        createIndexIfNeeded();
+    }
+
+    private void createIndexIfNeeded() {
+        IndicesExistsResponse existsResponse = client.admin().indices().prepareExists(INDEX_NAME).execute().actionGet();
         if (!existsResponse.isExists()) {
             CreateIndexRequestBuilder cirb = client.admin().indices().prepareCreate(INDEX_NAME);
             CreateIndexResponse createIndexResponse = cirb.execute().actionGet();
             if (!createIndexResponse.isAcknowledged()) {
-//            	throw new Exception("Could not create index ["+ INDEX_NAME +"].");
-            	logger.info("Could not create index [" + INDEX_NAME +" ].");
+//              throw new Exception("Could not create index ["+ INDEX_NAME +"].");
+                logger.info("Could not create index [" + INDEX_NAME +" ].");
             }
         }
-		
-	}
+    }
 	
     public void queryBackup(String query, Map<String, List<String>> filters, String username, SearchResultAccumulator result) {
         SearchResponse esResponse = queryBackup(query, filters);
@@ -78,7 +88,7 @@ public class ElasticSearchIndexClient implements Closeable {
 		return client.prepareSearch(INDEX_NAME)
 				.setQuery(qBuilder)
 				.addSort("backup_at", SortOrder.DESC)
-				.addHighlightedField(IndexUtils.FIELD_FULLTEXT)
+				.addHighlightedField(IndexFields.FIELD_FULLTEXT)
 				.setSize(100)
 				.execute().actionGet();
 	}
@@ -117,7 +127,7 @@ public class ElasticSearchIndexClient implements Closeable {
     }
 
 	private SearchResponse searchByJobId(long jobId) {
-		QueryBuilder qBuilder = QueryBuilders.matchQuery(IndexUtils.FIELD_JOB_ID, jobId);
+		QueryBuilder qBuilder = QueryBuilders.matchQuery(IndexFields.FIELD_JOB_ID, jobId);
 		return client.prepareSearch(INDEX_NAME).setQuery(qBuilder).execute().actionGet();
 	}
 	
@@ -133,9 +143,9 @@ public class ElasticSearchIndexClient implements Closeable {
 		Long timestamp = Long.parseLong(bmuId[2]);
 		
 		QueryBuilder qBuilder = QueryBuilders.boolQuery()
-				.must(QueryBuilders.matchQuery(IndexUtils.FIELD_OWNER_ID, owner))
-				.must(QueryBuilders.matchQuery(IndexUtils.FIELD_FILE_HASH, hash))
-				.must(QueryBuilders.matchQuery(IndexUtils.FIELD_BACKUP_AT, timestamp));
+				.must(QueryBuilders.matchQuery(IndexFields.FIELD_OWNER_ID, owner))
+				.must(QueryBuilders.matchQuery(IndexFields.FIELD_FILE_HASH, hash))
+				.must(QueryBuilders.matchQuery(IndexFields.FIELD_BACKUP_AT, timestamp));
 		
 			return client.prepareSearch(INDEX_NAME).setQuery(qBuilder).execute().actionGet();
 	}
@@ -149,7 +159,7 @@ public class ElasticSearchIndexClient implements Closeable {
 		SearchResponse response = getFileById(fileId);
 		SearchHit hit = response.getHits().getHits()[0];
 		Map<String, Object> source = hit.getSource();
-		return source.get(IndexUtils.FIELD_THUMBNAIL_PATH).toString();
+		return source.get(IndexFields.FIELD_THUMBNAIL_PATH).toString();
 	}
 	
 	public void deleteRecordsForUser() {
@@ -157,15 +167,15 @@ public class ElasticSearchIndexClient implements Closeable {
 				new IndicesExistsRequest("indexName")).actionGet().isExists();
 		if(hasIndex){
 			client.prepareDeleteByQuery(INDEX_NAME)
-				.setQuery(QueryBuilders.matchQuery(IndexUtils.FIELD_OWNER_ID, userId))
+				.setQuery(QueryBuilders.matchQuery(IndexFields.FIELD_OWNER_ID, userId))
 				.execute().actionGet();
 		}
 	}
 	
 	public void deleteRecordsForJobAndTimestamp(Long jobId, Long timestamp) {
 		QueryBuilder qBuilder = QueryBuilders.boolQuery()
-				.must(QueryBuilders.matchQuery(IndexUtils.FIELD_JOB_ID, jobId))
-				.must(QueryBuilders.matchQuery(IndexUtils.FIELD_BACKUP_AT, timestamp));
+				.must(QueryBuilders.matchQuery(IndexFields.FIELD_JOB_ID, jobId))
+				.must(QueryBuilders.matchQuery(IndexFields.FIELD_BACKUP_AT, timestamp));
 
 		client.prepareDeleteByQuery(INDEX_NAME)
 			.setQuery(qBuilder).execute().actionGet();
@@ -177,5 +187,16 @@ public class ElasticSearchIndexClient implements Closeable {
 			client.close();
 		}
 	}
+
+	// TODO PK use interface when splitting
+    public IndexDocument createDocument() throws IOException {
+        return new IndexDocument();
+    }
+
+    public void index(IndexDocument contentBuilder) throws IOException {
+        logger.debug("Pushing to ES index...");
+        client.prepareIndex(INDEX_NAME, DOCUMENT_TYPE_BACKUP).setSource(contentBuilder.asElastic()).setRefresh(true).execute().actionGet();
+        logger.debug(" done.");
+    }
 
 }

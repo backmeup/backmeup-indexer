@@ -22,26 +22,10 @@ import org.elasticsearch.search.highlight.HighlightField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class IndexUtils {
+class IndexUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IndexUtils.class);
 	
-	public static final String FIELD_OWNER_ID = "owner_id";
-	public static final String FIELD_OWNER_NAME = "owner_name";
-	public static final String FIELD_FILENAME = "filename";
-	public static final String FIELD_PATH = "path";
-	public static final String FIELD_THUMBNAIL_PATH = "thumbnail_path";
-	public static final String FIELD_BACKUP_SOURCE_ID = "backup_source_id";
-	public static final String FIELD_BACKUP_SOURCE_IDENTIFICATION = "backup_source_identification";
-	public static final String FIELD_BACKUP_SOURCE_PLUGIN_NAME = "backup_source_plugin_name";
-	public static final String FIELD_BACKUP_SINK = "backup_sink";
-	public static final String FIELD_FILE_HASH = "file_md5_hash";
-	public static final String FIELD_BACKUP_AT = "backup_at";
-	public static final String FIELD_CONTENT_TYPE = "Content-Type";
-	public static final String FIELD_JOB_ID = "job_id";
-	public static final String FIELD_JOB_NAME = "job_name";
-	public static final String FIELD_FULLTEXT = "fulltext";
-
     private static final String THUMBNAILS_FOLDER = "thumbnails/";
 	
 	private IndexUtils() {
@@ -54,16 +38,16 @@ public class IndexUtils {
 			FileItem fileItem = new FileItem();
 			
 			Map<String, Object> source = hit.getSource();
-	    	String hash = source.get(FIELD_FILE_HASH).toString();
-	    	Integer owner = (Integer) source.get(FIELD_OWNER_ID);
-	    	Long timestamp = (Long) source.get(FIELD_BACKUP_AT);
+	    	String hash = source.get(IndexFields.FIELD_FILE_HASH).toString();
+	    	Integer owner = (Integer) source.get(IndexFields.FIELD_OWNER_ID);
+	    	Long timestamp = (Long) source.get(IndexFields.FIELD_BACKUP_AT);
 			
 	    	String fileId = owner + ":" + hash + ":" + timestamp;
 			fileItem.setFileId(fileId);
-			fileItem.setTitle(source.get(FIELD_FILENAME).toString());
+			fileItem.setTitle(source.get(IndexFields.FIELD_FILENAME).toString());
 			fileItem.setTimeStamp(new Date(timestamp));
 			
-			if (source.get(FIELD_THUMBNAIL_PATH) != null) {
+			if (source.get(IndexFields.FIELD_THUMBNAIL_PATH) != null) {
 				fileItem.setThumbnailURL(THUMBNAILS_FOLDER + owner + "/" + fileId);
 			}
 			
@@ -80,18 +64,18 @@ public class IndexUtils {
 	  
 	  SearchHit hit = esResponse.getHits().getHits()[0];
 	  Map<String, Object> source = hit.getSource();
-	  String hash = source.get(FIELD_FILE_HASH).toString();
-      Integer owner = (Integer) source.get(FIELD_OWNER_ID);
-      Long timestamp = (Long) source.get(FIELD_BACKUP_AT);
+	  String hash = source.get(IndexFields.FIELD_FILE_HASH).toString();
+      Integer owner = (Integer) source.get(IndexFields.FIELD_OWNER_ID);
+      Long timestamp = (Long) source.get(IndexFields.FIELD_BACKUP_AT);
 	  FileInfo fi = new FileInfo();
 	  fi.setFileId(owner + ":" + hash + ":" + timestamp);
-	  fi.setSource(source.get(FIELD_BACKUP_SOURCE_PLUGIN_NAME) + " (" + source.get(FIELD_BACKUP_SOURCE_IDENTIFICATION) + ")");
-	  fi.setSourceId(Long.valueOf((Integer) source.get(FIELD_BACKUP_SOURCE_ID)));
+	  fi.setSource(source.get(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_NAME) + " (" + source.get(IndexFields.FIELD_BACKUP_SOURCE_IDENTIFICATION) + ")");
+	  fi.setSourceId(Long.valueOf((Integer) source.get(IndexFields.FIELD_BACKUP_SOURCE_ID)));
 	  fi.setTimeStamp(timestamp.longValue());
-	  fi.setTitle(source.get(FIELD_FILENAME).toString());
-	  fi.setPath(source.get(FIELD_PATH).toString());
-	  fi.setSink(source.get(FIELD_BACKUP_SINK).toString());
-	  Object contentType = source.get(FIELD_CONTENT_TYPE);
+	  fi.setTitle(source.get(IndexFields.FIELD_FILENAME).toString());
+	  fi.setPath(source.get(IndexFields.FIELD_PATH).toString());
+	  fi.setSink(source.get(IndexFields.FIELD_BACKUP_SINK).toString());
+	  Object contentType = source.get(IndexFields.FIELD_CONTENT_TYPE);
 	  if (contentType != null) {
 		  fi.setType(getTypeFromMimeType(contentType.toString()));
 	  } else {
@@ -109,7 +93,7 @@ public class IndexUtils {
 	    	Map<String, Object> source = hit.getSource();
 	    	
 			StringBuilder preview = null;
-			HighlightField highlight = hit.getHighlightFields().get(IndexUtils.FIELD_FULLTEXT);
+			HighlightField highlight = hit.getHighlightFields().get(IndexFields.FIELD_FULLTEXT);
 			if (highlight != null) {
 				preview = new StringBuilder("... ");
 				for (Text fragment : highlight.fragments()) {
@@ -117,69 +101,63 @@ public class IndexUtils {
 				}
 			}	
 
-	    	String hash = source.get(FIELD_FILE_HASH).toString();
-	    	Integer owner = (Integer) source.get(FIELD_OWNER_ID);
-	    	Long timestamp = (Long) source.get(FIELD_BACKUP_AT);
+	    	String hash = source.get(IndexFields.FIELD_FILE_HASH).toString();
+	    	Integer owner = (Integer) source.get(IndexFields.FIELD_OWNER_ID);
+	    	Long timestamp = (Long) source.get(IndexFields.FIELD_BACKUP_AT);
 	    	
 	    	SearchEntry entry = new SearchEntry();
 	    	
 	    	// We're constructing a (reasonably) unique ID using owner, hash and timestamp
 	    	entry.setFileId(owner + ":" + hash + ":" + timestamp);
-	    	entry.setTitle(source.get(FIELD_FILENAME).toString());
+	    	entry.setTitle(source.get(IndexFields.FIELD_FILENAME).toString());
 	    	entry.setTimeStamp(new Date(timestamp));
 	    	
-	    	if (source.get(FIELD_BACKUP_SOURCE_ID) != null) {
-	    		entry.setDatasourceId(Long.valueOf((Integer) source.get(FIELD_BACKUP_SOURCE_ID)));
-	    		entry.setDatasource(source.get(FIELD_BACKUP_SOURCE_PLUGIN_NAME) + " (" + source.get(FIELD_BACKUP_SOURCE_IDENTIFICATION) + ")");
+	    	if (source.get(IndexFields.FIELD_BACKUP_SOURCE_ID) != null) {
+	    		entry.setDatasourceId(Long.valueOf((Integer) source.get(IndexFields.FIELD_BACKUP_SOURCE_ID)));
+	    		entry.setDatasource(source.get(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_NAME) + " (" + source.get(IndexFields.FIELD_BACKUP_SOURCE_IDENTIFICATION) + ")");
 	    	}
 	    	
-	    	if (source.get(FIELD_JOB_NAME) != null) {
-	    		entry.setJobName(source.get(FIELD_JOB_NAME).toString());
+	    	if (source.get(IndexFields.FIELD_JOB_NAME) != null) {
+	    		entry.setJobName(source.get(IndexFields.FIELD_JOB_NAME).toString());
 	    	}
 	    	
 			if (preview != null) {
 				entry.setPreviewSnippet(preview.toString().trim());
 			}
 	    	
-	    	Object contentType = source.get(FIELD_CONTENT_TYPE);
+	    	Object contentType = source.get(IndexFields.FIELD_CONTENT_TYPE);
 	    	if (contentType != null) {
 	    		entry.setType(getTypeFromMimeType(contentType.toString()));
 	    	} else {
 	    		entry.setType("other");
 	    	}
 	    	
-	    	entry.setProperty(FIELD_PATH, source.get(FIELD_PATH).toString());
+	    	entry.setProperty(IndexFields.FIELD_PATH, source.get(IndexFields.FIELD_PATH).toString());
 	    	
-            copyProperty(FIELD_BACKUP_SINK, source, entry);
+            entry.copyProperty(IndexFields.FIELD_BACKUP_SINK, source);
 	    	
-	    	entry.setProperty(FIELD_FILE_HASH, hash);
+	    	entry.setProperty(IndexFields.FIELD_FILE_HASH, hash);
 	    	
-			if (source.get(FIELD_THUMBNAIL_PATH) != null) {
+			if (source.get(IndexFields.FIELD_THUMBNAIL_PATH) != null) {
 				entry.setThumbnailUrl(THUMBNAILS_FOLDER + userName + "/" + owner + ":" + hash + ":" + timestamp);
 			}
 			
 			// Custom props
-			copyProperty("destination", source, entry);
-			copyProperty("message", source, entry);
-			copyProperty("parent", source, entry);
-			copyProperty("author", source, entry);
-			copyProperty("source", source, entry);
-			copyProperty("likes", source, entry);
-			copyProperty("tags", source, entry);
-			copyProperty("modified", source, entry);
+			entry.copyProperty("destination", source);
+			entry.copyProperty("message", source);
+			entry.copyProperty("parent", source);
+			entry.copyProperty("author", source);
+			entry.copyProperty("source", source);
+			entry.copyProperty("likes", source);
+			entry.copyProperty("tags", source);
+			entry.copyProperty("modified", source);
 			
 	    	entries.add(entry);
 	    }
 		return entries;
 	}
 
-    private static void copyProperty(String key, Map<String, Object> source, SearchEntry entry) {
-        if (source.get(key) != null) {
-        	entry.setProperty(key, source.get(key).toString());
-        }
-    }
-	
-	public static List<CountedEntry> getBySource(org.elasticsearch.action.search.SearchResponse esResponse) {		
+    public static List<CountedEntry> getBySource(org.elasticsearch.action.search.SearchResponse esResponse) {		
 		// TODO we currently group by 'list of sources' rather than source
 		return groupBySource(esResponse);
 	}
@@ -196,9 +174,9 @@ public class IndexUtils {
 		// Now where's my Scala groupBy!? *heul*
 		Map<String, Integer> groupedHits = new HashMap<>();
 		for (SearchHit hit : esResponse.getHits()) {
-			if (hit.getSource().get(FIELD_JOB_ID) != null) {
-				String backupSourcePluginName = hit.getSource().get(FIELD_BACKUP_SOURCE_PLUGIN_NAME).toString();
-				String backupSourceIdentification = hit.getSource().get(FIELD_BACKUP_SOURCE_IDENTIFICATION).toString();
+			if (hit.getSource().get(IndexFields.FIELD_JOB_ID) != null) {
+				String backupSourcePluginName = hit.getSource().get(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_NAME).toString();
+				String backupSourceIdentification = hit.getSource().get(IndexFields.FIELD_BACKUP_SOURCE_IDENTIFICATION).toString();
 				String label = backupSourcePluginName + " (" + backupSourceIdentification + ")";
 				Integer count = groupedHits.get(label);
 				if (count == null) {
@@ -224,8 +202,8 @@ public class IndexUtils {
 		Map<String, Integer> groupedHits = new HashMap<>();
 		for (SearchHit hit : esResponse.getHits()) {
 			String type;
-			if (hit.getSource().get(FIELD_CONTENT_TYPE) != null) {
-				type = getTypeFromMimeType(hit.getSource().get(FIELD_CONTENT_TYPE).toString());
+			if (hit.getSource().get(IndexFields.FIELD_CONTENT_TYPE) != null) {
+				type = getTypeFromMimeType(hit.getSource().get(IndexFields.FIELD_CONTENT_TYPE).toString());
 			} else {
 				type = "other";
 			}
@@ -252,9 +230,9 @@ public class IndexUtils {
 		// Now where's my Scala groupBy!? *heul*
 		Map<String, Integer> groupedHits = new HashMap<>();
 		for (SearchHit hit : esResponse.getHits()) {
-			if (hit.getSource().get(FIELD_JOB_ID) != null) {
-				String backupJobName = hit.getSource().get(FIELD_JOB_NAME).toString();
-				String backupTimestamp = hit.getSource().get(FIELD_BACKUP_AT).toString();
+			if (hit.getSource().get(IndexFields.FIELD_JOB_ID) != null) {
+				String backupJobName = hit.getSource().get(IndexFields.FIELD_JOB_NAME).toString();
+				String backupTimestamp = hit.getSource().get(IndexFields.FIELD_BACKUP_AT).toString();
 				String label = backupJobName + " (" + backupTimestamp + ")";
 				Integer count = groupedHits.get(label);
 				if (count == null) {
@@ -352,8 +330,8 @@ public class IndexUtils {
 				// "ProfileName"
 				profile = profile.substring(1, profile.length() - 1);
 
-				filterstr.append("(" + FIELD_BACKUP_SOURCE_PLUGIN_NAME + ":"
-						+ source + " AND " + FIELD_BACKUP_SOURCE_IDENTIFICATION
+				filterstr.append("(" + IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_NAME + ":"
+						+ source + " AND " + IndexFields.FIELD_BACKUP_SOURCE_IDENTIFICATION
 						+ ":" + profile + ") OR ");
 			}
 
@@ -376,8 +354,8 @@ public class IndexUtils {
 				// get out the job name
 				String jobname = filter.substring(0, filter.length() - 16);
 
-				filterstr.append("(" + FIELD_BACKUP_AT + ":" + timestamp + " AND "
-						+ FIELD_JOB_NAME + ":" + jobname + ") OR ");
+				filterstr.append("(" + IndexFields.FIELD_BACKUP_AT + ":" + timestamp + " AND "
+						+ IndexFields.FIELD_JOB_NAME + ":" + jobname + ") OR ");
 			}
 
 			// remove the last " OR " and close the search string for this part
@@ -391,7 +369,7 @@ public class IndexUtils {
 	public static QueryBuilder buildQuery(Long userid, String queryString,
 			Map<String, List<String>> filters) {
 		BoolQueryBuilder qBuilder = new BoolQueryBuilder();
-		qBuilder.must(QueryBuilders.matchQuery(IndexUtils.FIELD_OWNER_ID,
+		qBuilder.must(QueryBuilders.matchQuery(IndexFields.FIELD_OWNER_ID,
 				userid));
 		qBuilder.must(QueryBuilders.queryString(queryString));
 
@@ -428,19 +406,19 @@ public class IndexUtils {
 			for (String filter : filters.get("type")) {
 				if (filter.toLowerCase().equals("html")) {
 					typematches.should(QueryBuilders.matchPhraseQuery(
-							FIELD_CONTENT_TYPE, "*html*"));
+					        IndexFields.FIELD_CONTENT_TYPE, "*html*"));
 				} else if (filter.toLowerCase().equals("image")) {
 					typematches.should(QueryBuilders.matchPhraseQuery(
-							FIELD_CONTENT_TYPE, "image*"));
+					        IndexFields.FIELD_CONTENT_TYPE, "image*"));
 				} else if (filter.toLowerCase().equals("video")) {
 					typematches.should(QueryBuilders.matchPhraseQuery(
-							FIELD_CONTENT_TYPE, "video*"));
+					        IndexFields.FIELD_CONTENT_TYPE, "video*"));
 				} else if (filter.toLowerCase().equals("audio")) {
 					typematches.should(QueryBuilders.matchPhraseQuery(
-							FIELD_CONTENT_TYPE, "audio*"));
+					        IndexFields.FIELD_CONTENT_TYPE, "audio*"));
 				} else if (filter.toLowerCase().equals("text")) {
 					typematches.should(QueryBuilders.matchPhraseQuery(
-							FIELD_CONTENT_TYPE, "text*"));
+					        IndexFields.FIELD_CONTENT_TYPE, "text*"));
 				}
 			}
 		}
@@ -469,8 +447,8 @@ public class IndexUtils {
 				profile = profile.substring(1, profile.length() - 1);
 
 				BoolQueryBuilder tempbuilder = new BoolQueryBuilder();
-				tempbuilder.must(QueryBuilders.matchPhraseQuery(FIELD_BACKUP_SOURCE_PLUGIN_NAME, source));
-				tempbuilder.must(QueryBuilders.matchPhraseQuery(FIELD_BACKUP_SOURCE_IDENTIFICATION, profile));
+				tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_NAME, source));
+				tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_BACKUP_SOURCE_IDENTIFICATION, profile));
 
 				// tempbuilder1 or tempbulder2 or ...
 				sourcematches.should(tempbuilder);
@@ -497,8 +475,8 @@ public class IndexUtils {
 				String jobname = filter.substring(0, filter.length() - 16);
 
 				BoolQueryBuilder tempbuilder = new BoolQueryBuilder();
-				tempbuilder.must(QueryBuilders.matchPhraseQuery(FIELD_BACKUP_AT, timestamp));
-				tempbuilder.must(QueryBuilders.matchPhraseQuery(FIELD_JOB_NAME, jobname));
+				tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_BACKUP_AT, timestamp));
+				tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_JOB_NAME, jobname));
 
 				// tempbuilder1 or tempbulder2 or ...
 				jobmatches.should(tempbuilder);

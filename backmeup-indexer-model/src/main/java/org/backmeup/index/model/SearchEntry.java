@@ -115,4 +115,10 @@ public class SearchEntry {
         this.datasourceId = datasourceId;
     }
 
+    public void copyProperty(String key, Map<String, Object> source) {
+        if (source.get(key) != null) {
+        	setProperty(key, source.get(key).toString());
+        }
+    }
+
 }
