@@ -12,6 +12,6 @@
 
     <artifactId>backmeup-indexer-model</artifactId>
     <packaging>jar</packaging>
-    <name>Backmeup Index Data</name>
+    <name>Backmeup Index Model</name>
 
 </project>
