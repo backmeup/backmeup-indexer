@@ -1,5 +1,6 @@
 package org.backmeup.index.dal.jpa;
 
+import java.net.URL;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -21,17 +22,32 @@ public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
 	@Override
 	public RunningIndexUserConfig findConfigByUserId(Long userID) {
 		Query q = this.em.createQuery("SELECT u FROM " + TABLENAME
-				+ " u WHERE userId = :userId");
+				+ " u WHERE u.userId = :userId");
 		q.setParameter("userId", userID);
 		return executeQuerySelectFirst(q);
 	}
 
 	@Override
-	public RunningIndexUserConfig findConfigByHttpPort(int httpPort) {
-		Query q = this.em.createQuery("SELECT u FROM " + TABLENAME
-				+ " u WHERE httpPort = :httpport");
-		q.setParameter("httpport", httpPort);
-		return executeQuerySelectFirst(q);
+	public RunningIndexUserConfig findConfigByHttpPort(URL host) {
+		if ((host.getProtocol() != null) && (host.getHost() != null)
+				&& (host.getPort() > -1)) {
+
+			String url = host.getProtocol() + "://" + host.getHost();
+			Integer httpPort = host.getPort();
+
+			Query q = this.em
+					.createQuery("SELECT u FROM "
+							+ TABLENAME
+							+ " u WHERE u.httpPort = :httpport and u.hostaddress =:hostaddr");
+			System.out.println("running findConfigByHttpPort query for: "
+					+ host);
+			q.setParameter("httpport", httpPort);
+			q.setParameter("hostaddr", url);
+			return executeQuerySelectFirst(q);
+
+		} else {
+			return null;
+		}
 	}
 
 	@Override
@@ -55,7 +71,7 @@ public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
 
 	@Override
 	public List<RunningIndexUserConfig> getAllESInstanceConfigs() {
-		Query q = this.em.createQuery("SELECT * FROM " + TABLENAME);
+		Query q = this.em.createQuery("SELECT u FROM " + TABLENAME + " u");
 		List<RunningIndexUserConfig> indexConfig = q.getResultList();
 		if (indexConfig != null && indexConfig.size() > 0) {
 			return indexConfig;

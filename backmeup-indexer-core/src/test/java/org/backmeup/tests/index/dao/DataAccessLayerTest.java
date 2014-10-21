@@ -2,6 +2,9 @@ package org.backmeup.tests.index.dao;
 
 import static org.junit.Assert.assertNotNull;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.List;
 import java.util.Properties;
 
 import javax.persistence.EntityManager;
@@ -62,7 +65,7 @@ public class DataAccessLayerTest {
 	}
 
 	@Test
-	public void shouldStorestoreConfigurationAndReadFromDBByHttpPort() {
+	public void shouldStoreConfigurationAndReadFromDBByHttpPort() {
 		RunningIndexUserConfig config = createConfig();
 
 		this.entityManager.getTransaction().begin();
@@ -70,12 +73,19 @@ public class DataAccessLayerTest {
 		im.save(config);
 		this.entityManager.getTransaction().commit();
 
-		RunningIndexUserConfig found = im.findConfigByHttpPort(9999);
-		assertNotNull("config with port 9999", found);
+		URL host;
+		try {
+			host = new URL("http", "localhost", 9999, "");
+			RunningIndexUserConfig found = im.findConfigByHttpPort(host);
+			assertNotNull("config with port 9999", found);
+		} catch (MalformedURLException e) {
+			Assert.fail("Testconfiguration not properly setup");
+			e.printStackTrace();
+		}
 	}
 
 	@Test
-	public void shouldStorestoreConfigurationAndReadFromDBByUserId() {
+	public void shouldStoreConfigurationAndReadFromDBByUserId() {
 		RunningIndexUserConfig config = createConfig();
 
 		this.entityManager.getTransaction().begin();
@@ -88,8 +98,29 @@ public class DataAccessLayerTest {
 		Assert.assertEquals(config.getUserID(), found.getUserID());
 	}
 
+	@Test
+	public void shouldStorestoreConfigurationAndReadAllFromDB() {
+		RunningIndexUserConfig config = createConfig();
+
+		this.entityManager.getTransaction().begin();
+		IndexManagerDao im = this.dal.createIndexManagerDao();
+		im.save(config);
+		this.entityManager.getTransaction().commit();
+
+		List<RunningIndexUserConfig> found = im.getAllESInstanceConfigs();
+		assertNotNull(found);
+		Assert.assertTrue(found.size() > 0);
+		Assert.assertEquals(config.getUserID(), found.get(0).getUserID());
+	}
+
 	private RunningIndexUserConfig createConfig() {
 		RunningIndexUserConfig config = new RunningIndexUserConfig();
+		try {
+			config.setHostAddress(new URL("http://localhost"));
+		} catch (MalformedURLException e) {
+			Assert.fail();
+			e.printStackTrace();
+		}
 		config.setHttpPort(9999);
 		config.setTcpPort(8888);
 		config.setClusterName("testname");

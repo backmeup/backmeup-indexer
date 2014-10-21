@@ -1,5 +1,6 @@
 package org.backmeup.index.dal;
 
+import java.net.URL;
 import java.util.List;
 
 import org.backmeup.index.db.RunningIndexUserConfig;
@@ -17,7 +18,14 @@ public interface IndexManagerDao extends BaseDao<RunningIndexUserConfig> {
 
 	List<RunningIndexUserConfig> getAllESInstanceConfigs();
 
-	RunningIndexUserConfig findConfigByHttpPort(int httpPort);
+	/**
+	 * e.g. URL host = new URL("http", "localhost", 9999, "");
+	 * 
+	 * @param url
+	 *            url must contain protocol, host and httpPort
+	 * @return
+	 */
+	RunningIndexUserConfig findConfigByHttpPort(URL url);
 
 	RunningIndexUserConfig findConfigByClusterName(String clustername);
 

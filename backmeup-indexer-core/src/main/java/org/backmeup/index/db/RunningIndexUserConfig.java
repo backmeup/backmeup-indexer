@@ -1,5 +1,7 @@
 package org.backmeup.index.db;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -19,7 +21,8 @@ public class RunningIndexUserConfig {
 	// ElasticSearch information
 	private Integer tcpPort;
 	private Integer httpPort;
-	private String transportaddress;
+	// hostaddress = host.getProtocol() + "://" + host.getHost()
+	private String hostaddress;
 	private String clusterName;
 
 	// Truecrypt information
@@ -33,14 +36,15 @@ public class RunningIndexUserConfig {
 		this.timestamp = new Date();
 	}
 
-	public RunningIndexUserConfig(Long userId, Integer tcpPort,
-			Integer httpPort, String transportaddress, String clusterName,
+	public RunningIndexUserConfig(Long userId, URL hostaddress,
+			Integer tcpPort, Integer httpPort, String clusterName,
 			String mountedDrive) {
 		this.setUserID(userId);
 		this.setTcpPort(tcpPort);
 		this.setHttpPort(httpPort);
 		this.setClusterName(clusterName);
 		this.setMountedDriveLetter(mountedDrive);
+		this.setHostAddress(hostaddress);
 		this.timestamp = new Date();
 	}
 
@@ -68,12 +72,22 @@ public class RunningIndexUserConfig {
 		this.httpPort = httpPort;
 	}
 
-	public String getTransportaddress() {
-		return this.transportaddress;
+	public URL getHostAddress() {
+		try {
+			return new URL(this.hostaddress);
+		} catch (MalformedURLException e) {
+			return null;
+		}
 	}
 
-	public void setTransportaddress(String transportaddress) {
-		this.transportaddress = transportaddress;
+	public void setHostAddress(URL host) {
+		if ((host.getProtocol() != null) && (host.getHost() != null)) {
+			this.hostaddress = host.getProtocol() + "://" + host.getHost();
+		}
+		if ((host.getPort() > -1)) {
+			this.httpPort = host.getPort();
+		}
+
 	}
 
 	public String getClusterName() {
