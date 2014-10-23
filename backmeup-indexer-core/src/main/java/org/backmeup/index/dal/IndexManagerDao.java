@@ -19,6 +19,15 @@ public interface IndexManagerDao extends BaseDao<RunningIndexUserConfig> {
 	List<RunningIndexUserConfig> getAllESInstanceConfigs();
 
 	/**
+	 * Filters the list of running index data from a certain domain
+	 * 
+	 * @param url
+	 *            url must contain protocol and host, no port configuration
+	 * @return
+	 */
+	List<RunningIndexUserConfig> getAllESInstanceConfigs(URL url);
+
+	/**
 	 * e.g. URL host = new URL("http", "localhost", 9999, "");
 	 * 
 	 * @param url

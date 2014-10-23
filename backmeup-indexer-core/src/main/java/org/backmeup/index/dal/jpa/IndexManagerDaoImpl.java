@@ -80,4 +80,28 @@ public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.backmeup.index.dal.IndexManagerDao#getAllESInstanceConfigs(java.net
+	 * .URL)
+	 */
+	@Override
+	public List<RunningIndexUserConfig> getAllESInstanceConfigs(URL url) {
+		if (url != null) {
+			Query q = this.em.createQuery("SELECT u FROM " + TABLENAME
+					+ " u WHERE u.hostaddress = :instance");
+			q.setParameter("instance", url.toExternalForm());
+			List<RunningIndexUserConfig> indexConfig = q.getResultList();
+			if (indexConfig != null && indexConfig.size() > 0) {
+				return indexConfig;
+			} else {
+				return null;
+			}
+		} else {
+			return null;
+		}
+	}
+
 }

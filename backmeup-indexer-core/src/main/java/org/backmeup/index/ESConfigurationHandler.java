@@ -50,7 +50,7 @@ public class ESConfigurationHandler {
 		tokens.put("tcpport", tcpport + "");
 		tokens.put("httpport", httpport + "");
 		tokens.put("clustername", "user" + userID);
-		// check if a Troucrypt Volume has been mounted, if not use the default
+		// check if a Truecrypt Volume has been mounted, if not use the default
 		// working dir path
 		if (IndexManager.getInstance().getTCMountedVolume(userID) != null) {
 			// TODO we're having problems with the IndexManager here -

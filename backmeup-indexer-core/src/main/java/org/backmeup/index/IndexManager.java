@@ -2,19 +2,33 @@ package org.backmeup.index;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.inject.Inject;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.enterprise.context.ApplicationScoped;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 
 import org.backmeup.data.dummy.ThemisDataSink;
+import org.backmeup.index.config.AvailableESInstanceState;
 import org.backmeup.index.config.Configuration;
-import org.backmeup.index.dal.Connection;
 import org.backmeup.index.dal.DataAccessLayer;
+import org.backmeup.index.dal.IndexManagerDao;
+import org.backmeup.index.dal.jpa.DataAccessLayerImpl;
 import org.backmeup.index.db.RunningIndexUserConfig;
 import org.backmeup.index.utils.file.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+@ApplicationScoped
 public class IndexManager {
 
 	public static IndexManager getInstance() {
@@ -30,29 +44,120 @@ public class IndexManager {
 	// // keeps a userId to Port and DriveLetter mapping
 	// private HashMap<Integer, HashMap<String, String>> userPortMapping = new
 	// HashMap<>();
-	@Inject
-	protected Connection conn;
 
-	@Inject
+	private final Logger log = LoggerFactory.getLogger(getClass());
+
+	private HashMap<URL, AvailableESInstanceState> availableESInstances = new HashMap<>();
+
+	private URL defaultHost = null;
+
+	// @Inject
+	// protected Connection conn;
+
+	// @Inject
 	protected DataAccessLayer dal;
 
-	private List<RunningIndexUserConfig> indexInstances = new ArrayList<>();
+	private EntityManagerFactory entityManagerFactory;
+	private EntityManager entityManager;
+	private IndexManagerDao dao;
+
+	// private List<RunningIndexUserConfig> runningESInstances = new
+	// ArrayList<>();
 
 	private static IndexManager im = new IndexManager();
 
 	// this class is implemented as singleton
 	private IndexManager() {
+		try {
+			createEntityManager();
+			initAvailableInstances();
+
+		} catch (MalformedURLException | URISyntaxException e) {
+			this.log.error("IndexManager initialization failed " + e);
+
+		}
+	}
+
+	// ========================================================================
+
+	// CDI lifecycle methods --------------------------------------------------
+	@PostConstruct
+	public void startupIndexManager() {
+		this.log.debug("startup() IndexManager (ApplicationScoped)");
+	}
+
+	@PreDestroy
+	public void shutdownIndexManager() {
+		this.log.debug("shutdown() IndexManager (ApplicationScoped)");
+	}
+
+	// ========================================================================
+
+	private void createEntityManager() {
+		this.entityManagerFactory = Persistence
+				.createEntityManagerFactory("org.backmeup.index.jpa");
+
+		this.dal = new DataAccessLayerImpl();
+		this.entityManager = this.entityManagerFactory.createEntityManager();
+		this.dal.setEntityManager(this.entityManager);
+	}
+
+	/**
+	 * For now this information is static and only synced with running records
+	 * stored within the DB. TODO - add the option for cluster configuration in
+	 * property file - central connection to all cluster instances - lightweight
+	 * module to start/stop instances on each cluster instance
+	 * 
+	 * @throws URISyntaxException
+	 * @throws MalformedURLException
+	 */
+	private void initAvailableInstances() throws MalformedURLException,
+			URISyntaxException {
+
+		this.defaultHost = new URI("http://localhost").toURL();
+
+		List<Integer> supportedTcpPorts = new ArrayList<Integer>();
+		List<Integer> supportedHttpPorts = new ArrayList<Integer>();
+
 		// init the available port range on elasticsearch
 		// Note: @see ESConfigurationHandler.checkPortRangeAccepted - these
 		// values are currently also hardcoded there
 		// TODO reset the port range
 		for (int i = 9360; i <= 9399; i++) {
-			availableTCPPorts.add(i);
+			supportedTcpPorts.add(i);
 		}
 		for (int i = 9260; i <= 9299; i++) {
-			availableHttpPorts.add(i);
+			supportedHttpPorts.add(i);
 		}
+		AvailableESInstanceState esInstance1 = new AvailableESInstanceState(
+				supportedTcpPorts, supportedHttpPorts);
+		this.availableESInstances.put(this.defaultHost, esInstance1);
 
+		syncAvailablePortswithPortsInUseFromDB(this.defaultHost);
+	}
+
+	/**
+	 * When initializing the manager sync the available port information with
+	 * the ones already in use - this information is persisted within the DB
+	 */
+	private void syncAvailablePortswithPortsInUseFromDB(URL host) {
+
+		// get all running instances according to the DB entries
+		List<RunningIndexUserConfig> runningConfigs = this.dao
+				.getAllESInstanceConfigs(host);
+
+		// update the list of available ports for this host
+		for (RunningIndexUserConfig config : runningConfigs) {
+			if ((config.getHostAddress() != null)
+					&& (config.getHttpPort() != null))
+				if (this.availableESInstances.get(config.getHostAddress()) != null) {
+					// remove host + port from available instances
+					this.availableESInstances.get(config.getHostAddress())
+							.removeAvailableHTTPPort(config.getHttpPort());
+					this.availableESInstances.get(config.getHostAddress())
+							.removeAvailableTCPPort(config.getTcpPort());
+				}
+		}
 	}
 
 	// TODO private final Logger logger =
@@ -76,9 +181,9 @@ public class IndexManager {
 	 * @throws IllegalArgumentException
 	 *             when the TrueCrypt instance was not configured properly
 	 */
-	public void startup(int userID) throws IOException, NumberFormatException,
-			ExceptionInInitializerError, IllegalArgumentException,
-			InterruptedException {
+	public void startupInstance(int userID) throws IOException,
+			NumberFormatException, ExceptionInInitializerError,
+			IllegalArgumentException, InterruptedException {
 		// mount truecrypt container
 		// create user specific ES launch configuration (yml file)
 		// start ES instance for user
@@ -124,38 +229,56 @@ public class IndexManager {
 		File fYML = ESConfigurationHandler.createUserYMLStartupFile(userID,
 				tcpPort, httpPort);
 
+		// TODO currently only one host machine supported: localhost
 		// keep a record of this configuration
-		this.setUserPortMapping(userID, httpPort, tcpPort, tcMountedDriveLetter);
+		URI uri;
+		try {
+			uri = new URI("http", "localhost", "", "");
+
+			RunningIndexUserConfig runningConfig = new RunningIndexUserConfig(
+					Long.valueOf(userID), uri.toURL(), tcpPort, httpPort,
+					"user" + userID, tcMountedDriveLetter);
+
+			// persist the configuration
+			this.entityManager.getTransaction().begin();
+			this.dao.save(runningConfig);
+			this.entityManager.getTransaction().commit();
+
+		} catch (URISyntaxException e) {
+			// may not happen
+			this.entityManager.getTransaction().rollback();
+		}
 
 		// just of testing:
-		System.out.println("using Drive: " + this.getTCMountedVolume(userID));
+		this.log.debug("using Drive: "
+				+ this.dao.findConfigByUserId(Long.valueOf(userID))
+						.getMountedDriveLetter());
 
 		// 5) now power on elasticsearch
 		ESConfigurationHandler.startElasticSearch(userID);
-		System.out.println("started ES Instance? on port: "
-				+ getESTHttpPort(userID));
-
+		this.log.debug("started ES Instance? on host: "
+				+ getRunningIndexUserConfig(userID).getClusterName() + ":"
+				+ getRunningIndexUserConfig(userID).getHttpPort());
 		// check instance up and running
 		// import waiting index files (shared data)
 	}
 
-	public void shutdown(int userID) throws IllegalArgumentException,
+	public void shutdownInstance(int userID) throws IllegalArgumentException,
 			ExceptionInInitializerError, IOException, InterruptedException {
 		// TODO persist the index data files and write back to data store
+
+		RunningIndexUserConfig runningInstanceConfig = this.dao
+				.findConfigByUserId(Long.valueOf(userID));
 
 		// shutdown the ElasticSearch Instance
 		ESConfigurationHandler.stopElasticSearch(userID);
 
-		// release the ES ports
-		this.releaseESHttpPort(getESTHttpPort(userID));
-		this.releaseESTCPPort(getESTcpPort(userID));
-
 		// unmount the truecrypt volume
-		String driveLetter = getTCMountedVolume(userID);
+		String driveLetter = runningInstanceConfig.getMountedDriveLetter();
 		TCMountHandler.unmount(driveLetter);
 
-		// remove the port mapping to user history
-		removeUserPortMapping(userID);
+		// remove the userconfiguration from db and release the ports
+		releaseRunningInstanceMapping(userID);
 
 		// whipe the data and yml configuration file
 		deleteLocalWorkingDir(userID);
@@ -168,8 +291,8 @@ public class IndexManager {
 	 * @throws InterruptedException
 	 * @throws IOException
 	 */
-	public void cleanup() throws IOException, InterruptedException {
-		// TODO IMPLEMENT
+	public void cleanupRude() throws IOException, InterruptedException {
+		// TODO Implement as Admin method
 		// unmount all open TrueCrypt volumes
 		TCMountHandler.unmountAll();
 		// shutdown all elastic search instances
@@ -177,104 +300,45 @@ public class IndexManager {
 		// TODO delete all working directories
 	}
 
-	/**
-	 * Keeps a record which ports have been used for the ElasticSearch
-	 * configuration and which DriveLetter has been mounted with Truecrypt
-	 */
-	private void setUserPortMapping(int userID, int httpPort, int tcpPort,
-			String driveLetter) {
-		HashMap<String, String> m = new HashMap<>();
-		m.put("httpPort", httpPort + "");
-		m.put("tcpPort", tcpPort + "");
-		m.put("tcDriveLetter", driveLetter);
-		this.userPortMapping.put(userID, m);
-	}
-
-	/**
-	 * Removes the record of which ES ports and TrueCrypt volume has been used
-	 * 
-	 * @param userID
-	 */
-	private void removeUserPortMapping(int userID) {
-		if (this.userPortMapping.containsKey(userID)) {
-			this.userPortMapping.remove(userID);
-		}
-	}
-
-	public int getESTcpPort(int userID) {
-		HashMap<String, String> m = this.userPortMapping.get(userID);
-		if (m != null && m.containsKey("tcpPort")) {
-			return Integer.valueOf(m.get("tcpPort"));
-		}
-		return -1;
-	}
-
-	public int getESTHttpPort(int userID) {
-		HashMap<String, String> m = this.userPortMapping.get(userID);
-		if (m != null && m.containsKey("httpPort")) {
-			return Integer.valueOf(m.get("httpPort"));
-		}
-		return -1;
-	}
-
-	/**
-	 * Returns the mounted volume's drive letter for a given userID
-	 */
-	public String getTCMountedVolume(int userID) {
-		HashMap<String, String> m = this.userPortMapping.get(userID);
-
-		if (m != null && m.containsKey("tcDriveLetter")) {
-			// note the return value can also be null
-			return m.get("tcDriveLetter");
-		}
-		return null;
+	public RunningIndexUserConfig getRunningIndexUserConfig(int userID) {
+		return this.dao.findConfigByUserId(Long.valueOf(userID));
 	}
 
 	private int getFreeESHttpPort() {
-		int ret = -1;
-		ret = this.availableHttpPorts.get(0);
-		this.usedHttpPorts.add(ret);
-		this.availableHttpPorts.remove(0);
-		return ret;
+		// TODO Loadbalancing between the different host machines
+		return this.availableESInstances.get(this.defaultHost)
+				.useNextHTTPPort();
 	}
 
 	private int getFreeESTCPPort() {
-		int ret = -1;
-		ret = this.availableTCPPorts.get(0);
-		this.usedTCPPorts.add(ret);
-		this.availableTCPPorts.remove(0);
-		return ret;
+		// TODO Loadbalancing between the different host machines
+		return this.availableESInstances.get(this.defaultHost).useNextTCPPort();
 	}
 
-	private void releaseESHttpPort(int port) {
-		int i = this.usedHttpPorts.indexOf(port);
-		if (i != -1) {
-			this.usedHttpPorts.remove(i);
-			this.availableHttpPorts.add(port);
-		}
-	}
+	/**
+	 * Cleans up the available and used port mapping and updates the database
+	 * This method does not stop running ES and TC instances
+	 * 
+	 * @param userID
+	 */
+	private void releaseRunningInstanceMapping(int userID) {
 
-	private void releaseESTCPPort(int port) {
-		int i = this.usedTCPPorts.indexOf(port);
-		if (i != -1) {
-			this.usedTCPPorts.remove(i);
-			this.availableTCPPorts.add(port);
-		}
-	}
+		this.entityManager.getTransaction().begin();
+		RunningIndexUserConfig config = this.dao.findById(Long.valueOf(userID));
+		this.availableESInstances.get(this.defaultHost).addAvailableHTTPPort(
+				config.getHttpPort());
+		this.availableESInstances.get(this.defaultHost).addAvailableTCPPort(
+				config.getTcpPort());
 
-	private void releaseTCMountedVolume(int port) {
-		int i = this.usedHttpPorts.indexOf(port);
-		if (i != -1) {
-			this.usedHttpPorts.remove(i);
-			this.availableHttpPorts.add(port);
-		}
+		this.dao.delete(config);
+		this.entityManager.getTransaction().commit();
 	}
 
 	/**
 	 * Inits a user specific elasticsearch instance i.e. copies the container
 	 * file and registers it within the themis-datasink
 	 */
-	public void init(int userID) {
+	private void init(int userID) {
 		// TODO fix weakness currently all copied TC container files have the
 		// same default password as this cannot be changed via TC command line
 		// interface. idea: keep default password but encrypt the container file
@@ -285,8 +349,8 @@ public class IndexManager {
 									"src/main/resources/elasticsearch_userdata_template_TC_150MB.tc"),
 							userID);
 		} catch (IOException e) {
-			// TODO add log statement
-			e.printStackTrace();
+			this.log.debug("IndexManager init ES instance failed for user"
+					+ userID + " due to " + e);
 		}
 	}
 
@@ -294,7 +358,7 @@ public class IndexManager {
 	 * 
 	 * Gets the root directory (for index operations) for all users done.
 	 */
-	public static String getUserDataWorkingDirRoot() {
+	private static String getUserDataWorkingDirRoot() {
 		String s = Configuration.getProperty("index.temp.data.home.dir");
 		if (s != null && s.length() > 0 && !s.contains("\"")) {
 			File f = new File(s);

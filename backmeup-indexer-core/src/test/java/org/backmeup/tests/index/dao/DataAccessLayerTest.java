@@ -99,7 +99,7 @@ public class DataAccessLayerTest {
 	}
 
 	@Test
-	public void shouldStorestoreConfigurationAndReadAllFromDB() {
+	public void shouldStoreConfigurationAndReadAllFromDB() {
 		RunningIndexUserConfig config = createConfig();
 
 		this.entityManager.getTransaction().begin();
@@ -111,6 +111,29 @@ public class DataAccessLayerTest {
 		assertNotNull(found);
 		Assert.assertTrue(found.size() > 0);
 		Assert.assertEquals(config.getUserID(), found.get(0).getUserID());
+	}
+
+	@Test
+	public void shouldFilterConfigurationByHostAddress() {
+		RunningIndexUserConfig config = createConfig();
+
+		this.entityManager.getTransaction().begin();
+		IndexManagerDao im = this.dal.createIndexManagerDao();
+		im.save(config);
+		this.entityManager.getTransaction().commit();
+
+		List<RunningIndexUserConfig> found;
+		try {
+			found = im.getAllESInstanceConfigs(new URL("http://localhost"));
+			assertNotNull(found);
+			Assert.assertTrue(found.size() > 0);
+			Assert.assertEquals(config.getUserID(), found.get(0).getUserID());
+			found = im.getAllESInstanceConfigs(new URL("http://localhost2"));
+			Assert.assertNull(found);
+
+		} catch (MalformedURLException e) {
+			Assert.fail("Malformed Instance request");
+		}
 	}
 
 	private RunningIndexUserConfig createConfig() {
