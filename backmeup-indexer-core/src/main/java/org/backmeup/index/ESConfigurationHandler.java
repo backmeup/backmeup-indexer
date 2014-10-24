@@ -41,9 +41,10 @@ public class ESConfigurationHandler {
 	 *            accepted port range from 9200 to 9299
 	 * @returns file pointer to the created configuration file
 	 */
-	public static File createUserYMLStartupFile(int userID, int tcpport,
-			int httpport, String mountedTCVolume) throws IOException,
-			ExceptionInInitializerError, NumberFormatException {
+	public static File createUserYMLStartupFile(int userID, URL host,
+			int tcpport, int httpport, String mountedTCVolume)
+			throws IOException, ExceptionInInitializerError,
+			NumberFormatException {
 
 		checkPortRangeAccepted(tcpport, httpport);
 
@@ -52,6 +53,7 @@ public class ESConfigurationHandler {
 		tokens.put("tcpport", tcpport + "");
 		tokens.put("httpport", httpport + "");
 		tokens.put("clustername", "user" + userID);
+		tokens.put("marvelagent", host + ":" + httpport + "");
 		// check if a Truecrypt Volume has been mounted, if not use the default
 		// working dir path
 		if (mountedTCVolume != null) {

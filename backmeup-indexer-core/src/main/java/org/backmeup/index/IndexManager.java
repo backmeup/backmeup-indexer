@@ -225,8 +225,8 @@ public class IndexManager {
 
 		// this file contains the user specific port configuration, data and log
 		// location, etc.
-		ESConfigurationHandler.createUserYMLStartupFile(userID, tcpPort,
-				httpPort, tcMountedDriveLetter);
+		ESConfigurationHandler.createUserYMLStartupFile(userID,
+				this.defaultHost, tcpPort, httpPort, tcMountedDriveLetter);
 
 		// TODO currently only one host machine supported: localhost
 		// keep a record of this configuration
