@@ -30,7 +30,8 @@ public class ESConfigurationHandlerTest {
 	@Test
 	public void testNonSupportedPortRange() {
 		try {
-			ESConfigurationHandler.createUserYMLStartupFile(100, 9210, 9310);
+			ESConfigurationHandler.createUserYMLStartupFile(100, 9210, 9310,
+					null);
 			Assert.fail("This code block should not be reached");
 		} catch (NumberFormatException e) {
 			Assert.assertTrue(
@@ -45,7 +46,7 @@ public class ESConfigurationHandlerTest {
 	public void testReplaceTokens() {
 		try {
 			File f = ESConfigurationHandler.createUserYMLStartupFile(100, 9310,
-					9210);
+					9210, null);
 
 			boolean bClusterName = false;
 			boolean bTCPPort = false;

@@ -61,9 +61,6 @@ public class IndexManager {
 	private EntityManager entityManager;
 	private IndexManagerDao dao;
 
-	// private List<RunningIndexUserConfig> runningESInstances = new
-	// ArrayList<>();
-
 	private static IndexManager im = new IndexManager();
 
 	// this class is implemented as singleton
@@ -89,6 +86,7 @@ public class IndexManager {
 	@PreDestroy
 	public void shutdownIndexManager() {
 		this.log.debug("shutdown() IndexManager (ApplicationScoped)");
+		this.entityManagerFactory.close();
 	}
 
 	// ========================================================================
@@ -100,6 +98,7 @@ public class IndexManager {
 		this.dal = new DataAccessLayerImpl();
 		this.entityManager = this.entityManagerFactory.createEntityManager();
 		this.dal.setEntityManager(this.entityManager);
+		this.dao = this.dal.createIndexManagerDao();
 	}
 
 	/**
@@ -226,8 +225,8 @@ public class IndexManager {
 
 		// this file contains the user specific port configuration, data and log
 		// location, etc.
-		File fYML = ESConfigurationHandler.createUserYMLStartupFile(userID,
-				tcpPort, httpPort);
+		ESConfigurationHandler.createUserYMLStartupFile(userID, tcpPort,
+				httpPort, tcMountedDriveLetter);
 
 		// TODO currently only one host machine supported: localhost
 		// keep a record of this configuration
@@ -252,7 +251,7 @@ public class IndexManager {
 		// just of testing:
 		this.log.debug("using Drive: "
 				+ this.dao.findConfigByUserId(Long.valueOf(userID))
-						.getMountedDriveLetter());
+						.getMountedTCDriveLetter());
 
 		// 5) now power on elasticsearch
 		ESConfigurationHandler.startElasticSearch(userID);
@@ -274,7 +273,7 @@ public class IndexManager {
 		ESConfigurationHandler.stopElasticSearch(userID);
 
 		// unmount the truecrypt volume
-		String driveLetter = runningInstanceConfig.getMountedDriveLetter();
+		String driveLetter = runningInstanceConfig.getMountedTCDriveLetter();
 		TCMountHandler.unmount(driveLetter);
 
 		// remove the userconfiguration from db and release the ports
@@ -402,6 +401,18 @@ public class IndexManager {
 			FileUtils.deleteDirectory(f);
 		}
 
+	}
+
+	/**
+	 * required for testing purposes to inject a different db configuration
+	 * 
+	 * @param em
+	 */
+	public void setEntityManager(EntityManager em) {
+		this.entityManager = em;
+		this.dal = new DataAccessLayerImpl();
+		this.dal.setEntityManager(this.entityManager);
+		this.dao = this.dal.createIndexManagerDao();
 	}
 
 }

@@ -48,7 +48,7 @@ public class RunningIndexUserConfig {
 		this.timestamp = new Date();
 	}
 
-	public String getMountedDriveLetter() {
+	public String getMountedTCDriveLetter() {
 		return this.mountedDriveLetter;
 	}
 

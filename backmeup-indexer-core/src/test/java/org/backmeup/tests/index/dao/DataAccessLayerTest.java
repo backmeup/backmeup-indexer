@@ -61,6 +61,7 @@ public class DataAccessLayerTest {
 
 	@After
 	public void closeEntityManager() {
+		this.entityManager.close();
 		this.entityManagerFactory.close();
 	}
 
@@ -129,7 +130,8 @@ public class DataAccessLayerTest {
 			Assert.assertTrue(found.size() > 0);
 			Assert.assertEquals(config.getUserID(), found.get(0).getUserID());
 			found = im.getAllESInstanceConfigs(new URL("http://localhost2"));
-			Assert.assertNull(found);
+			Assert.assertNotNull(found);
+			Assert.assertTrue(found.size() == 0);
 
 		} catch (MalformedURLException e) {
 			Assert.fail("Malformed Instance request");

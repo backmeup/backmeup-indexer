@@ -1,6 +1,7 @@
 package org.backmeup.index.dal.jpa;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -76,7 +77,7 @@ public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
 		if (indexConfig != null && indexConfig.size() > 0) {
 			return indexConfig;
 		} else {
-			return null;
+			return new ArrayList<RunningIndexUserConfig>();
 		}
 	}
 
@@ -97,10 +98,10 @@ public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
 			if (indexConfig != null && indexConfig.size() > 0) {
 				return indexConfig;
 			} else {
-				return null;
+				return new ArrayList<RunningIndexUserConfig>();
 			}
 		} else {
-			return null;
+			return new ArrayList<RunningIndexUserConfig>();
 		}
 	}
 

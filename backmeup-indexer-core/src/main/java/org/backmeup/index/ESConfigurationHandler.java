@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -15,6 +16,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.backmeup.index.config.Configuration;
+import org.backmeup.index.db.RunningIndexUserConfig;
 import org.backmeup.index.utils.tokenreader.MapTokenResolver;
 import org.backmeup.index.utils.tokenreader.TokenReplaceReader;
 
@@ -40,8 +42,8 @@ public class ESConfigurationHandler {
 	 * @returns file pointer to the created configuration file
 	 */
 	public static File createUserYMLStartupFile(int userID, int tcpport,
-			int httpport) throws IOException, ExceptionInInitializerError,
-			NumberFormatException {
+			int httpport, String mountedTCVolume) throws IOException,
+			ExceptionInInitializerError, NumberFormatException {
 
 		checkPortRangeAccepted(tcpport, httpport);
 
@@ -52,14 +54,12 @@ public class ESConfigurationHandler {
 		tokens.put("clustername", "user" + userID);
 		// check if a Truecrypt Volume has been mounted, if not use the default
 		// working dir path
-		if (IndexManager.getInstance().getTCMountedVolume(userID) != null) {
+		if (mountedTCVolume != null) {
 			// TODO we're having problems with the IndexManager here -
 			// .getTCMountedVolume(userID) returns null here when it shouldn't
 			System.out.println("creating data + log on mounted TC Volume");
-			tokens.put("pathtologs", IndexManager.getInstance()
-					.getTCMountedVolume(userID) + "/index/index-logs");
-			tokens.put("pathtodata", IndexManager.getInstance()
-					.getTCMountedVolume(userID) + "/index/index-data");
+			tokens.put("pathtologs", mountedTCVolume + "/index/index-logs");
+			tokens.put("pathtodata", mountedTCVolume + "/index/index-data");
 		} else {
 			System.out.println("creating data + log on standard Volume");
 			tokens.put("pathtologs", IndexManager.getUserDataWorkingDir(userID)
@@ -133,10 +133,10 @@ public class ESConfigurationHandler {
 	public static void stopElasticSearch(int userID)
 			throws ClientProtocolException, IOException {
 		// TODO need to implement. get Process and call quit.
-		int httpPort = IndexManager.getInstance().getESTHttpPort(userID);
-		// TODO change server host - pick it up from config or determine it
-		HttpGet shutdownRequest = new HttpGet("http://localhost:" + httpPort
-				+ "/_shutdown");
+		RunningIndexUserConfig config = IndexManager.getInstance()
+				.getRunningIndexUserConfig(userID);
+		HttpGet shutdownRequest = new HttpGet(config.getHostAddress() + ":"
+				+ config.getHttpPort() + "/_shutdown");
 		shutdownElasticSearch(shutdownRequest);
 	}
 
@@ -166,22 +166,29 @@ public class ESConfigurationHandler {
 		}
 	}
 
-	public static boolean isElasticSearchInstanceRunning(int httpPort)
+	public static boolean isElasticSearchInstanceRunning(URL host, int httpPort)
 			throws IOException {
 
-		DefaultHttpClient httpClient = new DefaultHttpClient();
-		HttpGet healthyRequest = new HttpGet("http://localhost:" + httpPort
-				+ "/_cluster/health?pretty=true");
-		HttpResponse response;
-		System.out.println("calling: " + healthyRequest);
+		if ((host.getProtocol() != null) && (host.getHost() != null)
+				&& (httpPort > -1)) {
+			DefaultHttpClient httpClient = new DefaultHttpClient();
+			HttpGet healthyRequest = new HttpGet(host.getProtocol() + "://"
+					+ host.getHost() + ":" + httpPort
+					+ "/_cluster/health?pretty=true");
 
-		response = httpClient.execute(healthyRequest);
-		System.out.println(response.toString());
+			HttpResponse response;
+			System.out.println("calling: " + healthyRequest);
 
-		if (response.getStatusLine().getStatusCode() == 200) {
-			return true;
+			response = httpClient.execute(healthyRequest);
+			System.out.println(response.toString());
+
+			if (response.getStatusLine().getStatusCode() == 200) {
+				return true;
+			}
+			return false;
 		}
-		return false;
+		throw new IOException("specified host: " + host + " and port: "
+				+ httpPort + " may not be null");
 	}
 
 	public static String getElasticSearchExecutable()
