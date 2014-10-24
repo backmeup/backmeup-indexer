@@ -14,6 +14,7 @@ import java.util.Random;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.backmeup.index.config.Configuration;
 import org.backmeup.index.db.RunningIndexUserConfig;
@@ -60,8 +61,10 @@ public class ESConfigurationHandler {
 			// TODO we're having problems with the IndexManager here -
 			// .getTCMountedVolume(userID) returns null here when it shouldn't
 			System.out.println("creating data + log on mounted TC Volume");
-			tokens.put("pathtologs", mountedTCVolume + "/index/index-logs");
-			tokens.put("pathtodata", mountedTCVolume + "/index/index-data");
+			tokens.put("pathtologs", mountedTCVolume + ":"
+					+ "/index/index-logs");
+			tokens.put("pathtodata", mountedTCVolume + ":"
+					+ "/index/index-data");
 		} else {
 			System.out.println("creating data + log on standard Volume");
 			tokens.put("pathtologs", IndexManager.getUserDataWorkingDir(userID)
@@ -137,17 +140,17 @@ public class ESConfigurationHandler {
 		// TODO need to implement. get Process and call quit.
 		RunningIndexUserConfig config = IndexManager.getInstance()
 				.getRunningIndexUserConfig(userID);
-		HttpGet shutdownRequest = new HttpGet(config.getHostAddress() + ":"
+		HttpPost shutdownRequest = new HttpPost(config.getHostAddress() + ":"
 				+ config.getHttpPort() + "/_shutdown");
 		shutdownElasticSearch(shutdownRequest);
 	}
 
-	private static void shutdownElasticSearch(HttpGet shutdownRequest)
+	private static void shutdownElasticSearch(HttpPost shutdownRequest)
 			throws IOException {
 		DefaultHttpClient httpClient = new DefaultHttpClient();
 		System.out.println("Issuing shutdown request: " + shutdownRequest);
 		HttpResponse response = httpClient.execute(shutdownRequest);
-		if (response.getStatusLine().getStatusCode() != 201) {
+		if (response.getStatusLine().getStatusCode() != 200) {
 			throw new IOException("ES shutdown command failed, statuscode:"
 					+ response.getStatusLine().getStatusCode());
 		}
@@ -159,7 +162,7 @@ public class ESConfigurationHandler {
 	public static void stopAll() {
 		// iterate over the range of all possible ports
 		for (int i = HTTPPORT_MIN; i <= HTTPPORT_MAX; i++) {
-			HttpGet shutdownRequest = new HttpGet("http://localhost:" + i
+			HttpPost shutdownRequest = new HttpPost("http://localhost:" + i
 					+ "/_shutdown");
 			try {
 				shutdownElasticSearch(shutdownRequest);

@@ -49,13 +49,13 @@ public class IndexManagerTest {
 		// IndexManager.getInstance().shutdown(999992);
 
 		closeEntityManager();
-		this.indexManager = IndexManager.getInstance();
-		this.indexManager.setEntityManager(this.entityManager);
 	}
 
 	@Before
 	public void before() {
 		createEntityManager();
+		this.indexManager = IndexManager.getInstance();
+		this.indexManager.setEntityManager(this.entityManager);
 	}
 
 	@AfterClass
@@ -63,13 +63,13 @@ public class IndexManagerTest {
 		// ESConfigurationHandler.stopAll();
 	}
 
-	private void createEntityManager() {
+	public void createEntityManager() {
 		this.entityManagerFactory = Persistence.createEntityManagerFactory(
 				"org.backmeup.index.jpa", overwrittenJPAProps());
 		this.entityManager = this.entityManagerFactory.createEntityManager();
 	}
 
-	private Properties overwrittenJPAProps() {
+	public Properties overwrittenJPAProps() {
 		Properties overwrittenJPAProps = new Properties();
 
 		overwrittenJPAProps.setProperty("javax.persistence.jdbc.driver",
@@ -93,7 +93,6 @@ public class IndexManagerTest {
 	}
 
 	@Test
-	@Ignore
 	public void testESandTCLaunchTest() {
 		try {
 			this.indexManager.startupInstance(999992);
@@ -108,15 +107,25 @@ public class IndexManagerTest {
 					httpPort > -1);
 			System.out.println("user 999992 on port: " + httpPort
 					+ " and TC volume: " + drive);
-			// TODO check instance up and running
+			// check instance up and running
+			Assert.assertTrue(
+					"ES Instance is not running ",
+					ESConfigurationHandler.isElasticSearchInstanceRunning(
+							conf.getHostAddress(), httpPort));
 		} catch (ExceptionInInitializerError | IllegalArgumentException
 				| IOException | InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			fail("Should not fail when properly configured" + e);
+		} finally {
+			try {
+				this.indexManager.shutdownInstance(999992);
+			} catch (IllegalArgumentException | ExceptionInInitializerError
+					| IOException | InterruptedException e) {
+				System.out
+						.println("Error shutting down instance for userID 999992");
+			}
 		}
-		// TODO need to check if the instance is up and running
-		fail("Not yet implemented");
 	}
 
 	@Test
@@ -202,6 +211,7 @@ public class IndexManagerTest {
 	}
 
 	@Test
+	@Ignore
 	public void testCreateIndexElementViaHttpClient() {
 		try {
 			IndexManager indexManager = IndexManager.getInstance();
@@ -268,6 +278,7 @@ public class IndexManagerTest {
 	}
 
 	@Test
+	@Ignore
 	public void testShutdown() {
 		// test if the shutdown and isRunning implementation is properly working
 		int userID = 999993;

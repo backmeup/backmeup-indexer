@@ -26,7 +26,8 @@ public class AvailableESInstanceState {
 
 	public void removeAvailableTCPPort(int i) {
 		if (this.availableTCPPorts.contains(i)) {
-			this.availableTCPPorts.remove(i);
+			int pos = this.availableTCPPorts.indexOf(i);
+			this.availableTCPPorts.remove(pos);
 		}
 	}
 
@@ -38,7 +39,8 @@ public class AvailableESInstanceState {
 
 	public void removeAvailableHTTPPort(int i) {
 		if (this.availableHttpPorts.contains(i)) {
-			this.availableHttpPorts.remove(i);
+			int pos = this.availableHttpPorts.indexOf(i);
+			this.availableHttpPorts.remove(pos);
 		}
 	}
 
