@@ -89,6 +89,10 @@ cluster.name: ${clustername}
 # to disable it, set the following:
 #node.max_local_storage_nodes: 1
 
+#marvel plugin config e.g. 
+#marvel.agent.exporter.es.hosts: localhost:9261
+marvel.agent.exporter.es.hosts: ${marvelagent}
+
 
 #################################### Index ####################################
 

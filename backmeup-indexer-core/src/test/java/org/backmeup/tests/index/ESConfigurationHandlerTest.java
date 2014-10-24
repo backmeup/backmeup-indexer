@@ -5,13 +5,28 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import org.backmeup.index.ESConfigurationHandler;
 import org.backmeup.index.config.Configuration;
+import org.backmeup.index.utils.file.FileUtils;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class ESConfigurationHandlerTest {
+
+	URL host;
+
+	@Before
+	public void before() {
+		try {
+			this.host = new URL("http://localhost");
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+	}
 
 	@Test
 	public void testESHomeDirSet() {
@@ -30,7 +45,8 @@ public class ESConfigurationHandlerTest {
 	@Test
 	public void testNonSupportedPortRange() {
 		try {
-			ESConfigurationHandler.createUserYMLStartupFile(100, 9210, 9310);
+			ESConfigurationHandler.createUserYMLStartupFile(100, this.host,
+					9210, 9310, null);
 			Assert.fail("This code block should not be reached");
 		} catch (NumberFormatException e) {
 			Assert.assertTrue(
@@ -44,8 +60,8 @@ public class ESConfigurationHandlerTest {
 	@Test
 	public void testReplaceTokens() {
 		try {
-			File f = ESConfigurationHandler.createUserYMLStartupFile(100, 9310,
-					9210);
+			File f = ESConfigurationHandler.createUserYMLStartupFile(100,
+					this.host, 9310, 9210, null);
 
 			boolean bClusterName = false;
 			boolean bTCPPort = false;
@@ -74,6 +90,8 @@ public class ESConfigurationHandlerTest {
 					bClusterName);
 			Assert.assertEquals("TCP Port Config missing", true, bTCPPort);
 			Assert.assertEquals("HTTPPort Config missing", true, bHTTPPort);
+
+			FileUtils.deleteDirectory(f.getParentFile().getParentFile());
 
 		} catch (ExceptionInInitializerError e) {
 			Assert.fail("Should never happen for a properly configured instance "
