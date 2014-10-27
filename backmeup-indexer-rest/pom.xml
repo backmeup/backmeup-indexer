@@ -74,4 +74,40 @@
         </dependency>
 	</dependencies>
 
+    <profiles>
+        <profile>
+            <id>integration-tests</id>
+            <activation>
+                <property>
+                    <name>integrationTests</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.tomcat.maven</groupId>
+                        <artifactId>tomcat7-maven-plugin</artifactId>
+                        <version>${version.org.apache.tomcat.maven}</version>
+                        <configuration>
+                            <url>${config.tomcat.manager.url}</url>
+                            <server>${config.tomcat.authentication.id}</server>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>tomcat-deploy</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>deploy</goal>
+                                </goals>
+                                <configuration>
+                                    <update>true</update>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 </project>
