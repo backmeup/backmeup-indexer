@@ -1,6 +1,8 @@
 package org.backmeup.index.client;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,6 +68,39 @@ public class ElasticSearchIndexClient implements IndexClient {
     }
 	
     @Override
+    public SearchResultAccumulator queryBackup(String query, String source, String type, String job, String username) {
+        Map<String, List<String>> filters = createFiltersFor(source, type, job);
+        return queryBackup(query, filters, username);
+    }
+
+    private Map<String, List<String>> createFiltersFor(String source, String type, String job) {
+        Map<String, List<String>> filters = null;
+
+        if (source != null || type != null || job != null) {
+            filters = new HashMap<>();
+        }
+
+        if (source != null) {
+            List<String> filtervalue = new LinkedList<>();
+            filtervalue.add(source);
+            filters.put("source", filtervalue);
+        }
+
+        if (type != null) {
+            List<String> filtervalue = new LinkedList<>();
+            filtervalue.add(type);
+            filters.put("type", filtervalue);
+        }
+
+        if (job != null) {
+            List<String> filtervalue = new LinkedList<>();
+            filtervalue.add(job);
+            filters.put("job", filtervalue);
+        }
+
+        return filters;
+    }
+
     public SearchResultAccumulator queryBackup(String query, Map<String, List<String>> filters, String username) {
         SearchResponse esResponse = queryBackup(query, filters);
         SearchResultAccumulator result = new SearchResultAccumulator();
