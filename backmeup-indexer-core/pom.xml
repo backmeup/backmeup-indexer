@@ -26,13 +26,6 @@
 			<artifactId>slf4j-api</artifactId>
 			<version>${version.org.slf4j}</version>
 		</dependency>
-
-<!-- 		<dependency> -->
-<!--   			<groupId>com.rabbitmq</groupId> -->
-<!--   			<artifactId>amqp-client</artifactId> -->
-<!--   			<version>${version.com.rabbitmq}</version> -->
-<!-- 		</dependency> -->
-
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
@@ -51,12 +44,7 @@
       		<version>${version.javax.enterprise.cdi-api}</version>
     	</dependency>
 		
-<!-- 		<dependency> -->
-<!--       		<groupId>org.apache.felix</groupId> -->
-<!--       		<artifactId>org.apache.felix.framework</artifactId> -->
-<!--       		<version>${version.org.apache.felix}</version> -->
-<!--     	</dependency> -->
-
+        <!-- unused? -->
 		<dependency>
 			<groupId>org.codehaus.jackson</groupId>
 			<artifactId>jackson-mapper-asl</artifactId>
@@ -89,7 +77,6 @@
 		</dependency>
 	</dependencies>
 
-
     <build>
         <plugins>
             <plugin>
@@ -97,40 +84,10 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${version.org.apache.maven.plugins.maven-surefire-plugin}</version>
                 <configuration>
+                    <!-- tests need TrueCrypt Linux installation, skip by default -->
                     <skipTests>true</skipTests>
                 </configuration>
             </plugin>
-            <plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-dependency-plugin</artifactId>
-				<version>${version.org.apache.maven.plugins.maven-dependency-plugin}</version>
-				<executions>
-					<execution>
-						<id>copy-packaged</id>
-						<phase>package</phase>
-						<goals>
-							<goal>copy</goal>
-						</goals>
-						<configuration>
-							<artifactItems>
-								<artifactItem>
-									<groupId>${project.groupId}</groupId>
-									<artifactId>${project.artifactId}</artifactId>
-									<version>${project.version}</version>
-									<type>${project.packaging}</type>
-								</artifactItem>
-								<artifactItem>
-									<groupId>javax.persistence</groupId>
-    								<artifactId>com.springsource.javax.persistence</artifactId>
-    								<version>2.0.0.Beta1</version>
-									<type>${project.packaging}</type>
-								</artifactItem>
-							</artifactItems>
-							<outputDirectory>${config.localBuildArtefactDirectory}</outputDirectory>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
         </plugins>
     </build>
 
