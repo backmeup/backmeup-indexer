@@ -3,6 +3,7 @@ package org.backmeup.index.rest.resources;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -14,13 +15,18 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.backmeup.index.client.IndexClient;
+import org.backmeup.index.client.IndexDocument;
 import org.backmeup.index.model.CountedEntry;
 import org.backmeup.index.model.SearchEntry;
 import org.backmeup.index.model.SearchResultAccumulator;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 public class IndexTest {
 
@@ -28,20 +34,21 @@ public class IndexTest {
 
     @Rule
     public final EmbeddedRestServer server = new EmbeddedRestServer(IndexWithMockedFactory.class);
-    private final String HOST = server.host;
-    private final int PORT = server.port;
 
-    private HttpClient client = HttpClientBuilder.create().build();
+    private final String baseUrl = server.host + server.port + "/index/" + USER;
+    private final HttpClient httpClient = HttpClientBuilder.create().build();
+
+    private static IndexClient indexClient;
 
     public static class IndexWithMockedFactory extends Index {
         @Override
         protected IndexClient getIndexClient(Long userId) {
             assertEquals(USER, userId);
 
-            IndexClient client = mock(IndexClient.class);
+            indexClient = mock(IndexClient.class);
             SearchResultAccumulator sr = oneFile();
-            when(client.queryBackup("find_me", null, null, null, "peter")).thenReturn(sr);
-            return client;
+            when(indexClient.queryBackup("find_me", null, null, null, "peter")).thenReturn(sr);
+            return indexClient;
         }
     }
 
@@ -57,15 +64,15 @@ public class IndexTest {
 
     @Test
     public void shouldGetSearchResultForUserAndQuery() throws IOException {
-        HttpGet method = new HttpGet(HOST + PORT + "/index/" + USER + "?query=find_me&username=peter");
+        HttpGet method = new HttpGet(baseUrl + "?query=find_me&username=peter");
 
-        HttpResponse response = client.execute(method);
+        HttpResponse response = httpClient.execute(method);
 
         assertStatusCode(200, response);
 
         HttpEntity entity = response.getEntity();
         String body = IOUtils.toString(entity.getContent());
-        System.out.println(body);
+        // System.out.println(body);
         assertTrue(body.indexOf("\"byJob\":[{\"title\":\"first Job\",\"count\":1},{\"title\":\"next Job\",\"count\":1}]") >= 0);
         assertTrue(body.indexOf("\"byType\":[{\"title\":\"Type\",\"count\":3}]") >= 0);
         assertTrue(body.indexOf("\"bySource\":[{\"title\":\"Dropbox\",\"count\":2},{\"title\":\"Facebook\",\"count\":2}]") >= 0);
@@ -74,11 +81,28 @@ public class IndexTest {
 
     @Test
     public void shouldGetBadRequestForMissingQuery() throws IOException {
-        HttpGet method = new HttpGet(HOST + PORT + "/index/" + USER + "?username=peter");
-        
-        HttpResponse response = client.execute(method);
-        
+        HttpGet method = new HttpGet(baseUrl + "?username=peter");
+
+        HttpResponse response = httpClient.execute(method);
+
         assertStatusCode(400, response);
+    }
+
+    @Test
+    public void shouldIndexDocument() throws IOException {
+        HttpPost method = new HttpPost(baseUrl);
+
+        String jsonDocument = "{\"fields\":{ \"name\":\"Peter\", \"size\":42}, \"largeFields\":{}}";
+        method.setEntity(new StringEntity(jsonDocument, ContentType.APPLICATION_JSON));
+        HttpResponse response = httpClient.execute(method);
+
+        assertStatusCode(201, response);
+
+        ArgumentCaptor<IndexDocument> argumentCaptor = ArgumentCaptor.forClass(IndexDocument.class);
+        verify(indexClient).index(argumentCaptor.capture());
+        IndexDocument document = argumentCaptor.getValue();
+        assertEquals("Peter", document.getFields().get("name"));
+        assertEquals(Integer.valueOf(42), document.getFields().get("size"));
     }
 
     private void assertStatusCode(int expectedStatus, HttpResponse response) {
@@ -86,29 +110,3 @@ public class IndexTest {
         assertEquals(expectedStatus, responseCode);
     }
 }
-
-//index/{userid}/
-//
-//GET
-//index/{userid}/files/?job=id
-//    Set<FileItem> searchAllFileItemsForJob(Long jobId);
-//
-//GET
-//index/{userid}/files/{fileid}/info
-//    FileInfo getFileInfoForFile(String fileId);
-//
-//GET
-//index/{userid}/files/{fileid}/thumbnail
-//    String getThumbnailPathForFile(String fileId);
-//
-//DELETE
-//    void deleteRecordsForUser();
-//
-//DELETE
-//index/{userid}/?job=id&timestamp=tsmp
-//    void deleteRecordsForJobAndTimestamp(Long jobId, Long timestamp);
-//
-//PUT/POST
-//index/
-//    void index(IndexDocument document) throws IOException;
-//
