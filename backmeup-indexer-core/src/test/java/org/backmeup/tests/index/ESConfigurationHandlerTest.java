@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -58,47 +57,37 @@ public class ESConfigurationHandlerTest {
 	}
 
 	@Test
-	public void testReplaceTokens() {
-		try {
-			File f = ESConfigurationHandler.createUserYMLStartupFile(100,
-					this.host, 9310, 9210, null);
+	public void testReplaceTokens() throws IOException {
+		File f = ESConfigurationHandler.createUserYMLStartupFile(100,
+				this.host, 9310, 9210, null);
 
-			boolean bClusterName = false;
-			boolean bTCPPort = false;
-			boolean bHTTPPort = false;
+		boolean bClusterName = false;
+		boolean bTCPPort = false;
+		boolean bHTTPPort = false;
 
-			Reader in = new FileReader(f);
-			BufferedReader br = new BufferedReader(in);
+		try (BufferedReader br = new BufferedReader(new FileReader(f))) {
 
-			String line;
-			while ((line = br.readLine()) != null) {
-				if (line.contains("cluster.name: user" + 100)) {
-					bClusterName = true;
-				}
-				if (line.contains("transport.tcp.port: 9310")) {
-					bTCPPort = true;
-				}
-				if (line.contains("http.port: 9210")) {
-					bHTTPPort = true;
-				}
-			}
-			in.close();
-
-			// check if the new user specific configuration file was properly
-			// written
-			Assert.assertEquals("Clustername Config missing", true,
-					bClusterName);
-			Assert.assertEquals("TCP Port Config missing", true, bTCPPort);
-			Assert.assertEquals("HTTPPort Config missing", true, bHTTPPort);
-
-			FileUtils.deleteDirectory(f.getParentFile().getParentFile());
-
-		} catch (ExceptionInInitializerError e) {
-			Assert.fail("Should never happen for a properly configured instance "
-					+ e);
-		} catch (IOException e) {
-			Assert.fail("Should never happen for a properly configured instance "
-					+ e);
+		    String line;
+		    while ((line = br.readLine()) != null) {
+		        if (line.contains("cluster.name: user" + 100)) {
+		            bClusterName = true;
+		        }
+		        if (line.contains("transport.tcp.port: 9310")) {
+		            bTCPPort = true;
+		        }
+		        if (line.contains("http.port: 9210")) {
+		            bHTTPPort = true;
+		        }
+		    }
 		}
+
+		// check if the new user specific configuration file was properly
+		// written
+		Assert.assertEquals("Clustername Config missing", true,
+				bClusterName);
+		Assert.assertEquals("TCP Port Config missing", true, bTCPPort);
+		Assert.assertEquals("HTTPPort Config missing", true, bHTTPPort);
+
+		FileUtils.deleteDirectory(f.getParentFile().getParentFile());
 	}
 }

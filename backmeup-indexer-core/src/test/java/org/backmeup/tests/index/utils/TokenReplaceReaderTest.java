@@ -1,7 +1,5 @@
 package org.backmeup.tests.index.utils;
 
-import static org.junit.Assert.fail;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -27,21 +25,18 @@ public class TokenReplaceReaderTest {
 		Reader source = new StringReader(
 				"1234567890${token1}abcdefg${token2}XYZ$000");
 
-		Reader reader = new TokenReplaceReader(source, resolver);
+		try (Reader reader = new TokenReplaceReader(source, resolver)) {
+		    
+		    String result = "";
+		    String expresult = "1234567890value1abcdefgJJ ROCKS!!!XYZ$000";
 
-		String result = "";
-		String expresult = "1234567890value1abcdefgJJ ROCKS!!!XYZ$000";
-		try {
-			int data = reader.read();
-			while (data != -1) {
-				result += (char) data;
-				data = reader.read();
-			}
-			Assert.assertEquals(result, expresult);
-		} catch (IOException e) {
-			fail("unexpected behaviour");
-		} finally {
-			reader.close();
+	        int data = reader.read();
+	        while (data != -1) {
+	            result += (char) data;
+	            data = reader.read();
+	        }
+	        Assert.assertEquals(result, expresult);
 		}
+
 	}
 }
