@@ -46,9 +46,9 @@ public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
 			q.setParameter("hostaddr", url);
 			return executeQuerySelectFirst(q);
 
-		} else {
-			return null;
-		}
+		} 
+			
+		return null;
 	}
 
 	@Override
@@ -76,9 +76,8 @@ public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
 		List<RunningIndexUserConfig> indexConfig = q.getResultList();
 		if (indexConfig != null && indexConfig.size() > 0) {
 			return indexConfig;
-		} else {
-			return new ArrayList<RunningIndexUserConfig>();
-		}
+		} 
+		return new ArrayList<>();
 	}
 
 	/*
@@ -97,12 +96,10 @@ public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
 			List<RunningIndexUserConfig> indexConfig = q.getResultList();
 			if (indexConfig != null && indexConfig.size() > 0) {
 				return indexConfig;
-			} else {
-				return new ArrayList<RunningIndexUserConfig>();
-			}
-		} else {
-			return new ArrayList<RunningIndexUserConfig>();
-		}
+			} 
+		} 
+
+		return new ArrayList<>();
 	}
 
 }

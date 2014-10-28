@@ -11,12 +11,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.backmeup.index.config.Configuration;
 import org.backmeup.index.db.RunningIndexUserConfig;
 import org.backmeup.index.utils.tokenreader.MapTokenResolver;
@@ -139,13 +139,15 @@ public class ESConfigurationHandler {
 
 	private static void shutdownElasticSearch(HttpPost shutdownRequest)
 			throws IOException {
-		DefaultHttpClient httpClient = new DefaultHttpClient();
-		System.out.println("Issuing shutdown request: " + shutdownRequest);
-		HttpResponse response = httpClient.execute(shutdownRequest);
-		if (response.getStatusLine().getStatusCode() != 200) {
-			throw new IOException("ES shutdown command failed, statuscode:"
-					+ response.getStatusLine().getStatusCode());
-		}
+	    try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+	        System.out.println("Issuing shutdown request: " + shutdownRequest);
+	        try (CloseableHttpResponse response = httpClient.execute(shutdownRequest)) {
+    	        if (response.getStatusLine().getStatusCode() != 200) {
+    	            throw new IOException("ES shutdown command failed, statuscode:"
+    	                    + response.getStatusLine().getStatusCode());
+    	        }
+	        }
+	    }
 	}
 
 	/**
@@ -168,25 +170,21 @@ public class ESConfigurationHandler {
 
 		if ((host.getProtocol() != null) && (host.getHost() != null)
 				&& (httpPort > -1)) {
-			DefaultHttpClient httpClient = new DefaultHttpClient();
-			HttpGet healthyRequest = new HttpGet(host.getProtocol() + "://"
-					+ host.getHost() + ":" + httpPort
-					+ "/_cluster/health?pretty=true");
-
-			System.out.println("calling: " + healthyRequest);
-			try (CloseableHttpResponse response = httpClient
-					.execute(healthyRequest)) {
-				System.out.println(response.toString());
-
-				if (response.getStatusLine().getStatusCode() == 200) {
-					return true;
-				}
-				return false;
-			}
-		} else {
-			throw new IOException("specified host: " + host + " and port: "
-					+ httpPort + " may not be null");
+	        try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+    			HttpGet healthyRequest = new HttpGet(host.getProtocol() + "://"
+    					+ host.getHost() + ":" + httpPort
+    					+ "/_cluster/health?pretty=true");
+    
+    			System.out.println("calling: " + healthyRequest);
+    			try (CloseableHttpResponse response = httpClient
+    					.execute(healthyRequest)) {
+    				System.out.println(response.toString());
+    				return response.getStatusLine().getStatusCode() == 200;
+    			}
+	        }
 		}
+        throw new IOException("specified host: " + host + " and port: "
+        		+ httpPort + " may not be null");
 	}
 
 	public static String getElasticSearchExecutable()
@@ -242,10 +240,9 @@ public class ESConfigurationHandler {
 			File f = new File(s);
 			if (f.isDirectory() && f.exists()) {
 				return f.getAbsolutePath();
-			} else {
-				throw new ExceptionInInitializerError(
-						"ElasticSearch home.dir does not exist or is not accessible to system");
 			}
+            throw new ExceptionInInitializerError(
+            		"ElasticSearch home.dir does not exist or is not accessible to system");
 		}
 		throw new ExceptionInInitializerError(
 				"ElasticSearch Home not properly configured within backmeup-indexer.properties");
