@@ -57,9 +57,6 @@ public class IndexTest {
 
     @Test
     public void shouldGetSearchResultForUserAndQuery() throws IOException {
-        // GET index/{userid}/?query=...&username=
-        // SearchResultAccumulator queryBackup(String query, String source, String type, String job, String username);
-
         HttpGet method = new HttpGet(HOST + PORT + "/index/" + USER + "?query=find_me&username=peter");
 
         HttpResponse response = client.execute(method);
@@ -73,6 +70,15 @@ public class IndexTest {
         assertTrue(body.indexOf("\"byType\":[{\"title\":\"Type\",\"count\":3}]") >= 0);
         assertTrue(body.indexOf("\"bySource\":[{\"title\":\"Dropbox\",\"count\":2},{\"title\":\"Facebook\",\"count\":2}]") >= 0);
         assertTrue(body.indexOf("\"files\":[{\"fileId\":\"fileId\",") >= 0);
+    }
+
+    @Test
+    public void shouldGetBadRequestForMissingQuery() throws IOException {
+        HttpGet method = new HttpGet(HOST + PORT + "/index/" + USER + "?username=peter");
+        
+        HttpResponse response = client.execute(method);
+        
+        assertStatusCode(400, response);
     }
 
     private void assertStatusCode(int expectedStatus, HttpResponse response) {
