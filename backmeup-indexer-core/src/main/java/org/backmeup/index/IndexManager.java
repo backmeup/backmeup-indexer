@@ -106,17 +106,14 @@ public class IndexManager {
 	 * stored within the DB. TODO - add the option for cluster configuration in
 	 * property file - central connection to all cluster instances - lightweight
 	 * module to start/stop instances on each cluster instance
-	 * 
-	 * @throws URISyntaxException
-	 * @throws MalformedURLException
 	 */
 	private void initAvailableInstances() throws MalformedURLException,
 			URISyntaxException {
 
 		this.defaultHost = new URI("http://localhost").toURL();
 
-		List<Integer> supportedTcpPorts = new ArrayList<Integer>();
-		List<Integer> supportedHttpPorts = new ArrayList<Integer>();
+		List<Integer> supportedTcpPorts = new ArrayList<>();
+		List<Integer> supportedHttpPorts = new ArrayList<>();
 
 		// init the available port range on elasticsearch
 		// Note: @see ESConfigurationHandler.checkPortRangeAccepted - these
@@ -314,8 +311,6 @@ public class IndexManager {
 	/**
 	 * Cleans up the available and used port mapping and updates the database
 	 * This method does not stop running ES and TC instances
-	 * 
-	 * @param userID
 	 */
 	private void releaseRunningInstanceMapping(int userID) {
 
@@ -402,8 +397,6 @@ public class IndexManager {
 
 	/**
 	 * required for testing purposes to inject a different db configuration
-	 * 
-	 * @param em
 	 */
 	public void setEntityManager(EntityManager em) {
 		this.entityManager = em;

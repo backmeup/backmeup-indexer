@@ -23,7 +23,6 @@ public interface IndexManagerDao extends BaseDao<RunningIndexUserConfig> {
 	 * 
 	 * @param url
 	 *            url must contain protocol and host, no port configuration
-	 * @return
 	 */
 	List<RunningIndexUserConfig> getAllESInstanceConfigs(URL url);
 
@@ -32,7 +31,6 @@ public interface IndexManagerDao extends BaseDao<RunningIndexUserConfig> {
 	 * 
 	 * @param url
 	 *            url must contain protocol, host and httpPort
-	 * @return
 	 */
 	RunningIndexUserConfig findConfigByHttpPort(URL url);
 
