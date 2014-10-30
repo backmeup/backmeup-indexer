@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import org.apache.commons.lang.SystemUtils;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -21,8 +22,13 @@ import org.backmeup.index.config.Configuration;
 import org.backmeup.index.db.RunningIndexUserConfig;
 import org.backmeup.index.utils.tokenreader.MapTokenResolver;
 import org.backmeup.index.utils.tokenreader.TokenReplaceReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ESConfigurationHandler {
+
+	private static final Logger log = LoggerFactory
+			.getLogger(ESConfigurationHandler.class);
 
 	public static int TCPPORT_MIN = 9300;
 	public static int TCPPORT_MAX = 9399;
@@ -56,18 +62,20 @@ public class ESConfigurationHandler {
 		tokens.put("httpport", httpport + "");
 		tokens.put("clustername", "user" + userID);
 		tokens.put("marvelagent", host + ":" + httpport + "");
+		log.debug("creating yml configuration file with ports tcp: " + tcpport
+				+ " http: " + httpport + " clustername: user" + userID);
 		// check if a Truecrypt Volume has been mounted, if not use the default
 		// working dir path
 		if (mountedTCVolume != null) {
-			// TODO we're having problems with the IndexManager here -
-			// .getTCMountedVolume(userID) returns null here when it shouldn't
-			System.out.println("creating data + log on mounted TC Volume");
+			log.debug("creating data + log on mounted TC volume"
+					+ mountedTCVolume);
 			tokens.put("pathtologs", mountedTCVolume + ":"
 					+ "/index/index-logs");
 			tokens.put("pathtodata", mountedTCVolume + ":"
 					+ "/index/index-data");
 		} else {
-			System.out.println("creating data + log on standard Volume");
+			log.debug("creating data + log on standard volume"
+					+ IndexManager.getUserDataWorkingDir(userID));
 			tokens.put("pathtologs", IndexManager.getUserDataWorkingDir(userID)
 					+ "/index/index-logs");
 			tokens.put("pathtodata", IndexManager.getUserDataWorkingDir(userID)
@@ -106,10 +114,19 @@ public class ESConfigurationHandler {
 
 		// TODO add -server to the command line to not use the client vm (better
 		// performance)
-		String command = "\"" + getElasticSearchExecutable() + "\"" + " "
-				+ "-Des.config=" + IndexManager.getUserDataWorkingDir(userID)
-				+ "/index/elasticsearch.config.user" + userID + ".yml";
-		System.out.println(command);
+		String command = null;
+		if (SystemUtils.IS_OS_LINUX) {
+			command = getElasticSearchExecutable() + " " + "-Des.config="
+					+ IndexManager.getUserDataWorkingDir(userID)
+					+ "/index/elasticsearch.config.user" + userID + ".yml";
+		}
+		if (SystemUtils.IS_OS_WINDOWS) {
+			command = "\"" + getElasticSearchExecutable() + "\"" + " "
+					+ "-Des.config="
+					+ IndexManager.getUserDataWorkingDir(userID)
+					+ "/index/elasticsearch.config.user" + userID + ".yml";
+		}
+		log.debug(command);
 
 		try {
 			// TODO use ProcessBuilder instead and assign a dedicated amount of
@@ -118,18 +135,15 @@ public class ESConfigurationHandler {
 			// give ES a chance to startup before returning - wait 10 seconds
 			Thread.sleep(10000);
 			// p.waitFor();
-			// TODO need to kill this process when shutdown / cleanup is called?
 
 		} catch (IOException e) {
-			System.out.println("Error executing: " + command + " "
-					+ e.toString());
+			log.error("Error executing: " + command + " " + e.toString());
 			throw e;
 		}
 	}
 
 	public static void stopElasticSearch(int userID)
 			throws ClientProtocolException, IOException {
-		// TODO need to implement. get Process and call quit.
 		RunningIndexUserConfig config = IndexManager.getInstance()
 				.getRunningIndexUserConfig(userID);
 		HttpPost shutdownRequest = new HttpPost(config.getHostAddress() + ":"
@@ -139,15 +153,20 @@ public class ESConfigurationHandler {
 
 	private static void shutdownElasticSearch(HttpPost shutdownRequest)
 			throws IOException {
-	    try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
-	        System.out.println("Issuing shutdown request: " + shutdownRequest);
-	        try (CloseableHttpResponse response = httpClient.execute(shutdownRequest)) {
-    	        if (response.getStatusLine().getStatusCode() != 200) {
-    	            throw new IOException("ES shutdown command failed, statuscode:"
-    	                    + response.getStatusLine().getStatusCode());
-    	        }
-	        }
-	    }
+		try (CloseableHttpClient httpClient = HttpClientBuilder.create()
+				.build()) {
+			log.debug("Issuing shutdown request: " + shutdownRequest);
+			try (CloseableHttpResponse response = httpClient
+					.execute(shutdownRequest)) {
+				if (response.getStatusLine().getStatusCode() != 200) {
+					log.error("shutdown down failed with statuscode: "
+							+ response.getStatusLine().getStatusCode());
+					throw new IOException(
+							"ES shutdown command failed, statuscode:"
+									+ response.getStatusLine().getStatusCode());
+				}
+			}
+		}
 	}
 
 	/**
@@ -170,21 +189,22 @@ public class ESConfigurationHandler {
 
 		if ((host.getProtocol() != null) && (host.getHost() != null)
 				&& (httpPort > -1)) {
-	        try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
-    			HttpGet healthyRequest = new HttpGet(host.getProtocol() + "://"
-    					+ host.getHost() + ":" + httpPort
-    					+ "/_cluster/health?pretty=true");
-    
-    			System.out.println("calling: " + healthyRequest);
-    			try (CloseableHttpResponse response = httpClient
-    					.execute(healthyRequest)) {
-    				System.out.println(response.toString());
-    				return response.getStatusLine().getStatusCode() == 200;
-    			}
-	        }
+			try (CloseableHttpClient httpClient = HttpClientBuilder.create()
+					.build()) {
+				HttpGet healthyRequest = new HttpGet(host.getProtocol() + "://"
+						+ host.getHost() + ":" + httpPort
+						+ "/_cluster/health?pretty=true");
+
+				System.out.println("calling: " + healthyRequest);
+				try (CloseableHttpResponse response = httpClient
+						.execute(healthyRequest)) {
+					System.out.println(response.toString());
+					return response.getStatusLine().getStatusCode() == 200;
+				}
+			}
 		}
-        throw new IOException("specified host: " + host + " and port: "
-        		+ httpPort + " may not be null");
+		throw new IOException("specified host: " + host + " and port: "
+				+ httpPort + " may not be null");
 	}
 
 	public static String getElasticSearchExecutable()
@@ -193,30 +213,31 @@ public class ESConfigurationHandler {
 		if (s != null && s.length() > 0 && !s.contains("\"")) {
 			File f = new File(s);
 			if (f.isDirectory() && f.exists()) {
-				String tcexe = f.getAbsolutePath() + "/bin/elasticsearch.bat";
+				String tcexe = null;
+
+				if (SystemUtils.IS_OS_LINUX) {
+					tcexe = f.getAbsolutePath() + "/bin/elasticsearch";
+				}
+				if (SystemUtils.IS_OS_WINDOWS) {
+					tcexe = f.getAbsolutePath() + "/bin/elasticsearch.bat";
+				}
 				File tc = new File(tcexe);
 				if (tc.isFile() && tc.exists()) {
 					return tc.getAbsolutePath();
 				}
 			}
 		}
-		throw new ExceptionInInitializerError("Error finding ElasticSearch in "
-				+ s);
+		throw new ExceptionInInitializerError(
+				"Error finding ElasticSearch executable in " + s);
 	}
 
 	public static boolean checkElasticSearchAvailable() {
-		String s = Configuration.getProperty("elasticsearch.home.dir");
-		if (s != null && s.length() > 0 && !s.contains("\"")) {
-			File f = new File(s);
-			if (f.isDirectory() && f.exists()) {
-				String tcexe = f.getAbsolutePath() + "/bin/elasticsearch.bat";
-				File tc = new File(tcexe);
-				if (tc.isFile() && tc.exists()) {
-					return true;
-				}
-			}
+		try {
+			getElasticSearchExecutable();
+			return true;
+		} catch (Exception e) {
+			return false;
 		}
-		return false;
 	}
 
 	private static void checkPortRangeAccepted(int tcpport, int httpport)
@@ -241,8 +262,8 @@ public class ESConfigurationHandler {
 			if (f.isDirectory() && f.exists()) {
 				return f.getAbsolutePath();
 			}
-            throw new ExceptionInInitializerError(
-            		"ElasticSearch home.dir does not exist or is not accessible to system");
+			throw new ExceptionInInitializerError(
+					"ElasticSearch home.dir does not exist or is not accessible to system");
 		}
 		throw new ExceptionInInitializerError(
 				"ElasticSearch Home not properly configured within backmeup-indexer.properties");

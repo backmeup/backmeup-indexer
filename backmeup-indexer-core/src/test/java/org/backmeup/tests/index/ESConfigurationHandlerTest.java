@@ -45,7 +45,7 @@ public class ESConfigurationHandlerTest {
 	public void testNonSupportedPortRange() {
 		try {
 			ESConfigurationHandler.createUserYMLStartupFile(100, this.host,
-					9210, 9310, null);
+					9810, 9910, null);
 			Assert.fail("This code block should not be reached");
 		} catch (NumberFormatException e) {
 			Assert.assertTrue(
@@ -67,24 +67,23 @@ public class ESConfigurationHandlerTest {
 
 		try (BufferedReader br = new BufferedReader(new FileReader(f))) {
 
-		    String line;
-		    while ((line = br.readLine()) != null) {
-		        if (line.contains("cluster.name: user" + 100)) {
-		            bClusterName = true;
-		        }
-		        if (line.contains("transport.tcp.port: 9310")) {
-		            bTCPPort = true;
-		        }
-		        if (line.contains("http.port: 9210")) {
-		            bHTTPPort = true;
-		        }
-		    }
+			String line;
+			while ((line = br.readLine()) != null) {
+				if (line.contains("cluster.name: user" + 100)) {
+					bClusterName = true;
+				}
+				if (line.contains("transport.tcp.port: 9310")) {
+					bTCPPort = true;
+				}
+				if (line.contains("http.port: 9210")) {
+					bHTTPPort = true;
+				}
+			}
 		}
 
 		// check if the new user specific configuration file was properly
 		// written
-		Assert.assertEquals("Clustername Config missing", true,
-				bClusterName);
+		Assert.assertEquals("Clustername Config missing", true, bClusterName);
 		Assert.assertEquals("TCP Port Config missing", true, bTCPPort);
 		Assert.assertEquals("HTTPPort Config missing", true, bHTTPPort);
 
