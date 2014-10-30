@@ -2,15 +2,22 @@ package org.backmeup.index;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.SystemUtils;
 import org.backmeup.index.config.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 //Note: There are windows specific elements used within this class
 //TODO solve issue windows restricted to 24 drive letters
 //TODO add linux support 
 
 public class TCMountHandler {
+
+	private static final Logger log = LoggerFactory
+			.getLogger(TCMountHandler.class);
 
 	/**
 	 * @param tcVolume
@@ -64,11 +71,12 @@ public class TCMountHandler {
 		// The executed command should looks something like this
 		// TrueCrypt.exe /q background /v
 		// "D:/temp/themis/userspace1/index-es/TestTCVol1.tc" /a /p 12345
+		// or
+		// String command =
+		// "/usr/bin/truecrypt /home/themis/themis-truecrypt/elasticsearch_userdata_template_TC_150MB.tc /hmedia/truecrypt3/ --password=12345";
 
-		String command = "\"" + getTrueCryptExe() + "\"" + " "
-				+ "/q background " + "/v " + "\"" + tcVolume.getAbsolutePath()
-				+ "\" " + "/l " + driveLetter + " /p " + password;
-		System.out.println(command);
+		String command = createMountCommand(tcVolume, driveLetter, password);
+		log.debug("executing: " + command);
 
 		try {
 			// Execute the call
@@ -79,8 +87,7 @@ public class TCMountHandler {
 			p.waitFor();
 
 		} catch (IOException | InterruptedException e) {
-			System.out.println("Error executing: " + command + " "
-					+ e.toString());
+			log.error("Error executing: " + command + " " + e.toString());
 			throw e;
 		}
 
@@ -96,6 +103,24 @@ public class TCMountHandler {
 		return driveLetter;
 	}
 
+	private static String createMountCommand(File tcVolume, String driveLetter,
+			String password) {
+
+		String command = null;
+		if (SystemUtils.IS_OS_LINUX) {
+			command = getTrueCryptExe() + " -d " + tcVolume.getAbsolutePath()
+					+ " " + driveLetter + " --password=" + password;
+
+		}
+		if (SystemUtils.IS_OS_WINDOWS) {
+			command = "\"" + getTrueCryptExe() + "\"" + " " + "/q background "
+					+ "/v " + "\"" + tcVolume.getAbsolutePath() + "\" " + "/l "
+					+ driveLetter + " /p " + password;
+		}
+
+		return command;
+	}
+
 	/**
 	 * Checks if a given drive Letter is allowed as configured within the
 	 * properties file
@@ -104,8 +129,7 @@ public class TCMountHandler {
 	 *            without any special chars, just e.g. H or K
 	 */
 	private static boolean isAllowedDriveLetter(String driveLetter) {
-		List<String> allowed = Configuration
-				.getPropertyList("truecrypt.mountable.drives");
+		List<String> allowed = getSupportedDriveLetters();
 		if (!allowed.isEmpty()) {
 			if (allowed.contains(driveLetter)) {
 				return true;
@@ -120,7 +144,23 @@ public class TCMountHandler {
 	 * This does not state that a given drive or volume is already in use or not
 	 */
 	public static List<String> getSupportedDriveLetters() {
-		return Configuration.getPropertyList("truecrypt.mountable.drives");
+		if (SystemUtils.IS_OS_LINUX) {
+			return generateSupportedDrivesForLinux();
+		}
+
+		if (SystemUtils.IS_OS_WINDOWS) {
+			return Configuration.getPropertyList("truecrypt.mountable.drives");
+		}
+
+		return new ArrayList<String>();
+	}
+
+	private static List<String> generateSupportedDrivesForLinux() {
+		List<String> r = new ArrayList<String>();
+		for (int i = 0; i < 50; i++) {
+			r.add("/media/themis/volume" + i);
+		}
+		return r;
 	}
 
 	/**
@@ -132,19 +172,31 @@ public class TCMountHandler {
 	public static boolean isDriveMounted(String driveLetter)
 			throws IllegalArgumentException {
 
-		if (driveLetter != null) {
-			// TODO add proper driveLetter handling - currently windows specific
-			File f;
+		if (driveLetter == null) {
+			throw new IllegalArgumentException("provided drive " + driveLetter
+					+ "not valid");
+		}
+
+		File f = null;
+
+		if (SystemUtils.IS_OS_WINDOWS) {
+			// note: File.listRoots() to list drives is windows specific
 			if (driveLetter.contains(":")) {
 				f = new File(driveLetter);
 			} else {
 				f = new File(driveLetter + ":");
 			}
-			if (f.exists()) {
-				return true;
-			}
+		}
+
+		if (SystemUtils.IS_OS_LINUX) {
+			f = new File(driveLetter);
+		}
+
+		if (f != null && f.exists()) {
+			return true;
 		}
 		return false;
+
 	}
 
 	/**
@@ -153,18 +205,30 @@ public class TCMountHandler {
 	 * 
 	 */
 	public static void unmountAll() throws IOException, InterruptedException {
-		String command = getTrueCryptExe() + " " + "/q background " + "/d";
-		System.out.println(command);
+		String command = createUnmountAllCommand();
+		log.debug("unmounting: " + command);
 
 		Process p;
 		try {
 			p = Runtime.getRuntime().exec(command);
 			p.waitFor();
 		} catch (IOException | InterruptedException e) {
-			System.out.println("Error executing: " + command + " "
-					+ e.toString());
+			log.error("Error executing: " + command + " " + e.toString());
 			throw e;
 		}
+	}
+
+	private static String createUnmountAllCommand() {
+		String command = null;
+		if (SystemUtils.IS_OS_LINUX) {
+			// unmount with either mounting point or Truecrypt container file
+			command = getTrueCryptExe() + " -d";
+
+		}
+		if (SystemUtils.IS_OS_WINDOWS) {
+			command = getTrueCryptExe() + " " + "/q background " + "/d";
+		}
+		return command;
 	}
 
 	/**
@@ -185,50 +249,70 @@ public class TCMountHandler {
 
 		if (isDriveMounted(driveLetter)) {
 
-			String command = getTrueCryptExe() + " " + "/q background " + "/d "
-					+ driveLetter;
-			System.out.println(command);
+			String command = createUnmountCommand(driveLetter);
+			log.debug("unmounting: " + command);
 
 			Process p;
 			try {
 				p = Runtime.getRuntime().exec(command);
 				p.waitFor();
 			} catch (IOException | InterruptedException e) {
-				System.out.println("Error executing: " + command + " "
-						+ e.toString());
+				log.error("Error executing: " + command + " " + e.toString());
 				throw e;
 			}
 		}
+	}
 
+	private static String createUnmountCommand(String driveLetter) {
+
+		String command = null;
+		if (SystemUtils.IS_OS_LINUX) {
+			// unmount with either mounting point or Truecrypt container file
+			command = getTrueCryptExe() + " -d " + driveLetter;
+
+		}
+		if (SystemUtils.IS_OS_WINDOWS) {
+			command = getTrueCryptExe() + " " + "/q background " + "/d "
+					+ driveLetter;
+		}
+
+		return command;
 	}
 
 	public static boolean checkTrueCryptAvailable() {
-		String s = Configuration.getProperty("truecrypt.home.dir");
-		if (s != null && s.length() > 0 && !s.contains("\"")) {
-			File f = new File(s);
-			if (f.isDirectory() && f.exists()) {
-				String tcexe = f.getAbsolutePath() + "/TrueCrypt.exe";
-				File tc = new File(tcexe);
-				if (tc.isFile() && tc.exists()) {
-					return true;
-				}
-			}
+		try {
+			getTrueCryptExe();
+			return true;
+		} catch (Exception e) {
+			return false;
 		}
-		return false;
 	}
 
 	public static String getTrueCryptExe() throws ExceptionInInitializerError {
-		String s = Configuration.getProperty("truecrypt.home.dir");
-		if (s != null && s.length() > 0 && !s.contains("\"")) {
-			File f = new File(s);
-			if (f.isDirectory() && f.exists()) {
-				String tcexe = f.getAbsolutePath() + "/TrueCrypt.exe";
-				File tc = new File(tcexe);
-				if (tc.isFile() && tc.exists()) {
-					return tc.getAbsolutePath();
+		if (SystemUtils.IS_OS_WINDOWS) {
+			String s = Configuration.getProperty("truecrypt.home.dir");
+			if (s != null && s.length() > 0 && !s.contains("\"")) {
+				File f = new File(s);
+				if (f.isDirectory() && f.exists()) {
+					String tcexe = f.getAbsolutePath() + "/TrueCrypt.exe";
+					File tc = new File(tcexe);
+					if (tc.isFile() && tc.exists()) {
+						return tc.getAbsolutePath();
+					}
 				}
 			}
+			throw new ExceptionInInitializerError("Error finding TrueCrypt in "
+					+ s);
 		}
-		throw new ExceptionInInitializerError("Error finding TrueCrypt in " + s);
+		if (SystemUtils.IS_OS_LINUX) {
+			String tc = "/usr/bin/truecrypt";
+			File f = new File(tc);
+			if (f.exists()) {
+				return "/usr/bin/truecrypt";
+			}
+			throw new ExceptionInInitializerError(
+					"Error finding TrueCrypt in /usr/bin/");
+		}
+		throw new ExceptionInInitializerError("Unsupported operating system");
 	}
 }

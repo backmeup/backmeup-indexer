@@ -355,12 +355,12 @@ public class IndexManager {
 			if (f.isDirectory() && f.exists()) {
 				return f.getAbsolutePath();
 			}
-			
-            f.mkdirs();
-            if (f.isDirectory() && f.exists()) {
-            	return f.getAbsolutePath();
-            }
-            
+
+			f.mkdirs();
+			if (f.isDirectory() && f.exists()) {
+				return f.getAbsolutePath();
+			}
+
 			throw new ExceptionInInitializerError(
 					"index.temp.data.home.dir does not exist or is not accessible to system");
 		}

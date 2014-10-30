@@ -68,6 +68,12 @@
 			<artifactId>postgresql</artifactId>
 			<version>${version.org.postgresql}</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>${version.commons-lang}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.apache.derby</groupId>

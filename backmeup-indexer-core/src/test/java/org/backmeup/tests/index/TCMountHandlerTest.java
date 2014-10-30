@@ -3,8 +3,10 @@ package org.backmeup.tests.index;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.lang.SystemUtils;
 import org.backmeup.index.TCMountHandler;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -35,7 +37,8 @@ public class TCMountHandlerTest {
 	}
 
 	@Test
-	public void mountAndUnmountTestContainer() {
+	public void mountAndUnmountTestContainerWindows() {
+		Assume.assumeTrue(SystemUtils.IS_OS_WINDOWS);
 		File tcTestFile = new File("src/main/resources/tests/TestTCVol1.tc");
 		try {
 			TCMountHandler.mount(tcTestFile, "12345", "I");
@@ -52,7 +55,26 @@ public class TCMountHandlerTest {
 	}
 
 	@Test
+	public void mountAndUnmountTestContainerLinux() {
+		Assume.assumeTrue(SystemUtils.IS_OS_LINUX);
+		File tcTestFile = new File("src/main/resources/tests/TestTCVol1.tc");
+		try {
+			TCMountHandler.mount(tcTestFile, "12345", "/media/truecrypt1");
+			Assert.assertEquals("TrueCrypt Testvolume did not get mounted",
+					true, TCMountHandler.isDriveMounted("/media/truecrypt1"));
+			TCMountHandler.unmount("/media/truecrypt1");
+			Assert.assertEquals(
+					"TrueCrypt Testvolume did not get unmounted properly",
+					false, TCMountHandler.isDriveMounted("/media/truecrypt1"));
+		} catch (Exception e) {
+			// should not happen in this test case
+			Assert.fail("should never fail mounting this scenario");
+		}
+	}
+
+	@Test
 	public void mountVolumeTwiceAtSameTime() {
+		Assume.assumeTrue(SystemUtils.IS_OS_WINDOWS);
 		// mounting the same TrueCrypt Volume file twice at the same time is not
 		// possible
 		File tcTestFile = new File("src/main/resources/tests/TestTCVol1.tc");
@@ -76,6 +98,7 @@ public class TCMountHandlerTest {
 
 	@Test
 	public void mountTwiceOnSameDrive() {
+		Assume.assumeTrue(SystemUtils.IS_OS_WINDOWS);
 		File tcTestFile = new File("src/main/resources/tests/TestTCVol1.tc");
 		File tcTestFile2 = new File("src/main/resources/tests/TestTCVol2.tc");
 		try {
