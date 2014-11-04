@@ -3,6 +3,7 @@ package org.backmeup.index.client;
 import java.io.IOException;
 import java.util.Map;
 
+import org.backmeup.index.model.IndexDocument;
 import org.elasticsearch.common.text.StringText;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;

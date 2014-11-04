@@ -28,6 +28,8 @@
 		<java.compiler.source>1.7</java.compiler.source>
 		<java.compiler.target>1.7</java.compiler.target>
 		<project.build.java.target>1.7</project.build.java.target>
+		
+		<version.backmeup.model>2.0.0-SNAPSHOT</version.backmeup.model>
 
 		<!-- Configuration -->
 		<config.tomcat.manager.url>http://127.0.0.1:8080/manager/text</config.tomcat.manager.url>
@@ -42,6 +44,7 @@
 		<version.com.rabbitmq>2.8.6</version.com.rabbitmq>
 		<version.com.miglayout>3.7.4</version.com.miglayout>
 		<version.commons-lang>2.3</version.commons-lang>
+		<version.commons-io>2.3</version.commons-io>
 		<version.javax.el>2.2</version.javax.el>
 		<version.javax.enterprise.cdi-api>1.1</version.javax.enterprise.cdi-api>
 		<version.javax.servlet>3.0.1</version.javax.servlet>

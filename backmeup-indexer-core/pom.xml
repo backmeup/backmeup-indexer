@@ -20,6 +20,12 @@
             <artifactId>backmeup-indexer-model</artifactId>
             <version>${project.version}</version>
         </dependency>
+        
+        <dependency>
+            <groupId>org.backmeup</groupId>
+            <artifactId>backmeup-model</artifactId>
+            <version>${version.backmeup.model}</version>
+        </dependency>
 
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -73,6 +79,12 @@
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
 			<version>${version.commons-lang}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>${version.commons-io}</version>
 		</dependency>
 
 		<dependency>

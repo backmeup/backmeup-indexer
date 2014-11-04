@@ -92,6 +92,7 @@ public class IndexManager {
 	// ========================================================================
 
 	private void createEntityManager() {
+		// TODO @Inject
 		this.entityManagerFactory = Persistence
 				.createEntityManagerFactory("org.backmeup.index.jpa");
 

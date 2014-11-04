@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.backmeup.index.model.FileInfo;
 import org.backmeup.index.model.FileItem;
+import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.SearchResultAccumulator;
 
 public interface IndexClient extends Closeable {

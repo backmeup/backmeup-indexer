@@ -17,9 +17,9 @@ import javax.ws.rs.core.Response;
 
 import org.backmeup.index.client.IndexClient;
 import org.backmeup.index.client.IndexClientFactory;
-import org.backmeup.index.client.IndexDocument;
 import org.backmeup.index.model.FileInfo;
 import org.backmeup.index.model.FileItem;
+import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.SearchResultAccumulator;
 
 @Path("index")
