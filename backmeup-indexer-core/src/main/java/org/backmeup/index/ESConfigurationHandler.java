@@ -60,7 +60,8 @@ public class ESConfigurationHandler {
 		tokens.put("tcpport", tcpport + "");
 		tokens.put("httpport", httpport + "");
 		tokens.put("clustername", "user" + userID);
-		tokens.put("marvelagent", host + ":" + httpport + "");
+		// info marvel does not allow to specify the protocol as http
+		tokens.put("marvelagent", host.getHost() + ":" + httpport + "");
 		log.debug("creating yml configuration file with ports tcp: " + tcpport
 				+ " http: " + httpport + " clustername: user" + userID);
 		// check if a Truecrypt Volume has been mounted, if not use the default
