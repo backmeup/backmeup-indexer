@@ -2,6 +2,7 @@ package org.backmeup.index;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -165,7 +166,10 @@ public class IndexManager {
 
 	/**
 	 * Runs the ES configuration, index data mounting from TrueCrypt and powers
-	 * on a ES instance for a given user.
+	 * on a ES instance for a given user. mount truecrypt container, create user
+	 * specific ES launch configuration (yml file), start ES instance for user
+	 * elasticsearch -Des.config="C:\Program
+	 * Files\elasticsearch-1.2.0\config\elasticsearch.user0.yml"
 	 * 
 	 * @throws IOException
 	 *             when the required artifact files are not properly created
@@ -181,11 +185,6 @@ public class IndexManager {
 	public void startupInstance(int userID) throws IOException,
 			NumberFormatException, ExceptionInInitializerError,
 			IllegalArgumentException, InterruptedException {
-		// mount truecrypt container
-		// create user specific ES launch configuration (yml file)
-		// start ES instance for user
-		// elasticsearch -Des.config="C:\Program
-		// Files\elasticsearch-1.2.0\config\elasticsearch.user0.yml"
 
 		// 1) check if user has been initialized
 		File fTCContainerOnDataSink = null;
@@ -213,7 +212,7 @@ public class IndexManager {
 		tcMountedDriveLetter = TCMountHandler.mount(fTCContainer, "12345",
 				TCMountHandler.getSupportedDriveLetters().get(0));
 
-		System.out.println("Mounted Drive Letter: " + tcMountedDriveLetter
+		this.log.debug("Mounted Drive Letter: " + tcMountedDriveLetter
 				+ "from: " + fTCContainer.getAbsolutePath());
 
 		// 4) crate a user specific ElasticSearch startup configuration file
@@ -227,12 +226,12 @@ public class IndexManager {
 		ESConfigurationHandler.createUserYMLStartupFile(userID,
 				this.defaultHost, tcpPort, httpPort, tcMountedDriveLetter);
 
-		// TODO currently only one host machine supported: localhost
-		// keep a record of this configuration
-		URI uri;
 		try {
-			uri = new URI("http", "localhost", "", "");
+			// TODO currently only one host machine for ES supported: localhost
+			URI uri = new URI("http", InetAddress.getLocalHost()
+					.getHostAddress() + "", "", "");
 
+			// keep a database record of this configuration
 			RunningIndexUserConfig runningConfig = new RunningIndexUserConfig(
 					Long.valueOf(userID), uri.toURL(), tcpPort, httpPort,
 					"user" + userID, tcMountedDriveLetter,

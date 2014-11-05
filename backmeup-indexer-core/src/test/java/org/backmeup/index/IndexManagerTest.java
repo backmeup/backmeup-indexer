@@ -158,7 +158,7 @@ public class IndexManagerTest {
 	public void testConnectViaTransportClient() throws IOException {
 
 		try {
-			this.indexManager.startupInstance(999991);
+			this.indexManager.startupInstance(999992);
 		} catch (ExceptionInInitializerError | IllegalArgumentException
 				| IOException | InterruptedException e1) {
 			fail("Should not reach this code block" + e1);
@@ -166,7 +166,7 @@ public class IndexManagerTest {
 
 		// check instance up and running
 		RunningIndexUserConfig conf = this.indexManager
-				.getRunningIndexUserConfig(999991);
+				.getRunningIndexUserConfig(999992);
 		int httpPort = conf.getHttpPort();
 		String drive = conf.getMountedTCDriveLetter();
 		Assert.assertNotNull("mounting TC data drive for user should not fail",
@@ -182,11 +182,13 @@ public class IndexManagerTest {
 						conf.getHostAddress(), httpPort));
 
 		Settings settings = ImmutableSettings.settingsBuilder()
-				.put("cluster.name", "user" + 999991)
-				.put("client.transport.sniff", true).build();
+				.put("cluster.name", "user" + 999992).build();
+
+		// now try to connect with the TransportClient - requires the
+		// transport.tcp.port for connection
 		Client client = new TransportClient(settings)
-				.addTransportAddress(new InetSocketTransportAddress(
-						"localhost", httpPort));
+				.addTransportAddress(new InetSocketTransportAddress(conf
+						.getHostAddress().getHost(), conf.getTcpPort()));
 
 		IndexResponse response = null;
 
@@ -207,7 +209,6 @@ public class IndexManagerTest {
 	}
 
 	@Test
-	@Ignore
 	public void testCreateIndexElementViaHttpClient() throws IOException {
 		try {
 			this.indexManager.startupInstance(999991);
