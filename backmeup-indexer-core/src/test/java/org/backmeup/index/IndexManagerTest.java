@@ -19,8 +19,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.backmeup.index.ESConfigurationHandler;
-import org.backmeup.index.IndexManager;
 import org.backmeup.index.db.RunningIndexUserConfig;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
@@ -44,9 +42,16 @@ public class IndexManagerTest {
 
 	@After
 	public void after() {
-		// TODO JUST FOR TESTING - reactivate later
-		// IndexManager.getInstance().shutdown(999991);
-		// IndexManager.getInstance().shutdown(999992);
+		try {
+			IndexManager.getInstance().shutdownInstance(999991);
+		} catch (IllegalArgumentException | ExceptionInInitializerError
+				| IOException | InterruptedException e1) {
+		}
+		try {
+			IndexManager.getInstance().shutdownInstance(999992);
+		} catch (IllegalArgumentException | ExceptionInInitializerError
+				| IOException | InterruptedException e) {
+		}
 
 		closeEntityManager();
 	}
@@ -117,14 +122,6 @@ public class IndexManagerTest {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			fail("Should not fail when properly configured" + e);
-		} finally {
-			try {
-				this.indexManager.shutdownInstance(999992);
-			} catch (IllegalArgumentException | ExceptionInInitializerError
-					| IOException | InterruptedException e) {
-				System.out
-						.println("Error shutting down instance for userID 999992");
-			}
 		}
 	}
 
@@ -132,7 +129,7 @@ public class IndexManagerTest {
 	@Ignore
 	public void testUserStartupArtefakts() {
 		try {
-			indexManager.startupInstance(999991);
+			this.indexManager.startupInstance(999991);
 			File fTC = new File(IndexManager.getUserDataWorkingDir(999991)
 					+ "/index/elasticsearch_userdata_TC_150MB.tc");
 			Assert.assertTrue(
@@ -158,22 +155,31 @@ public class IndexManagerTest {
 	}
 
 	@Test
-	@Ignore
 	public void testConnectViaTransportClient() throws IOException {
 
 		try {
-			indexManager.startupInstance(999991);
+			this.indexManager.startupInstance(999991);
 		} catch (ExceptionInInitializerError | IllegalArgumentException
 				| IOException | InterruptedException e1) {
 			fail("Should not reach this code block" + e1);
 		}
 
+		// check instance up and running
 		RunningIndexUserConfig conf = this.indexManager
 				.getRunningIndexUserConfig(999991);
-
 		int httpPort = conf.getHttpPort();
-		Assert.assertTrue("No valid http port for user 999991 assigned. Port: "
-				+ httpPort, httpPort > -1);
+		String drive = conf.getMountedTCDriveLetter();
+		Assert.assertNotNull("mounting TC data drive for user should not fail",
+				drive);
+		Assert.assertTrue("ES http portnumber should have been assigned",
+				httpPort > -1);
+		System.out.println("user 999992 on port: " + httpPort
+				+ " and TC volume: " + drive);
+
+		Assert.assertTrue(
+				"ES Instance is not running ",
+				ESConfigurationHandler.isElasticSearchInstanceRunning(
+						conf.getHostAddress(), httpPort));
 
 		Settings settings = ImmutableSettings.settingsBuilder()
 				.put("cluster.name", "user" + 999991)
@@ -196,8 +202,7 @@ public class IndexManagerTest {
 		Assert.assertTrue("Contains Index",
 				response.getIndex().equals("twitter"));
 
-		Assert.assertTrue("Contains Type",
-				response.getType().equals("tweet"));
+		Assert.assertTrue("Contains Type", response.getType().equals("tweet"));
 
 	}
 
@@ -205,7 +210,7 @@ public class IndexManagerTest {
 	@Ignore
 	public void testCreateIndexElementViaHttpClient() throws IOException {
 		try {
-			indexManager.startupInstance(999991);
+			this.indexManager.startupInstance(999991);
 			System.out.println("startup done");
 
 		} catch (ExceptionInInitializerError | IllegalArgumentException
@@ -218,45 +223,46 @@ public class IndexManagerTest {
 
 		int httpPort = conf.getHttpPort();
 		URL host = conf.getHostAddress();
-		Assert.assertTrue("ES instance up and running?",
-				ESConfigurationHandler.isElasticSearchInstanceRunning(host,
-						httpPort));
+		Assert.assertTrue("ES instance up and running?", ESConfigurationHandler
+				.isElasticSearchInstanceRunning(host, httpPort));
 
-		try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
-		    // TODO set port dynamically!!
-		    HttpPost postRequest = new HttpPost("http://localhost:" + httpPort
-		            + "/dummytestindex/article");
-		    
-		    StringEntity input = new StringEntity(
-		            "{\"name\":\"ES JAVA API WorkAround\",\"category\":\"Garbage\"}");
-		    input.setContentType("application/json");
-		    postRequest.setEntity(input);
-		    
-		    try (CloseableHttpResponse response = httpClient.execute(postRequest)) {
-		        
-		        System.out.println(response.toString());
-		        if (response.getStatusLine().getStatusCode() != 201) {
-		            Assert.fail("Failed : HTTP error code : "
-		                    + response.getStatusLine().getStatusCode());
-		        }
-		        
-		        BufferedReader br = new BufferedReader(new InputStreamReader(
-		                (response.getEntity().getContent())));
-		        
-		        String output;
-		        while ((output = br.readLine()) != null) {
-		            System.out.println("got response: " + output);
-		            Assert.assertTrue("Contains Index", output.contains("\""
-		                    + "_index" + "\"" + ":" + "\"" + "dummytestindex"
-		                    + "\""));
-		            
-		            Assert.assertTrue("Contains Type", output.contains("\""
-		                    + "_type" + "\"" + ":" + "\"" + "article" + "\""));
-		            
-		            Assert.assertTrue("Contains Created", output.contains("\""
-		                    + "created" + "\"" + ":" + "true"));
-		        }
-		    }
+		try (CloseableHttpClient httpClient = HttpClientBuilder.create()
+				.build()) {
+			// TODO set port dynamically!!
+			HttpPost postRequest = new HttpPost("http://localhost:" + httpPort
+					+ "/dummytestindex/article");
+
+			StringEntity input = new StringEntity(
+					"{\"name\":\"ES JAVA API WorkAround\",\"category\":\"Garbage\"}");
+			input.setContentType("application/json");
+			postRequest.setEntity(input);
+
+			try (CloseableHttpResponse response = httpClient
+					.execute(postRequest)) {
+
+				System.out.println(response.toString());
+				if (response.getStatusLine().getStatusCode() != 201) {
+					Assert.fail("Failed : HTTP error code : "
+							+ response.getStatusLine().getStatusCode());
+				}
+
+				BufferedReader br = new BufferedReader(new InputStreamReader(
+						(response.getEntity().getContent())));
+
+				String output;
+				while ((output = br.readLine()) != null) {
+					System.out.println("got response: " + output);
+					Assert.assertTrue("Contains Index", output.contains("\""
+							+ "_index" + "\"" + ":" + "\"" + "dummytestindex"
+							+ "\""));
+
+					Assert.assertTrue("Contains Type", output.contains("\""
+							+ "_type" + "\"" + ":" + "\"" + "article" + "\""));
+
+					Assert.assertTrue("Contains Created", output.contains("\""
+							+ "created" + "\"" + ":" + "true"));
+				}
+			}
 		}
 	}
 
@@ -265,18 +271,17 @@ public class IndexManagerTest {
 	public void testShutdown() throws IOException, InterruptedException {
 		// test if the shutdown and isRunning implementation is properly working
 		int userID = 999993;
-		indexManager.startupInstance(userID);
+		this.indexManager.startupInstance(userID);
 
 		RunningIndexUserConfig conf = this.indexManager
 				.getRunningIndexUserConfig(999991);
 
 		int httpPort = conf.getHttpPort();
 		URL host = conf.getHostAddress();
-		Assert.assertTrue("ES instance up and running?",
-				ESConfigurationHandler.isElasticSearchInstanceRunning(host,
-						httpPort));
+		Assert.assertTrue("ES instance up and running?", ESConfigurationHandler
+				.isElasticSearchInstanceRunning(host, httpPort));
 
-		indexManager.shutdownInstance(userID);
+		this.indexManager.shutdownInstance(userID);
 
 		Assert.assertFalse("ES instance up and running?",
 				ESConfigurationHandler.isElasticSearchInstanceRunning(host,

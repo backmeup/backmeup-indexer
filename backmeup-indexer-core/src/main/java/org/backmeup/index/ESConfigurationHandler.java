@@ -145,9 +145,16 @@ public class ESConfigurationHandler {
 			throws ClientProtocolException, IOException {
 		RunningIndexUserConfig config = IndexManager.getInstance()
 				.getRunningIndexUserConfig(userID);
-		HttpPost shutdownRequest = new HttpPost(config.getHostAddress() + ":"
-				+ config.getHttpPort() + "/_shutdown");
-		shutdownElasticSearch(shutdownRequest);
+		if (config != null) {
+			HttpPost shutdownRequest = new HttpPost(config.getHostAddress()
+					+ ":" + config.getHttpPort() + "/_shutdown");
+			shutdownElasticSearch(shutdownRequest);
+		} else {
+			log.debug("stopElasticSearch for userID " + userID
+					+ " failed due to missing RunningIndexUserConfig");
+			throw new IOException("stopElasticSearch for userID " + userID
+					+ " failed due to missing RunningIndexUserConfig");
+		}
 	}
 
 	private static void shutdownElasticSearch(HttpPost shutdownRequest)

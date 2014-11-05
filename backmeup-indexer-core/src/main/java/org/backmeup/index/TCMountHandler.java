@@ -272,8 +272,9 @@ public class TCMountHandler {
 
 		}
 		if (SystemUtils.IS_OS_WINDOWS) {
+			// use /f to force dismount
 			command = getTrueCryptExe() + " " + "/q background " + "/d "
-					+ driveLetter;
+					+ driveLetter + " /f";
 		}
 
 		return command;

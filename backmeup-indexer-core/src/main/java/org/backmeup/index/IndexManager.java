@@ -213,7 +213,8 @@ public class IndexManager {
 		tcMountedDriveLetter = TCMountHandler.mount(fTCContainer, "12345",
 				TCMountHandler.getSupportedDriveLetters().get(0));
 
-		System.out.println("Mounted Drive Letter: " + tcMountedDriveLetter);
+		System.out.println("Mounted Drive Letter: " + tcMountedDriveLetter
+				+ "from: " + fTCContainer.getAbsolutePath());
 
 		// 4) crate a user specific ElasticSearch startup configuration file
 		// TODO currently when all available ports are in use the system will
@@ -234,7 +235,8 @@ public class IndexManager {
 
 			RunningIndexUserConfig runningConfig = new RunningIndexUserConfig(
 					Long.valueOf(userID), uri.toURL(), tcpPort, httpPort,
-					"user" + userID, tcMountedDriveLetter);
+					"user" + userID, tcMountedDriveLetter,
+					fTCContainer.getAbsolutePath());
 
 			// persist the configuration
 			this.entityManager.getTransaction().begin();
@@ -247,9 +249,10 @@ public class IndexManager {
 		}
 
 		// just of testing:
-		this.log.debug("using Drive: "
-				+ this.dao.findConfigByUserId(Long.valueOf(userID))
-						.getMountedTCDriveLetter());
+		RunningIndexUserConfig c = this.dao.findConfigByUserId(Long
+				.valueOf(userID));
+		this.log.debug("using mounting point: " + c.getMountedTCDriveLetter()
+				+ " for source: " + c.getMountedContainerLocation());
 
 		// 5) now power on elasticsearch
 		ESConfigurationHandler.startElasticSearch(userID);
@@ -262,10 +265,9 @@ public class IndexManager {
 
 	public void shutdownInstance(int userID) throws IllegalArgumentException,
 			ExceptionInInitializerError, IOException, InterruptedException {
-		// TODO persist the index data files and write back to data store
+		// TODO need to create a transaction for this
 
-		RunningIndexUserConfig runningInstanceConfig = this.dao
-				.findConfigByUserId(Long.valueOf(userID));
+		RunningIndexUserConfig runningInstanceConfig = getRunningIndexUserConfig(userID);
 
 		// shutdown the ElasticSearch Instance
 		ESConfigurationHandler.stopElasticSearch(userID);
@@ -274,16 +276,21 @@ public class IndexManager {
 		String driveLetter = runningInstanceConfig.getMountedTCDriveLetter();
 		TCMountHandler.unmount(driveLetter);
 
+		// persist the index data files within the container back to the Themis
+		// data sink
+		ThemisDataSink.saveIndexTrueCryptContainer(new File(
+				runningInstanceConfig.getMountedContainerLocation()), userID);
+
 		// remove the userconfiguration from db and release the ports
 		releaseRunningInstanceMapping(userID);
 
-		// whipe the data and yml configuration file
+		// whipe the temp working directory
 		deleteLocalWorkingDir(userID);
 	}
 
 	/**
 	 * Cleanup - stops all running ES instances, removes all mounted TC
-	 * container
+	 * container - NOT RECOMMENDED
 	 */
 	public void cleanupRude() throws IOException, InterruptedException {
 		// TODO Implement as Admin method
