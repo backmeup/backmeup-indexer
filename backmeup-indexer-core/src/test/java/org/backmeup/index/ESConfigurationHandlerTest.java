@@ -1,4 +1,4 @@
-package org.backmeup.tests.index;
+package org.backmeup.index;
 
 import java.io.BufferedReader;
 import java.io.File;

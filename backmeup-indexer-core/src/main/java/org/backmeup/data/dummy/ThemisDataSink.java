@@ -10,8 +10,7 @@ import java.util.UUID;
 import org.apache.commons.io.FileUtils;
 import org.backmeup.index.config.Configuration;
 import org.backmeup.index.model.IndexDocument;
-
-import com.google.gson.Gson;
+import org.backmeup.index.utils.file.JsonSerializer;
 
 /**
  * dummy implementation of a themis data sink currently with file operations for
@@ -101,9 +100,8 @@ public class ThemisDataSink {
 		}
 
 		// serialize the IndexDocument to JSON
-		// String serializedIndexDoc = JsonSerializer.serialize(indexFragment);
-		Gson gson = new Gson();
-		String serializedIndexDoc = gson.toJson(indexFragment);
+		String serializedIndexDoc = JsonSerializer.serialize(indexFragment);
+
 		// check if we need to generate a unique file name or if if it's sharing
 		UUID uuid = null;
 		if (filename == null) {
@@ -155,11 +153,9 @@ public class ThemisDataSink {
 				serObject += l;
 			}
 			// deserialize the object
-			// IndexDocument indexDoc = JsonSerializer.deserialize(serObject,
-			// IndexDocument.class);
-			Gson gson = new Gson();
-			IndexDocument indexDoc = gson.fromJson(serObject,
+			IndexDocument indexDoc = JsonSerializer.deserialize(serObject,
 					IndexDocument.class);
+
 			return indexDoc;
 		} else {
 			throw new IOException("Error getting index fragment: "

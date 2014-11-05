@@ -1,4 +1,4 @@
-package org.backmeup.tests.index.dao;
+package org.backmeup.index.dal;
 
 import static org.junit.Assert.assertNotNull;
 

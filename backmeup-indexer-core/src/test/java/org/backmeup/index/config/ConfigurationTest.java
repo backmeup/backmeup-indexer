@@ -1,4 +1,4 @@
-package org.backmeup.tests.index.config;
+package org.backmeup.index.config;
 
 import java.util.List;
 

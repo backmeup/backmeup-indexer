@@ -1,4 +1,4 @@
-package org.backmeup.tests.index;
+package org.backmeup.index;
 
 import static org.junit.Assert.fail;
 
