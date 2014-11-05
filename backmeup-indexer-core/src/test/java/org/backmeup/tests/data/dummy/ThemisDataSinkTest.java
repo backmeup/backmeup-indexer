@@ -9,12 +9,13 @@ import org.apache.commons.io.FileUtils;
 import org.backmeup.data.dummy.ThemisDataSink;
 import org.backmeup.index.config.Configuration;
 import org.backmeup.index.model.IndexDocument;
-import org.backmeup.model.serializer.JsonSerializer;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.gson.Gson;
 
 public class ThemisDataSinkTest {
 
@@ -36,10 +37,10 @@ public class ThemisDataSinkTest {
 			ThemisDataSink.deleteIndexTrueCryptContainer(99999);
 		} catch (IOException e) {
 		}
-		try {
-			ThemisDataSink.deleteAllIndexFragments(99998);
-		} catch (IOException e) {
-		}
+		// try {
+		// ThemisDataSink.deleteAllIndexFragments(99998);
+		// } catch (IOException e) {
+		// }
 	}
 
 	@Before
@@ -55,8 +56,10 @@ public class ThemisDataSinkTest {
 			File fIndexDocument = new File(
 					"src/main/resources/tests/sampleIndexDocument.serindexdocument");
 			String sampleFragment = FileUtils.readFileToString(fIndexDocument);
-			this.indexDoc = JsonSerializer.deserialize(sampleFragment,
-					IndexDocument.class);
+			Gson gson = new Gson();
+			this.indexDoc = gson.fromJson(sampleFragment, IndexDocument.class);
+			// this.indexDoc = JsonSerializer.deserialize(sampleFragment,
+			// IndexDocument.class);
 
 		} catch (IOException e) {
 		}
@@ -129,7 +132,7 @@ public class ThemisDataSinkTest {
 					99998);
 			Assert.assertNotNull(fragment);
 
-			ThemisDataSink.deleteIndexFragment(fileID, 99998);
+			// ThemisDataSink.deleteIndexFragment(fileID, 99998);
 
 		} catch (IOException e) {
 			Assert.fail("failed saving, getting or deleting indexFragment: "

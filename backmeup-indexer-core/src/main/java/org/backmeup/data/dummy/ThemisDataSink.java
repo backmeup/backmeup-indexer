@@ -10,13 +10,14 @@ import java.util.UUID;
 import org.apache.commons.io.FileUtils;
 import org.backmeup.index.config.Configuration;
 import org.backmeup.index.model.IndexDocument;
-import org.backmeup.model.serializer.JsonSerializer;
+
+import com.google.gson.Gson;
 
 /**
  * dummy implementation of a themis data sink currently with file operations for
  * Truecrypt container files required to persist the index data
  * 
- * @author LindleyA
+ * @TODO add encryption for serialized IndexDocuments on disc
  * 
  */
 public class ThemisDataSink {
@@ -73,29 +74,43 @@ public class ThemisDataSink {
 		f.delete();
 	}
 
-	public static void shareIndexFragment(int fromUserID, int withUserID,
-			IndexDocument indexFragment) {
+	/**
+	 * Persists a shared IndexDocument from userA with userB
+	 * 
+	 * @param userIDShares
+	 * @param userIDToShareWith
+	 * @param indexFragmentRef
+	 * @throws IOException
+	 */
+	public static void saveSharedIndexFragment(int userIDShares,
+			int userIDToShareWith, UUID indexFragmentRef) throws IOException {
 
 	}
 
 	/**
-	 * Persists an IndexDocument within the user's index-fragments space in the
-	 * DataSink
-	 * 
-	 * @param indexFragment
-	 * @param userID
-	 * @return uuid of the object created
-	 * @throws IOException
+	 * Helper method used in case when sharing an IndexDocument with another
+	 * user in this case the thwo objects need to have the same UUID
 	 */
-	public static UUID saveIndexFragment(IndexDocument indexFragment, int userID)
-			throws IOException {
+	private static UUID saveIndexFragment(IndexDocument indexFragment,
+			int userID, UUID filename) throws IOException {
+
+		// TODO continue with output folder
+
 		if (indexFragment == null) {
 			throw new IOException("IndexDocument may not be null");
 		}
 
 		// serialize the IndexDocument to JSON
-		String serializedIndexDoc = JsonSerializer.serialize(indexFragment);
-		UUID uuid = UUID.randomUUID();
+		// String serializedIndexDoc = JsonSerializer.serialize(indexFragment);
+		Gson gson = new Gson();
+		String serializedIndexDoc = gson.toJson(indexFragment);
+		// check if we need to generate a unique file name or if if it's sharing
+		UUID uuid = null;
+		if (filename == null) {
+			uuid = UUID.randomUUID();
+		} else {
+			uuid = filename;
+		}
 
 		if (userID > -1 && (serializedIndexDoc != null)) {
 
@@ -111,6 +126,21 @@ public class ThemisDataSink {
 							+ "/index-fragments/" + uuid + ".serindexdocument"
 							+ " for userID: " + userID);
 		}
+
+	}
+
+	/**
+	 * Persists an IndexDocument within the user's index-fragments space in the
+	 * DataSink
+	 * 
+	 * @param indexFragment
+	 * @param userID
+	 * @return uuid of the object created
+	 * @throws IOException
+	 */
+	public static UUID saveIndexFragment(IndexDocument indexFragment, int userID)
+			throws IOException {
+		return saveIndexFragment(indexFragment, userID, null);
 	}
 
 	public static IndexDocument getIndexFragment(UUID objectID, int userID)
@@ -125,7 +155,10 @@ public class ThemisDataSink {
 				serObject += l;
 			}
 			// deserialize the object
-			IndexDocument indexDoc = JsonSerializer.deserialize(serObject,
+			// IndexDocument indexDoc = JsonSerializer.deserialize(serObject,
+			// IndexDocument.class);
+			Gson gson = new Gson();
+			IndexDocument indexDoc = gson.fromJson(serObject,
 					IndexDocument.class);
 			return indexDoc;
 		} else {
