@@ -194,18 +194,18 @@ public class ESConfigurationHandler {
 	public static boolean isElasticSearchInstanceRunning(URL host, int httpPort)
 			throws IOException {
 
-		if ((host.getProtocol() != null) && (host.getHost() != null)
-				&& (httpPort > -1)) {
+		if ((host != null) && (host.getProtocol() != null)
+				&& (host.getHost() != null) && (httpPort > -1)) {
 			try (CloseableHttpClient httpClient = HttpClientBuilder.create()
 					.build()) {
 				HttpGet healthyRequest = new HttpGet(host.getProtocol() + "://"
 						+ host.getHost() + ":" + httpPort
 						+ "/_cluster/health?pretty=true");
 
-				System.out.println("calling: " + healthyRequest);
+				log.debug("calling: " + healthyRequest);
 				try (CloseableHttpResponse response = httpClient
 						.execute(healthyRequest)) {
-					System.out.println(response.toString());
+					log.debug("response: " + response.toString());
 					return response.getStatusLine().getStatusCode() == 200;
 				}
 			}

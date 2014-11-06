@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -70,7 +71,8 @@ public class IndexManager {
 			createEntityManager();
 			initAvailableInstances();
 
-		} catch (MalformedURLException | URISyntaxException e) {
+		} catch (MalformedURLException | URISyntaxException
+				| UnknownHostException e) {
 			this.log.error("IndexManager initialization failed " + e);
 
 		}
@@ -110,9 +112,10 @@ public class IndexManager {
 	 * module to start/stop instances on each cluster instance
 	 */
 	private void initAvailableInstances() throws MalformedURLException,
-			URISyntaxException {
+			URISyntaxException, UnknownHostException {
 
-		this.defaultHost = new URI("http://localhost").toURL();
+		this.defaultHost = new URI("http", InetAddress.getLocalHost()
+				.getHostAddress() + "", "", "").toURL();
 
 		List<Integer> supportedTcpPorts = new ArrayList<>();
 		List<Integer> supportedHttpPorts = new ArrayList<>();

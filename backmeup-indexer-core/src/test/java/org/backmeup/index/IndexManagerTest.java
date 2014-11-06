@@ -229,8 +229,8 @@ public class IndexManagerTest {
 
 		try (CloseableHttpClient httpClient = HttpClientBuilder.create()
 				.build()) {
-			// TODO set port dynamically!!
-			HttpPost postRequest = new HttpPost("http://localhost:" + httpPort
+			HttpPost postRequest = new HttpPost("http://"
+					+ conf.getHostAddress().getHost() + ":" + httpPort
 					+ "/dummytestindex/article");
 
 			StringEntity input = new StringEntity(
