@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.apache.commons.io.FileUtils;
 import org.backmeup.index.config.Configuration;
 import org.backmeup.index.model.IndexDocument;
+import org.backmeup.index.model.IndexFields;
 import org.backmeup.index.utils.file.JsonSerializer;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -21,6 +22,10 @@ public class ThemisDataSinkTest {
 	public void after() {
 		try {
 			ThemisDataSink.deleteIndexTrueCryptContainer(99998);
+		} catch (IOException e) {
+		}
+		try {
+			ThemisDataSink.deleteAllIndexFragments(99997);
 		} catch (IOException e) {
 		}
 	}
@@ -130,6 +135,27 @@ public class ThemisDataSinkTest {
 			Assert.assertNotNull(fragment);
 
 			ThemisDataSink.deleteIndexFragment(fileID, 99998);
+
+		} catch (IOException e) {
+			Assert.fail("failed saving, getting or deleting indexFragment: "
+					+ e.toString());
+		}
+	}
+
+	@Test
+	public void testAddUUIDtoRecordWhenPersisting() {
+
+		try {
+			Assert.assertFalse(this.indexDoc.getFields().containsKey(
+					IndexFields.FIELD_INDEX_UUID));
+			UUID fileID = ThemisDataSink
+					.saveIndexFragment(this.indexDoc, 99997);
+
+			IndexDocument fragment = ThemisDataSink.getIndexFragment(fileID,
+					99997);
+			Assert.assertNotNull(fragment);
+			Assert.assertTrue(fragment.getFields().containsKey(
+					IndexFields.FIELD_INDEX_UUID));
 
 		} catch (IOException e) {
 			Assert.fail("failed saving, getting or deleting indexFragment: "

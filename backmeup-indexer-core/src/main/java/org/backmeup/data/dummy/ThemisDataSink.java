@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.apache.commons.io.FileUtils;
 import org.backmeup.index.config.Configuration;
 import org.backmeup.index.model.IndexDocument;
+import org.backmeup.index.model.IndexFields;
 import org.backmeup.index.utils.file.JsonSerializer;
 
 /**
@@ -99,9 +100,6 @@ public class ThemisDataSink {
 			throw new IOException("IndexDocument may not be null");
 		}
 
-		// serialize the IndexDocument to JSON
-		String serializedIndexDoc = JsonSerializer.serialize(indexFragment);
-
 		// check if we need to generate a unique file name or if if it's sharing
 		UUID uuid = null;
 		if (filename == null) {
@@ -109,6 +107,12 @@ public class ThemisDataSink {
 		} else {
 			uuid = filename;
 		}
+
+		// before serializing we add the UUID as element within the object
+		indexFragment.field(IndexFields.FIELD_INDEX_UUID, uuid);
+
+		// serialize the IndexDocument to JSON
+		String serializedIndexDoc = JsonSerializer.serialize(indexFragment);
 
 		if (userID > -1 && (serializedIndexDoc != null)) {
 

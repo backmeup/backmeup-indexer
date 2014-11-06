@@ -10,6 +10,7 @@ import java.util.Set;
 import org.backmeup.index.model.FileInfo;
 import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.IndexDocument;
+import org.backmeup.index.model.IndexFields;
 import org.backmeup.index.model.SearchResultAccumulator;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
