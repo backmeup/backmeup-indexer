@@ -58,24 +58,20 @@ public class ThemisDataSinkTest {
 	}
 
 	@Before
-	public void before() {
+	public void before() throws IOException {
 		this.tcTemplateFile = new File(
 				"src/main/resources/elasticsearch_userdata_template_TC_150MB.tc");
-		try {
-			// for Truecrypt container tests
-			ThemisDataSink.saveIndexTrueCryptContainer(this.tcTemplateFile,
-					99998);
+		// for Truecrypt container tests
+		ThemisDataSink.saveIndexTrueCryptContainer(this.tcTemplateFile,
+				99998);
 
-			// for indexFragment tests
-			File fIndexDocument = new File(
-					"src/main/resources/tests/sampleIndexDocument.serindexdocument");
-			String sampleFragment = FileUtils.readFileToString(fIndexDocument,
-					"UTF-8");
-			this.indexDoc = JsonSerializer.deserialize(sampleFragment,
-					IndexDocument.class);
-
-		} catch (IOException e) {
-		}
+		// for indexFragment tests
+		File fIndexDocument = new File(
+				"src/main/resources/tests/sampleIndexDocument.serindexdocument");
+		String sampleFragment = FileUtils.readFileToString(fIndexDocument,
+				"UTF-8");
+		this.indexDoc = JsonSerializer.deserialize(sampleFragment,
+				IndexDocument.class);
 	}
 
 	public File tcTemplateFile;
@@ -88,14 +84,11 @@ public class ThemisDataSinkTest {
 	}
 
 	@Test
-	public void testStoreIndexTCContainerFileForUser() {
+	public void testStoreIndexTCContainerFileForUser() throws IOException {
 		File tcTemplateFile = new File(
 				"src/main/resources/elasticsearch_userdata_template_TC_150MB.tc");
-		try {
-			ThemisDataSink.saveIndexTrueCryptContainer(tcTemplateFile, 99999);
-		} catch (IOException e) {
-			Assert.fail("Should not reach this part of the testcase " + e);
-		}
+
+		ThemisDataSink.saveIndexTrueCryptContainer(tcTemplateFile, 99999);
 	}
 
 	@Test
