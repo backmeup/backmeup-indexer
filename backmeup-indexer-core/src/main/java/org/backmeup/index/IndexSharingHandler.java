@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
+import org.backmeup.data.dummy.ElasticContentBuilder;
 import org.backmeup.data.dummy.ThemisDataSink;
 import org.backmeup.data.dummy.ThemisDataSink.IndexFragmentType;
-import org.backmeup.index.model.ElasticContentBuilder;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.utils.file.JsonSerializer;
 import org.elasticsearch.action.index.IndexResponse;

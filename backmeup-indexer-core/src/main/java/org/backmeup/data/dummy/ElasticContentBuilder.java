@@ -1,8 +1,9 @@
-package org.backmeup.index.model;
+package org.backmeup.data.dummy;
 
 import java.io.IOException;
 import java.util.Map;
 
+import org.backmeup.index.model.IndexDocument;
 import org.elasticsearch.common.text.StringText;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
