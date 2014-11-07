@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.backmeup.index.model.ElasticContentBuilder;
 import org.backmeup.index.model.FileInfo;
 import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.IndexDocument;

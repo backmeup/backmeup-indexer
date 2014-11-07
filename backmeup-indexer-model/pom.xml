@@ -13,5 +13,26 @@
     <artifactId>backmeup-indexer-model</artifactId>
     <packaging>jar</packaging>
     <name>Backmeup Index Model</name>
+    
+    <dependencies>
+         <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>${version.org.elasticsearch}</version>
+        </dependency>
+    </dependencies>
+    
+     <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${version.org.apache.maven.plugins.maven-surefire-plugin}</version>
+                <configuration>
+                    <skipTests>false</skipTests>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

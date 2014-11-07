@@ -27,6 +27,11 @@ import org.backmeup.index.dal.IndexManagerDao;
 import org.backmeup.index.dal.jpa.DataAccessLayerImpl;
 import org.backmeup.index.db.RunningIndexUserConfig;
 import org.backmeup.index.utils.file.FileUtils;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -353,6 +358,26 @@ public class IndexManager {
 			this.log.debug("IndexManager init ES instance failed for user"
 					+ userID + " due to " + e);
 		}
+	}
+
+	/**
+	 * Configures and returns a Client to ElasticSearch to interact with for a
+	 * specific user
+	 * 
+	 * @param userID
+	 * @return
+	 */
+	public Client getESTransportClient(int userID) {
+		RunningIndexUserConfig conf = getRunningIndexUserConfig(userID);
+		Settings settings = ImmutableSettings.settingsBuilder()
+				.put("cluster.name", "user" + userID).build();
+
+		// now try to connect with the TransportClient - requires the
+		// transport.tcp.port for connection
+		Client client = new TransportClient(settings)
+				.addTransportAddress(new InetSocketTransportAddress(conf
+						.getHostAddress().getHost(), conf.getTcpPort()));
+		return client;
 	}
 
 	/**

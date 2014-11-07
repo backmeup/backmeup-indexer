@@ -22,6 +22,21 @@ import org.backmeup.index.utils.file.JsonSerializer;
  */
 public class ThemisDataSink {
 
+	public enum IndexFragmentType {
+		TO_IMPORT_USER_OWNED("to-import/userowned/"), IMPORTED_USER_OWNED(
+				"imported/userowned/");
+
+		private String storage_location;
+
+		IndexFragmentType(String location) {
+			this.storage_location = location;
+		}
+
+		private String getStorageLocation() {
+			return this.storage_location;
+		}
+	}
+
 	/**
 	 * Fetches the user specific TrueCrypt container file which is stored within
 	 * the user space
@@ -84,70 +99,67 @@ public class ThemisDataSink {
 	 */
 	public static void saveSharedIndexFragment(int userIDShares,
 			int userIDToShareWith, UUID indexFragmentRef) throws IOException {
-
+		// TODO OR REMOVE
 	}
 
 	/**
-	 * Helper method used in case when sharing an IndexDocument with another
-	 * user in this case the thwo objects need to have the same UUID
+	 * Persists an IndexDocument within the user's index-fragments space in the
+	 * DataSink. Distinguishes between imported, shared or already indexed
+	 * IndexDocuments
 	 */
-	private static UUID saveIndexFragment(IndexDocument indexFragment,
-			int userID, UUID filename) throws IOException {
+	public static UUID saveIndexFragment(IndexDocument indexFragment,
+			int userID, IndexFragmentType type) throws IOException {
 
-		// TODO continue with output folder
-
+		if (userID <= -1) {
+			throw new IOException("userID missing");
+		}
 		if (indexFragment == null) {
 			throw new IOException("IndexDocument may not be null");
 		}
-
-		// check if we need to generate a unique file name or if if it's sharing
-		UUID uuid = null;
-		if (filename == null) {
-			uuid = UUID.randomUUID();
-		} else {
-			uuid = filename;
+		if (type == null) {
+			throw new IOException(
+					"The IndexFragmentType (location) may not be null");
 		}
 
-		// before serializing we add the UUID as element within the object
-		indexFragment.field(IndexFields.FIELD_INDEX_UUID, uuid);
+		// the object's UUID. same objects across multiple users have same UUID
+		UUID uuid = null;
+
+		// check if we need to generate a unique file name or if if it's sharing
+		if (indexFragment.getFields().containsKey(IndexFields.FIELD_INDEX_UUID)) {
+			// existing object, has already assigned a UUID
+			uuid = (UUID) indexFragment.getFields().get(
+					IndexFields.FIELD_INDEX_UUID);
+		} else {
+			uuid = UUID.randomUUID();
+			// before serializing we add the UUID as element within the object
+			indexFragment.field(IndexFields.FIELD_INDEX_UUID, uuid);
+		}
 
 		// serialize the IndexDocument to JSON
 		String serializedIndexDoc = JsonSerializer.serialize(indexFragment);
 
-		if (userID > -1 && (serializedIndexDoc != null)) {
+		if (serializedIndexDoc != null) {
 
-			FileUtils.writeStringToFile(new File(getDataSinkHome(userID)
-					+ "/user" + userID + "/index-fragments/" + uuid
-					+ ".serindexdocument"), serializedIndexDoc);
+			FileUtils.writeStringToFile(
+					new File(getDataSinkHome(userID) + "/user" + userID
+							+ "/index-fragments/" + type.getStorageLocation()
+							+ uuid + ".serindexdocument"), serializedIndexDoc);
 			return uuid;
 
 		} else {
 			throw new IOException(
 					"Error persisting serialized IndexDocument in user space"
 							+ getDataSinkHome(userID) + "/user" + userID
-							+ "/index-fragments/" + uuid + ".serindexdocument"
-							+ " for userID: " + userID);
+							+ "/index-fragments/" + type.getStorageLocation()
+							+ uuid + ".serindexdocument" + " for userID: "
+							+ userID);
 		}
 
 	}
 
-	/**
-	 * Persists an IndexDocument within the user's index-fragments space in the
-	 * DataSink
-	 * 
-	 * @param indexFragment
-	 * @param userID
-	 * @return uuid of the object created
-	 * @throws IOException
-	 */
-	public static UUID saveIndexFragment(IndexDocument indexFragment, int userID)
-			throws IOException {
-		return saveIndexFragment(indexFragment, userID, null);
-	}
-
-	public static IndexDocument getIndexFragment(UUID objectID, int userID)
-			throws IOException {
-		File f = getIndexFragmentFile(objectID, userID);
+	public static IndexDocument getIndexFragment(UUID objectID, int userID,
+			IndexFragmentType type) throws IOException {
+		File f = getIndexFragmentFile(objectID, userID, type);
 
 		if (userID > -1 && (f.exists() && f.canRead())) {
 			List<String> lines = FileUtils.readLines(f, "UTF-8");
@@ -164,15 +176,17 @@ public class ThemisDataSink {
 		} else {
 			throw new IOException("Error getting index fragment: "
 					+ getDataSinkHome(userID) + "/user" + userID
-					+ "/index-fragments/" + objectID + ".serindexdocument"
-					+ ", file exists? " + f.exists() + ", file is readable? "
-					+ f.canRead());
+					+ "/index-fragments/" + type.getStorageLocation()
+					+ objectID + ".serindexdocument" + ", file exists? "
+					+ f.exists() + ", file is readable? " + f.canRead());
 		}
 	}
 
-	private static File getIndexFragmentFile(UUID objectID, int userID) {
+	private static File getIndexFragmentFile(UUID objectID, int userID,
+			IndexFragmentType type) {
 		return new File(getDataSinkHome(userID) + "/user" + userID
-				+ "/index-fragments/" + objectID + ".serindexdocument");
+				+ "/index-fragments/" + type.getStorageLocation() + objectID
+				+ ".serindexdocument");
 	}
 
 	/**
@@ -182,10 +196,11 @@ public class ThemisDataSink {
 	 * @param userID
 	 * @return
 	 */
-	public static List<UUID> getAllIndexFragmentUUIDs(int userID) {
+	public static List<UUID> getAllIndexFragmentUUIDs(int userID,
+			IndexFragmentType type) {
 		List<UUID> ret = new ArrayList<UUID>();
 		File f = new File(getDataSinkHome(userID) + "/user" + userID
-				+ "/index-fragments/");
+				+ "/index-fragments/" + type.getStorageLocation());
 
 		FilenameFilter textFilter = new FilenameFilter() {
 			@Override
@@ -213,24 +228,25 @@ public class ThemisDataSink {
 		return ret;
 	}
 
-	public static void deleteIndexFragment(UUID objectID, int userID)
-			throws IOException {
-		File f = getIndexFragmentFile(objectID, userID);
+	public static void deleteIndexFragment(UUID objectID, int userID,
+			IndexFragmentType type) throws IOException {
+		File f = getIndexFragmentFile(objectID, userID, type);
 
 		if (userID > -1 && (f.exists() && f.canRead())) {
 			f.delete();
 		} else {
 			throw new IOException("error deleting fragment: "
 					+ getDataSinkHome(userID) + "/user" + userID
-					+ "/index-fragments/" + objectID + ".serindexdocument"
-					+ ", file exists? " + f.exists() + ", file is readable? "
-					+ f.canRead());
+					+ "/index-fragments/" + type.getStorageLocation()
+					+ objectID + ".serindexdocument" + ", file exists? "
+					+ f.exists() + ", file is readable? " + f.canRead());
 		}
 	}
 
-	public static void deleteAllIndexFragments(int userID) throws IOException {
-		for (UUID uuid : getAllIndexFragmentUUIDs(userID)) {
-			deleteIndexFragment(uuid, userID);
+	public static void deleteAllIndexFragments(int userID,
+			IndexFragmentType type) throws IOException {
+		for (UUID uuid : getAllIndexFragmentUUIDs(userID, type)) {
+			deleteIndexFragment(uuid, userID, type);
 		}
 	}
 
