@@ -1,9 +1,10 @@
 package org.backmeup.index;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
 import java.net.URL;
@@ -84,8 +85,10 @@ public class ESConfigurationHandler {
 
 		MapTokenResolver resolver = new MapTokenResolver(tokens);
 
-		try (Reader inputReader = new FileReader(new File(
-				"src/main/resources/elasticsearch_template.yml"))) {
+		ClassLoader classLoader = ESConfigurationHandler.class.getClassLoader();
+        InputStream classpathResource = classLoader.getResourceAsStream(
+		        "elasticsearch_template.yml");
+        try (Reader inputReader = new InputStreamReader(classpathResource)) {
 
 			try (Reader tokenReplaceReader = new TokenReplaceReader(
 					inputReader, resolver)) {

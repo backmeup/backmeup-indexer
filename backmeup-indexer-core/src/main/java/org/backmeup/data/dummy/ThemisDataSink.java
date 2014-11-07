@@ -1,8 +1,10 @@
 package org.backmeup.data.dummy;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -68,8 +70,7 @@ public class ThemisDataSink {
 		}
 
 		if (userID > -1 && (f.exists() && f.canRead())) {
-			FileUtils.copyFile(f, new File(getDataSinkHome(userID) + "/user"
-					+ userID + "/index/elasticsearch_userdata_TC_150MB.tc"));
+		    saveIndexTrueCryptContainer(new FileInputStream(f), userID);
 		} else {
 			throw new IOException(
 					"Error storing Index TrueCrypt Container file "
@@ -79,6 +80,15 @@ public class ThemisDataSink {
 		}
 	}
 
+    public static void saveIndexTrueCryptContainer(InputStream in, int userID) throws IOException {
+        if (in == null) {
+            throw new IOException("file is null");
+        }
+
+        FileUtils.copyInputStreamToFile(in, new File(getDataSinkHome(userID) + "/user"
+                + userID + "/index/elasticsearch_userdata_TC_150MB.tc"));
+    }
+	
 	/**
 	 * Removes the user specific TrueCrypt volume from the users file space
 	 */
@@ -264,10 +274,10 @@ public class ThemisDataSink {
 			if (f.isDirectory() && f.exists()) {
 				return f.getAbsolutePath();
 			}
-			throw new ExceptionInInitializerError(
+			throw new IllegalArgumentException(
 					"user home dir does not exist or is not accessible to system");
 		}
-		throw new ExceptionInInitializerError(
+		throw new IllegalArgumentException(
 				"User Home dir not properly configured within backmeup-indexer.properties");
 	}
 
