@@ -21,3 +21,4 @@ target/
 .DS_Store
 
 derby.log
+hs_err_pid*.log
