@@ -15,9 +15,17 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class ThemisDataSinkTest {
+
+	@Rule
+	public ExpectedException exception = ExpectedException.none();
 
 	@After
 	public void after() {
@@ -112,6 +120,7 @@ public class ThemisDataSinkTest {
 		}
 		try {
 			ThemisDataSink.getIndexTrueCryptContainer(99998);
+
 			Assert.fail("Should not be able to fetch a index truecrypt container file for this user");
 		} catch (IOException e) {
 			Assert.assertTrue(
@@ -171,6 +180,21 @@ public class ThemisDataSinkTest {
 			Assert.fail("failed saving, getting or deleting indexFragment: "
 					+ e.toString());
 		}
+	}
+
+	@Test
+	public void testDeleteAndMoveFragment() throws IOException {
+		UUID fileID = null;
+		fileID = ThemisDataSink.saveIndexFragment(this.indexDoc, 99997,
+				IndexFragmentType.TO_IMPORT_USER_OWNED);
+
+		ThemisDataSink.deleteIndexFragment(fileID, 99997,
+				IndexFragmentType.TO_IMPORT_USER_OWNED);
+
+		this.exception.expect(IOException.class);
+		IndexDocument fragment = ThemisDataSink.getIndexFragment(fileID, 99997,
+				IndexFragmentType.TO_IMPORT_USER_OWNED);
+
 	}
 
 }

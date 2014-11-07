@@ -42,15 +42,8 @@ public class IndexManager {
 		return im;
 	}
 
-	// Note: @see ESConfigurationHandler.checkPortRangeAccepted - these values
+	// TODO @see ESConfigurationHandler.checkPortRangeAccepted - these values
 	// are currently hardcoded there
-	// private List<Integer> availableTCPPorts = new ArrayList<>();
-	// private List<Integer> usedTCPPorts = new ArrayList<>();
-	// private List<Integer> availableHttpPorts = new ArrayList<>();
-	// private List<Integer> usedHttpPorts = new ArrayList<>();
-	// // keeps a userId to Port and DriveLetter mapping
-	// private HashMap<Integer, HashMap<String, String>> userPortMapping = new
-	// HashMap<>();
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -166,9 +159,7 @@ public class IndexManager {
 		}
 	}
 
-	// TODO private final Logger logger =
-	// org.slf4j.LoggerFactory.getLogger(ESUserConfigurationManagement.class);
-	// Add logging statements for warnings and errors
+	// TODO Add logging statements for warnings and errors
 	// TODO encrypt ES Webservice Endpoint (certificates or basic
 	// authentication
 

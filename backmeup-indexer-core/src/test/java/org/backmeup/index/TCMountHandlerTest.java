@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.lang.SystemUtils;
-import org.backmeup.index.TCMountHandler;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;

@@ -1,5 +1,14 @@
 package org.backmeup.index;
 
+import java.io.IOException;
+import java.util.UUID;
+
+import org.backmeup.index.db.RunningIndexUserConfig;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * Contains tests for sharing index fragments with other users - Includes the
@@ -7,11 +16,41 @@ package org.backmeup.index;
  * deleting fragments from Elasticsearch itself - rebuilding an ES index from
  * scratch (file basis)
  */
-public class IndexFragmentSharingTests {
+@RunWith(JUnit4.class)
+public class IndexFragmentSharingTests extends IndexManagerSetup {
 
 	// TODO Add Startup Class for all Integration Tests
 	// TODO @Before -> Put IndexFragment to-import
 	// TODO activateverifyIndexBuiltProperlyFromFragments
+
+	@Rule
+	public ExpectedException exception = ExpectedException.none();
+
+	private RunningIndexUserConfig startupInstance(int userID)
+			throws NumberFormatException, ExceptionInInitializerError,
+			IllegalArgumentException, IOException, InterruptedException {
+
+		this.indexManager.startupInstance(userID);
+		RunningIndexUserConfig conf = this.indexManager
+				.getRunningIndexUserConfig(userID);
+
+		int httpPort = conf.getHttpPort();
+		String drive = conf.getMountedTCDriveLetter();
+
+		System.out.println("user " + userID + " on port: " + httpPort
+				+ " and TC volume: " + drive);
+		// check instance up and running
+		ESConfigurationHandler.isElasticSearchInstanceRunning(
+				conf.getHostAddress(), httpPort);
+
+		return conf;
+	}
+
+	@Test
+	public void importIndexFragmentsToES() {
+		this.exception.expect(IllegalArgumentException.class);
+		UUID uuid = UUID.fromString("Test");
+	}
 
 	/*
 	 * @Test

@@ -1,8 +1,11 @@
 package org.backmeup.index;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
+import org.backmeup.data.dummy.ThemisDataSink;
+import org.backmeup.data.dummy.ThemisDataSink.IndexFragmentType;
 import org.backmeup.index.model.ElasticContentBuilder;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.utils.file.JsonSerializer;
@@ -77,9 +80,30 @@ public class IndexSharingHandler {
 	 * @param userID
 	 */
 	public void importOwnedIndexFragmentInES(int userID) {
-		// TODO continue fetch all objects
-		// IndexDocument doc = ThemisDataSink.getIndexFragment(objectID,
-		// userID);
+
+		List<UUID> uuids = ThemisDataSink.getAllIndexFragmentUUIDs(userID,
+				IndexFragmentType.TO_IMPORT_USER_OWNED);
+		for (UUID uuid : uuids) {
+			try {
+				// get the file
+				IndexDocument doc = ThemisDataSink.getIndexFragment(uuid,
+						userID, IndexFragmentType.TO_IMPORT_USER_OWNED);
+				// import it in elasticsearch
+				importIndexFragmentInES(doc, userID);
+				// create record in imported, delete record in to_import
+				ThemisDataSink.saveIndexFragment(doc, userID,
+						IndexFragmentType.IMPORTED_USER_OWNED);
+				ThemisDataSink.deleteIndexFragment(uuid, userID,
+						IndexFragmentType.TO_IMPORT_USER_OWNED);
+				// TODO keep a ImportedIndexFragment history in the database
+
+			} catch (IOException e) {
+				log.error("Failed to fetch or import IndexFragment " + uuid
+						+ " of type " + IndexFragmentType.TO_IMPORT_USER_OWNED
+						+ " " + e);
+				// TODO ADD PROPER EXCEPTION
+			}
+		}
 	}
 
 	private static void importIndexFragmentInES(IndexDocument doc, int userID) {
@@ -91,8 +115,9 @@ public class IndexSharingHandler {
 
 		} catch (IOException e) {
 			log.error("failed to add IndexDocument "
-					+ JsonSerializer.serialize(doc) + " for userID: " + userID);
-			// TODO THINK ABOUT HOW TO HANDLE THIS CASE
+					+ JsonSerializer.serialize(doc) + " for userID: " + userID
+					+ " " + e);
+			// TODO ADD PROPER EXCEPTION
 		}
 	}
 
