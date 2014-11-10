@@ -1,7 +1,5 @@
 package org.backmeup.index;
 
-import static org.junit.Assert.fail;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +23,6 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -34,215 +31,135 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class IndexManagerTest extends IndexManagerSetup {
-    
+
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
-	@Test
-	public void testESandTCLaunchTest() {
-		try {
-			this.indexManager.startupInstance(999992);
-			RunningIndexUserConfig conf = this.indexManager
-					.getRunningIndexUserConfig(999992);
+    @Test
+    public void testESandTCLaunchTest() throws IndexManagerCoreException, IOException {
+        this.indexManager.startupInstance(999992);
+        RunningIndexUserConfig conf = this.indexManager.getRunningIndexUserConfig(999992);
 
-			int httpPort = conf.getHttpPort();
-			String drive = conf.getMountedTCDriveLetter();
-			Assert.assertNotNull(
-					"mounting TC data drive for user should not fail", drive);
-			Assert.assertTrue("ES http portnumber should have been assigned",
-					httpPort > -1);
-			System.out.println("user 999992 on port: " + httpPort
-					+ " and TC volume: " + drive);
-			// check instance up and running
-			Assert.assertTrue(
-					"ES Instance is not running ",
-					ESConfigurationHandler.isElasticSearchInstanceRunning(
-							conf.getHostAddress(), httpPort));
-		} catch (ExceptionInInitializerError | IllegalArgumentException
-				| IOException | InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			fail("Should not fail when properly configured" + e);
-		}
-	}
+        int httpPort = conf.getHttpPort();
+        String drive = conf.getMountedTCDriveLetter();
+        Assert.assertNotNull("mounting TC data drive for user should not fail", drive);
+        Assert.assertTrue("ES http portnumber should have been assigned", httpPort > -1);
+        System.out.println("user 999992 on port: " + httpPort + " and TC volume: " + drive);
+        // check instance up and running
+        Assert.assertTrue("ES Instance is not running ",
+                ESConfigurationHandler.isElasticSearchInstanceRunning(conf.getHostAddress(), httpPort));
+    }
 
-	@Test
-	@Ignore
-	public void testUserStartupArtefakts() {
-		try {
-			this.indexManager.startupInstance(999991);
-			File fTC = new File(IndexManager.getUserDataWorkingDir(999991)
-					+ "/index/elasticsearch_userdata_TC_150MB.tc");
-			Assert.assertTrue(
-					"Local copy of the TC data container should exist",
-					fTC.exists());
+    @Test
+    public void testUserStartupArtefakts() throws IndexManagerCoreException {
+        this.indexManager.startupInstance(999991);
+        File fTC = new File(IndexManager.getUserDataWorkingDir(999991) + "/index/elasticsearch_userdata_TC_150MB.tc");
+        Assert.assertTrue("Local copy of the TC data container should exist", fTC.exists());
 
-			File fYML = new File(IndexManager.getUserDataWorkingDir(999991)
-					+ "/index/elasticsearch.config.user" + 999991 + ".yml");
-			Assert.assertTrue("User specific ES YML file should exist",
-					fYML.exists());
+        File fYML = new File(IndexManager.getUserDataWorkingDir(999991) + "/index/elasticsearch.config.user" + 999991
+                + ".yml");
+        Assert.assertTrue("User specific ES YML file should exist", fYML.exists());
+    }
 
-		} catch (IOException | ExceptionInInitializerError
-				| IllegalArgumentException | InterruptedException e) {
-			fail("Should not reach this code block" + e);
-		}
+    @Test
+    public void testRetrieveTransportClientAndClusterState() throws IndexManagerCoreException {
+        this.exception.expect(IndexManagerCoreException.class);
+        Client client = this.indexManager.getESTransportClient(999992);
+        Assert.assertNull(client);
 
-	}
+        //startup or get running instance
+        client = this.indexManager.initAndCreateAndDoEverthing(999992L);
+        ClusterState state = this.indexManager.getESClusterState(999992L);
+        Assert.assertNotNull(state);
+        Assert.assertTrue(state.getClusterName().equals("user999992"));
 
-	@Test
-	public void testRetrieveTransportClientAndClusterState() {
-	    this.exception.expect(IndexManagerCoreException.class);
-	    Client client = this.indexManager.getESTransportClient(999992);	    
-	    Assert.assertNull(client);
-	    
-	    //startup or get running instance
-	    client = this.indexManager.initAndCreateAndDoEverthing(999992L);
-	    ClusterState state = this.indexManager.getESClusterState(999992L);
-	    Assert.assertNotNull(state);
-	    Assert.assertTrue(state.getClusterName().equals("user999992"));
-	    
-	    client.close();
-	}
+        client.close();
+    }
 
-	@Test
-	public void testConnectViaTransportClient() throws IOException {
+    @Test
+    public void testConnectViaTransportClient() throws IndexManagerCoreException, IOException {
 
-		try {
-			this.indexManager.startupInstance(999992);
-		} catch (ExceptionInInitializerError | IllegalArgumentException
-				| IOException | InterruptedException e1) {
-			fail("Should not reach this code block" + e1);
-		}
+        this.indexManager.startupInstance(999992);
 
-		// check instance up and running
-		RunningIndexUserConfig conf = this.indexManager
-				.getRunningIndexUserConfig(999992);
-		int httpPort = conf.getHttpPort();
-		String drive = conf.getMountedTCDriveLetter();
-		Assert.assertNotNull("mounting TC data drive for user should not fail",
-				drive);
-		Assert.assertTrue("ES http portnumber should have been assigned",
-				httpPort > -1);
-		System.out.println("user 999992 on port: " + httpPort
-				+ " and TC volume: " + drive);
+        // check instance up and running
+        RunningIndexUserConfig conf = this.indexManager.getRunningIndexUserConfig(999992);
+        int httpPort = conf.getHttpPort();
+        String drive = conf.getMountedTCDriveLetter();
+        Assert.assertNotNull("mounting TC data drive for user should not fail", drive);
+        Assert.assertTrue("ES http portnumber should have been assigned", httpPort > -1);
+        System.out.println("user 999992 on port: " + httpPort + " and TC volume: " + drive);
 
-		Assert.assertTrue(
-				"ES Instance is not running ",
-				ESConfigurationHandler.isElasticSearchInstanceRunning(
-						conf.getHostAddress(), httpPort));
+        Assert.assertTrue("ES Instance is not running ",
+                ESConfigurationHandler.isElasticSearchInstanceRunning(conf.getHostAddress(), httpPort));
 
-		Settings settings = ImmutableSettings.settingsBuilder()
-				.put("cluster.name", "user" + 999992).build();
+        Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", "user" + 999992).build();
 
-		// now try to connect with the TransportClient - requires the
-		// transport.tcp.port for connection
-		Client client = new TransportClient(settings)
-				.addTransportAddress(new InetSocketTransportAddress(conf
-						.getHostAddress().getHost(), conf.getTcpPort()));
+        // now try to connect with the TransportClient - requires the transport.tcp.port for connection
+        Client client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(conf
+                .getHostAddress().getHost(), conf.getTcpPort()));
 
-		IndexResponse response = null;
+        IndexResponse response = null;
 
-		response = client
-				.prepareIndex("twitter", "tweet", "1")
-				.setSource(
-						XContentFactory.jsonBuilder().startObject()
-								.field("user", "john")
-								.field("postDate", new Date())
-								.field("message", "who dont it work")
-								.endObject()).execute().actionGet();
+        response = client
+                .prepareIndex("twitter", "tweet", "1")
+                .setSource(
+                        XContentFactory.jsonBuilder().startObject().field("user", "john").field("postDate", new Date())
+                                .field("message", "who dont it work").endObject()).execute().actionGet();
 
-		Assert.assertTrue("Contains Index",
-				response.getIndex().equals("twitter"));
+        Assert.assertTrue("Contains Index", response.getIndex().equals("twitter"));
 
-		Assert.assertTrue("Contains Type", response.getType().equals("tweet"));
-		
-		DeleteResponse delresponse = client.prepareDelete("twitter", "tweet", "1")
-		        .execute()
-		        .actionGet();
-		System.out.println("Deleted Index: "+delresponse.getIndex());
-		Assert.assertTrue(delresponse.getIndex().equals("twitter"));
-		client.close();
+        Assert.assertTrue("Contains Type", response.getType().equals("tweet"));
 
-	}
+        DeleteResponse delresponse = client.prepareDelete("twitter", "tweet", "1").execute().actionGet();
+        System.out.println("Deleted Index: " + delresponse.getIndex());
+        Assert.assertTrue(delresponse.getIndex().equals("twitter"));
+        client.close();
 
-	@Test
-	public void testCreateIndexElementViaHttpClient() throws IOException {
-		try {
-			this.indexManager.startupInstance(999991);
-			System.out.println("startup done");
+    }
 
-		} catch (ExceptionInInitializerError | IllegalArgumentException
-				| IOException | InterruptedException e1) {
-			fail("Should not reach this code block" + e1);
-		}
+    @Test
+    public void testCreateIndexElementViaHttpClient() throws IndexManagerCoreException, IOException {
 
-		RunningIndexUserConfig conf = this.indexManager
-				.getRunningIndexUserConfig(999991);
+        this.indexManager.startupInstance(999991);
+        System.out.println("startup done");
 
-		int httpPort = conf.getHttpPort();
-		URL host = conf.getHostAddress();
-		Assert.assertTrue("ES instance up and running?", ESConfigurationHandler
-				.isElasticSearchInstanceRunning(host, httpPort));
+        RunningIndexUserConfig conf = this.indexManager.getRunningIndexUserConfig(999991);
 
-		try (CloseableHttpClient httpClient = HttpClientBuilder.create()
-				.build()) {
-			HttpPost postRequest = new HttpPost("http://"
-					+ conf.getHostAddress().getHost() + ":" + httpPort
-					+ "/dummytestindex/article");
+        int httpPort = conf.getHttpPort();
+        URL host = conf.getHostAddress();
+        Assert.assertTrue("ES instance up and running?",
+                ESConfigurationHandler.isElasticSearchInstanceRunning(host, httpPort));
 
-			StringEntity input = new StringEntity(
-					"{\"name\":\"ES JAVA API WorkAround\",\"category\":\"Garbage\"}");
-			input.setContentType("application/json");
-			postRequest.setEntity(input);
+        try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+            HttpPost postRequest = new HttpPost("http://" + conf.getHostAddress().getHost() + ":" + httpPort
+                    + "/dummytestindex/article");
 
-			try (CloseableHttpResponse response = httpClient
-					.execute(postRequest)) {
+            StringEntity input = new StringEntity("{\"name\":\"ES JAVA API WorkAround\",\"category\":\"Garbage\"}");
+            input.setContentType("application/json");
+            postRequest.setEntity(input);
 
-				System.out.println(response.toString());
-				if (response.getStatusLine().getStatusCode() != 201) {
-					Assert.fail("Failed : HTTP error code : "
-							+ response.getStatusLine().getStatusCode());
-				}
+            try (CloseableHttpResponse response = httpClient.execute(postRequest)) {
 
-				BufferedReader br = new BufferedReader(new InputStreamReader(
-						(response.getEntity().getContent())));
+                System.out.println(response.toString());
+                if (response.getStatusLine().getStatusCode() != 201) {
+                    Assert.fail("Failed : HTTP error code : " + response.getStatusLine().getStatusCode());
+                }
 
-				String output;
-				while ((output = br.readLine()) != null) {
-					System.out.println("got response: " + output);
-					Assert.assertTrue("Contains Index", output.contains("\""
-							+ "_index" + "\"" + ":" + "\"" + "dummytestindex"
-							+ "\""));
+                BufferedReader br = new BufferedReader(new InputStreamReader((response.getEntity().getContent())));
 
-					Assert.assertTrue("Contains Type", output.contains("\""
-							+ "_type" + "\"" + ":" + "\"" + "article" + "\""));
+                String output;
+                while ((output = br.readLine()) != null) {
+                    System.out.println("got response: " + output);
+                    Assert.assertTrue("Contains Index", output.contains("\"" + "_index" + "\"" + ":" + "\""
+                            + "dummytestindex" + "\""));
 
-					Assert.assertTrue("Contains Created", output.contains("\""
-							+ "created" + "\"" + ":" + "true"));
-				}
-			}
-		}
-	}
+                    Assert.assertTrue("Contains Type", output.contains("\"" + "_type" + "\"" + ":" + "\"" + "article"
+                            + "\""));
 
-	@Test
-	@Ignore
-	public void testShutdown() throws IOException, InterruptedException {
-		// test if the shutdown and isRunning implementation is properly working
-		int userID = 999993;
-		this.indexManager.startupInstance(userID);
+                    Assert.assertTrue("Contains Created", output.contains("\"" + "created" + "\"" + ":" + "true"));
+                }
+            }
+        }
+    }
 
-		RunningIndexUserConfig conf = this.indexManager
-				.getRunningIndexUserConfig(999991);
-
-		int httpPort = conf.getHttpPort();
-		URL host = conf.getHostAddress();
-		Assert.assertTrue("ES instance up and running?", ESConfigurationHandler
-				.isElasticSearchInstanceRunning(host, httpPort));
-
-		this.indexManager.shutdownInstance(userID);
-
-		Assert.assertFalse("ES instance up and running?",
-				ESConfigurationHandler.isElasticSearchInstanceRunning(host,
-						httpPort));
-	}
 }

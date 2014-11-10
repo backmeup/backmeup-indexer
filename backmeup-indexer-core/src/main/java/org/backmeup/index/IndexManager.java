@@ -46,36 +46,41 @@ public class IndexManager {
     }
 
     /**
-     * Startup or fetches a running ElasticSearch Instance for a given user and returns a 
-     * client handle for communication
+     * Startup or fetches a running ElasticSearch Instance for a given user and returns a client handle for
+     * communication
+     * 
      * @param userId
      * @return
      */
     public Client initAndCreateAndDoEverthing(Long userId) {
-        try{
+        try {
             //checks if an ES instance is responding and returns a new client instance if so
             ClusterState state = this.getESClusterState(userId);
             return this.getESTransportClient(userId.intValue());
-            
-        }catch(IndexManagerCoreException e){
+
+        } catch (IndexManagerCoreException e) {
             //in this case we need to fire up an ES instance for this user
             try {
                 this.startupInstance(userId.intValue());
                 return this.getESTransportClient(userId.intValue());
-                
-            } catch (IndexManagerCoreException| NumberFormatException | IOException | InterruptedException e1) {
-               this.log.error("failed to startup/connect with running instance and return a client object for user "+userId+" "+e1);
-               //in this case return null for now.
-               return null;
+
+            } catch (IndexManagerCoreException e1) {
+                this.log.error("failed to startup/connect with running instance and return a client object for user "
+                        + userId + ". Returning null", e1);
+
+                //call rollback
+                this.shutdownInstance(userId.intValue());
+
+                //in this case return null for now.
+                return null;
             }
         }
     }
-    
 
     // TODO @see ESConfigurationHandler.checkPortRangeAccepted - these values
     // are currently hardcoded there
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(IndexManager.class);
 
     private HashMap<URL, AvailableESInstanceState> availableESInstances = new HashMap<>();
 
@@ -200,7 +205,9 @@ public class IndexManager {
      * @throws IllegalArgumentException
      *             when the TrueCrypt instance was not configured properly
      */
-    public void startupInstance(int userID) throws IOException, NumberFormatException, InterruptedException {
+    public void startupInstance(int userID) throws IndexManagerCoreException {
+
+        this.log.debug("startupInstance for userID: " + userID + " started");
 
         // 1) check if user has been initialized
         File fTCContainerOnDataSink = null;
@@ -209,35 +216,60 @@ public class IndexManager {
         } catch (IOException e) {
             // initialize user
             init(userID);
-            // try the call again - user now initialized, if error -> throw
-            // exceptions
-            fTCContainerOnDataSink = ThemisDataSink.getIndexTrueCryptContainer(userID);
+            // try the call again - user now initialized, if error -> fail
+            try {
+                fTCContainerOnDataSink = ThemisDataSink.getIndexTrueCryptContainer(userID);
+            } catch (IOException e1) {
+                String s = "startupInstance for userID: " + userID + " step1 - failed";
+                this.log.debug(s, e1);
+                throw new IndexManagerCoreException(s, e1);
+            }
         }
+        this.log.debug("startupInstance for userID: " + userID + " step1 - ok");
 
         // 2) get a local copy of the TrueCrypt container for the given user
-        File fTCContainer = copyTCContainerFileToLocalWorkingDir(fTCContainerOnDataSink, userID);
+        File fTCContainer;
+        try {
+            fTCContainer = copyTCContainerFileToLocalWorkingDir(fTCContainerOnDataSink, userID);
+            this.log.debug("startupInstance for userID: " + userID + " step2 - ok");
+        } catch (IOException e1) {
+            String s = "startupInstance for userID: " + userID + " step2 - failed";
+            this.log.debug(s, e1);
+            throw new IndexManagerCoreException(s, e1);
+        }
 
         // 3) Now mount the ES data volume
-        // TODO currently when all available drives are in use the system will
-        // throw an IOException
+        // TODO currently when all available drives are in use the system will throw an IOException
         String tcMountedDriveLetter;
 
-        tcMountedDriveLetter = TCMountHandler.mount(fTCContainer, "12345", TCMountHandler.getSupportedDriveLetters()
-                .get(0));
-
-        this.log.debug("Mounted Drive Letter: " + tcMountedDriveLetter + "from: " + fTCContainer.getAbsolutePath());
+        try {
+            tcMountedDriveLetter = TCMountHandler.mount(fTCContainer, "12345", TCMountHandler
+                    .getSupportedDriveLetters().get(0));
+            this.log.debug("startupInstance for userID: " + userID + " step3 - ok");
+            this.log.debug("Mounted Drive Letter: " + tcMountedDriveLetter + "from: " + fTCContainer.getAbsolutePath());
+        } catch (ExceptionInInitializerError | IllegalArgumentException | IOException | InterruptedException e1) {
+            String s = "startupInstance for userID: " + userID + " step3 - failed";
+            this.log.debug(s, e1);
+            throw new IndexManagerCoreException(s, e1);
+        }
 
         // 4) crate a user specific ElasticSearch startup configuration file
-        // TODO currently when all available ports are in use the system will
-        // throw a NumberFormatException
+        // TODO currently when all available ports are in use the system will throw a NumberFormatException
         int tcpPort = getFreeESTCPPort();
         int httpPort = getFreeESHttpPort();
 
-        // this file contains the user specific port configuration, data and log
-        // location, etc.
-        ESConfigurationHandler.createUserYMLStartupFile(userID, this.defaultHost, tcpPort, httpPort,
-                tcMountedDriveLetter);
+        // this file contains the user specific ES startup config (data, ports, etc.)
+        try {
+            ESConfigurationHandler.createUserYMLStartupFile(userID, this.defaultHost, tcpPort, httpPort,
+                    tcMountedDriveLetter);
+            this.log.debug("startupInstance for userID: " + userID + " step4 - ok");
+        } catch (NumberFormatException | ExceptionInInitializerError | IOException e1) {
+            String s = "startupInstance for userID: " + userID + " step4 - failed";
+            this.log.debug(s, e1);
+            throw new IndexManagerCoreException(s, e1);
+        }
 
+        // 5) persist the configuration within the database
         try {
             // TODO currently only one host machine for ES supported: localhost
             URI uri = new URI("http", InetAddress.getLocalHost().getHostAddress() + "", "", "");
@@ -250,48 +282,94 @@ public class IndexManager {
             this.entityManager.getTransaction().begin();
             this.dao.save(runningConfig);
             this.entityManager.getTransaction().commit();
+            this.log.debug("startupInstance for userID: " + userID + " step5 - ok");
 
-        } catch (URISyntaxException e) {
-            // may not happen
-            this.entityManager.getTransaction().rollback();
+        } catch (Exception e1) {
+            String s = "startupInstance for userID: " + userID + " step5 - failed";
+            this.log.debug(s, e1);
+            throw new IndexManagerCoreException(s, e1);
         }
 
-        // just of testing:
-        RunningIndexUserConfig c = this.dao.findConfigByUserId(Long.valueOf(userID));
-        this.log.debug("using mounting point: " + c.getMountedTCDriveLetter() + " for source: "
-                + c.getMountedContainerLocation());
+        // 6) now power on elasticsearch
+        try {
+            ESConfigurationHandler.startElasticSearch(userID);
+            this.log.debug("startupInstance for userID: " + userID + " step6 - ok");
+            this.log.info("started ES Instance " + getRunningIndexUserConfig(userID).getClusterName() + " on host: "
+                    + getRunningIndexUserConfig(userID).getHostAddress().getHost() + ":"
+                    + getRunningIndexUserConfig(userID).getHttpPort());
 
-        // 5) now power on elasticsearch
-        ESConfigurationHandler.startElasticSearch(userID);
-        this.log.debug("started ES Instance? on host: " + getRunningIndexUserConfig(userID).getClusterName() + ":"
-                + getRunningIndexUserConfig(userID).getHttpPort());
-        // check instance up and running
-        // import waiting index files (shared data)
+        } catch (IOException | InterruptedException e1) {
+            String s = "startupInstance for userID: " + userID + " step6 - failed";
+            this.log.debug(s, e1);
+            throw new IndexManagerCoreException(s, e1);
+        }
+
+        // 7) check instance up and running
+        try {
+            getESClusterState(Long.valueOf(userID));
+        } catch (IndexManagerCoreException e1) {
+            String s = "startupInstance for userID: " + userID + " step7 - failed";
+            this.log.debug(s, e1);
+            throw new IndexManagerCoreException(s, e1);
+        }
     }
 
-    public void shutdownInstance(int userID) throws IllegalArgumentException, ExceptionInInitializerError, IOException,
-            InterruptedException {
-        // TODO need to create a transaction for this
+    /**
+     * Handles the shutdown (rollback) of TC, ES, Sharing, DB-persistency, etc. for a given instance
+     * 
+     * @param userID
+     */
+    public void shutdownInstance(int userID) {
+        this.log.debug("shutdownInstance for userID: " + userID + " started");
 
+        //1. get the perstisted records from DB
         RunningIndexUserConfig runningInstanceConfig = getRunningIndexUserConfig(userID);
+        if (runningInstanceConfig == null) {
+            //if they are null we can't do anything
+            this.log.debug("shutdownInstance for userID: " + userID
+                    + " step1 - failed, no configuration persisted in db");
+            return;
+        } else {
+            this.log.debug("shutdownInstance for userID: " + userID + " step1 - ok");
+        }
 
-        // shutdown the ElasticSearch Instance
-        ESConfigurationHandler.stopElasticSearch(userID);
+        //2. shutdown the ElasticSearch Instance
+        try {
+            ESConfigurationHandler.stopElasticSearch(userID);
+            this.log.debug("shutdownInstance for userID: " + userID + " step2 - ok");
+        } catch (IOException e) {
+            this.log.debug("shutdownInstance for userID: " + userID + " step2 - failed", e);
+        }
 
-        // unmount the truecrypt volume
-        String driveLetter = runningInstanceConfig.getMountedTCDriveLetter();
-        TCMountHandler.unmount(driveLetter);
+        //3. unmount the truecrypt volume
+        try {
+            String driveLetter = runningInstanceConfig.getMountedTCDriveLetter();
+            TCMountHandler.unmount(driveLetter);
+            this.log.debug("shutdownInstance for userID: " + userID + " step3 - ok");
+        } catch (IllegalArgumentException | ExceptionInInitializerError | IOException | InterruptedException e) {
+            this.log.debug("shutdownInstance for userID: " + userID + " step3 - failed", e);
+        }
 
-        // persist the index data files within the container back to the Themis
-        // data sink
-        ThemisDataSink.saveIndexTrueCryptContainer(new File(runningInstanceConfig.getMountedContainerLocation()),
-                userID);
+        //4. persist the index data files within the container back to the Themis data sink
+        try {
+            ThemisDataSink.saveIndexTrueCryptContainer(new File(runningInstanceConfig.getMountedContainerLocation()),
+                    userID);
+            this.log.debug("shutdownInstance for userID: " + userID + " step4 - ok");
+        } catch (IOException e) {
+            this.log.debug("shutdownInstance for userID: " + userID + " step4 - failed", e);
+        }
 
-        // remove the userconfiguration from db and release the ports
-        releaseRunningInstanceMapping(userID);
+        //5. remove the userconfiguration from db and release the ports
+        try {
+            releaseRunningInstanceMapping(userID);
+            this.log.debug("shutdownInstance for userID: " + userID + " step4 - ok");
+        } catch (IOException e) {
+            this.log.debug("shutdownInstance for userID: " + userID + " step5 - failed", e);
+        }
 
         // whipe the temp working directory
         deleteLocalWorkingDir(userID);
+        this.log.debug("shutdownInstance for userID: " + userID + " completed ok");
     }
 
     /**
@@ -324,15 +402,21 @@ public class IndexManager {
      * Cleans up the available and used port mapping and updates the database This method does not stop running ES and
      * TC instances
      */
-    private void releaseRunningInstanceMapping(int userID) {
+    private void releaseRunningInstanceMapping(int userID) throws IOException {
 
-        this.entityManager.getTransaction().begin();
-        RunningIndexUserConfig config = this.dao.findById(Long.valueOf(userID));
-        this.availableESInstances.get(this.defaultHost).addAvailableHTTPPort(config.getHttpPort());
-        this.availableESInstances.get(this.defaultHost).addAvailableTCPPort(config.getTcpPort());
+        try {
+            this.entityManager.getTransaction().begin();
+            RunningIndexUserConfig config = this.dao.findById(Long.valueOf(userID));
+            this.availableESInstances.get(this.defaultHost).addAvailableHTTPPort(config.getHttpPort());
+            this.availableESInstances.get(this.defaultHost).addAvailableTCPPort(config.getTcpPort());
 
-        this.dao.delete(config);
-        this.entityManager.getTransaction().commit();
+            this.dao.delete(config);
+            this.entityManager.getTransaction().commit();
+        } catch (Exception e) {
+            this.entityManager.getTransaction().rollback();
+            throw new IOException("Rolling back transaction for userID: " + userID
+                    + " availableHTTP and availableTCP port declaration out of sync");
+        }
     }
 
     /**
@@ -344,8 +428,9 @@ public class IndexManager {
         // same default password as this cannot be changed via TC command line
         // interface. idea: keep default password but encrypt the container file
         try {
-            ThemisDataSink.saveIndexTrueCryptContainer(getClass().getClassLoader().getResourceAsStream(
-                    "elasticsearch_userdata_template_TC_150MB.tc"), userID);
+            ThemisDataSink.saveIndexTrueCryptContainer(
+                    getClass().getClassLoader().getResourceAsStream("elasticsearch_userdata_template_TC_150MB.tc"),
+                    userID);
         } catch (IOException e) {
             this.log.debug("IndexManager init ES instance failed for user" + userID + " due to " + e);
         }
@@ -357,36 +442,44 @@ public class IndexManager {
      * @param userID
      * @return
      */
-    public Client getESTransportClient(int userID)  throws IndexManagerCoreException{
+    public Client getESTransportClient(int userID) throws IndexManagerCoreException {
         //TODO Keep Clients and last accessed timestamp? 
         RunningIndexUserConfig conf = getRunningIndexUserConfig(userID);
-        if(conf!=null){
+        if (conf != null) {
             Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", "user" + userID).build();
 
             // now try to connect with the TransportClient - requires the
             // transport.tcp.port for connection
             Client client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(conf
-                .getHostAddress().getHost(), conf.getTcpPort()));
+                    .getHostAddress().getHost(), conf.getTcpPort()));
             return client;
-        }
-        else{
-            throw new IndexManagerCoreException("Failed to create ES TransportClient for userID: " +userID+" due to missing RunningIndexUserConfig");
+        } else {
+            throw new IndexManagerCoreException("Failed to create ES TransportClient for userID: " + userID
+                    + " due to missing RunningIndexUserConfig");
         }
     }
-    
-    public ClusterState getESClusterState(Long userId) throws IndexManagerCoreException{
+
+    /**
+     * Retrieves the ClusterState of a mounted ES cluster for a given userID
+     * 
+     * @param userId
+     * @return
+     * @throws IndexManagerCoreException
+     *             if now instance is available
+     */
+    public ClusterState getESClusterState(Long userId) throws IndexManagerCoreException {
         //check if we've got a DB record
         RunningIndexUserConfig config = getRunningIndexUserConfig(userId.intValue());
-       
-        if(config!=null){
+
+        if (config != null) {
             Client client = this.getESTransportClient(userId.intValue());
-            ClusterState clusterState = client.admin().cluster().state(new ClusterStateRequest()).actionGet(10, TimeUnit.SECONDS).getState();
+            ClusterState clusterState = client.admin().cluster().state(new ClusterStateRequest())
+                    .actionGet(10, TimeUnit.SECONDS).getState();
             client.close();
-            this.log.debug("Clusterstate for userID: " +userId+" "+clusterState.prettyPrint());
+            this.log.debug("Clusterstate for userID: " + userId + " " + clusterState.prettyPrint());
             return clusterState;
-        }
-        else{
-            throw new IndexManagerCoreException("Clusterstate for userID: " +userId+" "+"Cluster not responding");
+        } else {
+            throw new IndexManagerCoreException("Clusterstate for userID: " + userId + " " + "Cluster not responding");
         }
     }
 
