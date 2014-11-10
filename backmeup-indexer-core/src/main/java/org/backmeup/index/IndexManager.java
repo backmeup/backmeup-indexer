@@ -115,12 +115,15 @@ public class IndexManager {
     // CDI lifecycle methods --------------------------------------------------
     @PostConstruct
     public void startupIndexManager() {
-        this.log.debug("startup() IndexManager (ApplicationScoped)");
+        this.log.debug("startup() IndexManager (ApplicationScoped) completed");
     }
 
     @PreDestroy
     public void shutdownIndexManager() {
-        this.log.debug("shutdown() IndexManager (ApplicationScoped)");
+        this.log.debug("shutdown() IndexManager (ApplicationScoped) started");
+        //cleanup - shutdown all running instances
+        shutdownAllRunningInstances(this.defaultHost);
+        this.log.debug("shutdown() all running ElasticSearch instances on " + this.defaultHost + " completed");
         this.entityManagerFactory.close();
     }
 
@@ -151,7 +154,7 @@ public class IndexManager {
         // init the available port range on elasticsearch
         // Note: @see ESConfigurationHandler.checkPortRangeAccepted - these
         // values are currently also hardcoded there
-        // TODO reset the port range
+        // TODO reset the port range to 9300 and 9200
         for (int i = 9360; i <= 9399; i++) {
             supportedTcpPorts.add(i);
         }
@@ -166,9 +169,11 @@ public class IndexManager {
 
     /**
      * When initializing the manager sync the available port information with the ones already in use - this information
-     * is persisted within the DB
+     * is persisted within the DB - currently ES instances are not reactivated on application startup
      */
     private void syncAvailablePortswithPortsInUseFromDB(URL host) {
+
+        //TODO possibly need to recreate ES instances marked as running within the DB
 
         // get all running instances according to the DB entries
         List<RunningIndexUserConfig> runningConfigs = this.dao.getAllESInstanceConfigs(host);
@@ -184,10 +189,6 @@ public class IndexManager {
                 }
         }
     }
-
-    // TODO Add logging statements for warnings and errors
-    // TODO encrypt ES Webservice Endpoint (certificates or basic
-    // authentication
 
     /**
      * Runs the ES configuration, index data mounting from TrueCrypt and powers on a ES instance for a given user. mount
@@ -370,6 +371,17 @@ public class IndexManager {
         // whipe the temp working directory
         deleteLocalWorkingDir(userID);
         this.log.debug("shutdownInstance for userID: " + userID + " completed ok");
+    }
+
+    /**
+     * Shuts down all running ES + TC instances on a given host
+     */
+    private void shutdownAllRunningInstances(URL host) {
+        // get all running instances according to the DB entries
+        List<RunningIndexUserConfig> runningConfigs = this.dao.getAllESInstanceConfigs(host);
+        for (RunningIndexUserConfig con : runningConfigs) {
+            shutdownInstance(con.getUserID().intValue());
+        }
     }
 
     /**
