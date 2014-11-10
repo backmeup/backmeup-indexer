@@ -95,6 +95,7 @@ public class IndexManager {
     private EntityManagerFactory entityManagerFactory;
     private EntityManager entityManager;
     private IndexManagerDao dao;
+    private IndexCoreGarbageCollector cleanupTask;
 
     private static IndexManager im = new IndexManager();
 
@@ -103,6 +104,7 @@ public class IndexManager {
         try {
             createEntityManager();
             initAvailableInstances();
+            this.cleanupTask = new IndexCoreGarbageCollector();
 
         } catch (MalformedURLException | URISyntaxException | UnknownHostException e) {
             this.log.error("IndexManager initialization failed " + e);
@@ -121,9 +123,14 @@ public class IndexManager {
     @PreDestroy
     public void shutdownIndexManager() {
         this.log.debug("shutdown() IndexManager (ApplicationScoped) started");
+
         //cleanup - shutdown all running instances
         shutdownAllRunningInstances(this.defaultHost);
         this.log.debug("shutdown() all running ElasticSearch instances on " + this.defaultHost + " completed");
+
+        //stop the garbage collector
+        this.cleanupTask.end();
+
         this.entityManagerFactory.close();
     }
 
@@ -169,11 +176,10 @@ public class IndexManager {
 
     /**
      * When initializing the manager sync the available port information with the ones already in use - this information
-     * is persisted within the DB - currently ES instances are not reactivated on application startup
+     * is persisted within the DB - if a given instance is not up and running anymore issue shutdown otherwise keep
+     * instance running and reconnect
      */
     private void syncAvailablePortswithPortsInUseFromDB(URL host) {
-
-        //TODO possibly need to recreate ES instances marked as running within the DB
 
         // get all running instances according to the DB entries
         List<RunningIndexUserConfig> runningConfigs = this.dao.getAllESInstanceConfigs(host);
@@ -182,10 +188,19 @@ public class IndexManager {
         for (RunningIndexUserConfig config : runningConfigs) {
             if ((config.getHostAddress() != null) && (config.getHttpPort() != null))
                 if (this.availableESInstances.get(config.getHostAddress()) != null) {
-                    // remove host + port from available instances
-                    this.availableESInstances.get(config.getHostAddress())
-                            .removeAvailableHTTPPort(config.getHttpPort());
-                    this.availableESInstances.get(config.getHostAddress()).removeAvailableTCPPort(config.getTcpPort());
+                    //check the instance's state
+                    try {
+                        //check if the instance is still up and running
+                        this.getESClusterState(config.getUserID());
+                        // remove host + port from available ones
+                        this.availableESInstances.get(config.getHostAddress()).removeAvailableHTTPPort(
+                                config.getHttpPort());
+                        this.availableESInstances.get(config.getHostAddress()).removeAvailableTCPPort(
+                                config.getTcpPort());
+                    } catch (IndexManagerCoreException e) {
+                        //not reachable - try to clean up the mess
+                        this.shutdownInstance(config.getUserID().intValue());
+                    }
                 }
         }
     }
@@ -313,6 +328,9 @@ public class IndexManager {
             this.log.debug(s, e1);
             throw new IndexManagerCoreException(s, e1);
         }
+
+        // 8) register a timeout for this instance
+        IndexKeepAliveTimer.getInstance().extendTTL20(Long.valueOf(userID));
     }
 
     /**
@@ -368,9 +386,12 @@ public class IndexManager {
             this.log.debug("shutdownInstance for userID: " + userID + " step5 - failed", e);
         }
 
-        // whipe the temp working directory
+        //6. whipe the temp working directory
         deleteLocalWorkingDir(userID);
         this.log.debug("shutdownInstance for userID: " + userID + " completed ok");
+
+        //7. remove entries in the garbage collector
+        IndexKeepAliveTimer.getInstance().flagAsShutdown(Long.valueOf(userID));
     }
 
     /**

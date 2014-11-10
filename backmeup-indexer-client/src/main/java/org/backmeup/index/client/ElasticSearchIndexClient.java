@@ -228,4 +228,5 @@ public class ElasticSearchIndexClient implements IndexClient {
         this.logger.debug(" done.");
     }
 
+    //TODO UPDATE TTL SERVICE
 }
