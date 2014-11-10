@@ -11,6 +11,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -27,8 +28,10 @@ import org.backmeup.index.dal.IndexManagerDao;
 import org.backmeup.index.dal.jpa.DataAccessLayerImpl;
 import org.backmeup.index.db.RunningIndexUserConfig;
 import org.backmeup.index.utils.file.FileUtils;
+import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -42,15 +45,32 @@ public class IndexManager {
         return im;
     }
 
+    /**
+     * Startup or fetches a running ElasticSearch Instance for a given user and returns a 
+     * client handle for communication
+     * @param userId
+     * @return
+     */
     public Client initAndCreateAndDoEverthing(Long userId) {
-        try {
-            // TODO Andrew fix all ID to long
-            IndexManager.getInstance().startupInstance(userId.intValue());
-            return IndexManager.getInstance().getESTransportClient(userId.intValue());
-        } catch (Exception ex) {
-            throw new IndexingException(ex);
+        try{
+            //checks if an ES instance is responding and returns a new client instance if so
+            ClusterState state = this.getESClusterState(userId);
+            return this.getESTransportClient(userId.intValue());
+            
+        }catch(IndexManagerCoreException e){
+            //in this case we need to fire up an ES instance for this user
+            try {
+                this.startupInstance(userId.intValue());
+                return this.getESTransportClient(userId.intValue());
+                
+            } catch (IndexManagerCoreException| NumberFormatException | IOException | InterruptedException e1) {
+               this.log.error("failed to startup/connect with running instance and return a client object for user "+userId+" "+e1);
+               //in this case return null for now.
+               return null;
+            }
         }
-    };
+    }
+    
 
     // TODO @see ESConfigurationHandler.checkPortRangeAccepted - these values
     // are currently hardcoded there
@@ -337,15 +357,37 @@ public class IndexManager {
      * @param userID
      * @return
      */
-    public Client getESTransportClient(int userID) {
+    public Client getESTransportClient(int userID)  throws IndexManagerCoreException{
+        //TODO Keep Clients and last accessed timestamp? 
         RunningIndexUserConfig conf = getRunningIndexUserConfig(userID);
-        Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", "user" + userID).build();
+        if(conf!=null){
+            Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", "user" + userID).build();
 
-        // now try to connect with the TransportClient - requires the
-        // transport.tcp.port for connection
-        Client client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(conf
+            // now try to connect with the TransportClient - requires the
+            // transport.tcp.port for connection
+            Client client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(conf
                 .getHostAddress().getHost(), conf.getTcpPort()));
-        return client;
+            return client;
+        }
+        else{
+            throw new IndexManagerCoreException("Failed to create ES TransportClient for userID: " +userID+" due to missing RunningIndexUserConfig");
+        }
+    }
+    
+    public ClusterState getESClusterState(Long userId) throws IndexManagerCoreException{
+        //check if we've got a DB record
+        RunningIndexUserConfig config = getRunningIndexUserConfig(userId.intValue());
+       
+        if(config!=null){
+            Client client = this.getESTransportClient(userId.intValue());
+            ClusterState clusterState = client.admin().cluster().state(new ClusterStateRequest()).actionGet(10, TimeUnit.SECONDS).getState();
+            client.close();
+            this.log.debug("Clusterstate for userID: " +userId+" "+clusterState.prettyPrint());
+            return clusterState;
+        }
+        else{
+            throw new IndexManagerCoreException("Clusterstate for userID: " +userId+" "+"Cluster not responding");
+        }
     }
 
     /**

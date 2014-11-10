@@ -15,18 +15,28 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.backmeup.index.db.RunningIndexUserConfig;
+import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.junit.Assert;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class IndexManagerTest extends IndexManagerSetup {
+    
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
 
 	@Test
 	public void testESandTCLaunchTest() {
@@ -80,9 +90,18 @@ public class IndexManagerTest extends IndexManagerSetup {
 	}
 
 	@Test
-	@Ignore
-	public void testUserShutdownArtefakts() {
-		fail("Not yet implemented");
+	public void testRetrieveTransportClientAndClusterState() {
+	    this.exception.expect(IndexManagerCoreException.class);
+	    Client client = this.indexManager.getESTransportClient(999992);	    
+	    Assert.assertNull(client);
+	    
+	    //startup or get running instance
+	    client = this.indexManager.initAndCreateAndDoEverthing(999992L);
+	    ClusterState state = this.indexManager.getESClusterState(999992L);
+	    Assert.assertNotNull(state);
+	    Assert.assertTrue(state.getClusterName().equals("user999992"));
+	    
+	    client.close();
 	}
 
 	@Test
@@ -136,6 +155,13 @@ public class IndexManagerTest extends IndexManagerSetup {
 				response.getIndex().equals("twitter"));
 
 		Assert.assertTrue("Contains Type", response.getType().equals("tweet"));
+		
+		DeleteResponse delresponse = client.prepareDelete("twitter", "tweet", "1")
+		        .execute()
+		        .actionGet();
+		System.out.println("Deleted Index: "+delresponse.getIndex());
+		Assert.assertTrue(delresponse.getIndex().equals("twitter"));
+		client.close();
 
 	}
 
