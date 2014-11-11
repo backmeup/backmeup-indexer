@@ -12,13 +12,50 @@ BackMeUp v2 "Themis" Index Component. Provides a central interface for handling 
  - PostgresSQL [Tested under  v9.3 x86]
  - JDK v1.7 [Tested under Oracle JDK 1.7 and openJDK]
  
- Specific to the index-core
+ Specific to index-core
  - Truecrypt v7.1a [from https://www.grc.com/misc/truecrypt/truecrypt.htm]
  - Elasticsearch 1.2.0 [http://www.elasticsearch.org/downloads/1-2-0/]
  
 For implicitly required software artefacts and version see the project's pom.xml files
-   
-TODO continue...
+
+1) Configuration
+================
+Make sure to install TrueCrypt v7.1a and ElasticSearch v1.2.0 on your operating system. 
+Go to backmeup-indexer-core>src>main>resources>backmeup-indexer.properties and edit
+according to your setup
+
+Truecrypt
+ - Linux:
+   * installation defaults to /usr/bin - no settings required
+   * volumes are mounted to /media/themis/ - make sure this mounting point is accessible
+   * allow sudo to run without password for the current user (required for mounting)
+ - Windows
+   * truecrypt.home.dir = C:/Program Files/TrueCrypt
+   * truecrypt.mountable.drives=I,J,K,L - a comma seperated list of mountable drives to use
+ 
+ Elasticsearch
+ - elasticsearch.home.dir = C:/Program Files/elasticsearch-1.2.0
+
+ #a directory where truecrypt container files are copied to when mounting them
+ #as well as elasticsearch yml files when starting the ES user instances
+ index.temp.data.home.dir = D:/temp/themis/indexuserspace1
+
+ #the root directory of the themis-datasink (dummy implementation)
+ themis-datasink.home.dir = D:/temp/themis/datasink
+
+
+2) Deployment
+=============
+To deploy backmeup-indexer call
+* mvn clean install (-P TrueCryptTests)
+then change to backmeup-service project to run
+* mvn clean install -DskipTests -DintegrationTests
+
+Note:
+The Maven integration test profile is automatically executed for this component when Elasticsearch is detected in
+C:/Program Files/elasticsearch-1.2.0/bin/elasticsearch.bat
+To manually execute the backmeup-indexer integration tests call maven with '-P TrueCryptTests'
+
 
 Hints
 =====

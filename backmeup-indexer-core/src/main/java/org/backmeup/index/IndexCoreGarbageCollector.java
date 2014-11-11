@@ -31,6 +31,7 @@ public class IndexCoreGarbageCollector {
                 IndexCoreGarbageCollector.this.log
                         .debug("started running garbage collection for ElasticSearch Instances no longer in use");
                 List<Long> userIDs = IndexKeepAliveTimer.getInstance().getUsersToShutdown();
+                IndexCoreGarbageCollector.this.log.debug("found " + userIDs.size() + " instances to shutdown");
                 for (Long userId : userIDs) {
                     //iterate over all instances to shutdown
                     IndexManager.getInstance().shutdownInstance(userId.intValue());

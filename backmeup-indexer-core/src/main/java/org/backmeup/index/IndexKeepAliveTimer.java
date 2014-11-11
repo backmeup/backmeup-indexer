@@ -6,7 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-//@ApplicationScoped
+import javax.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
 public class IndexKeepAliveTimer {
 
     private Map<Long, Date> lastAccessLog = new HashMap<Long, Date>();
@@ -47,6 +49,11 @@ public class IndexKeepAliveTimer {
         return ret;
     }
 
+    /**
+     * Mark a running index instance as shutdown. No cleanup required for these instances anymore
+     * 
+     * @param userID
+     */
     public void flagAsShutdown(Long userID) {
         if (this.lastAccessLog.containsKey(userID)) {
             this.lastAccessLog.remove(userID);
