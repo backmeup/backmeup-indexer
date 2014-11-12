@@ -28,7 +28,7 @@ public class IndexKeepAliveTimer {
      * 
      * @param userID
      */
-    public void extendTTL20(Long userID) {
+    public synchronized void extendTTL20(Long userID) {
         Date d = new Date(System.currentTimeMillis() + this.minutes * 60 * 1000);
     }
 
@@ -37,7 +37,7 @@ public class IndexKeepAliveTimer {
      * 
      * @return userID
      */
-    public List<Long> getUsersToShutdown() {
+    public synchronized List<Long> getUsersToShutdown() {
         List<Long> ret = new ArrayList<Long>();
         for (Map.Entry<Long, Date> entry : this.lastAccessLog.entrySet()) {
             Date timestamp = entry.getValue();
@@ -54,7 +54,7 @@ public class IndexKeepAliveTimer {
      * 
      * @param userID
      */
-    public void flagAsShutdown(Long userID) {
+    public synchronized void flagAsShutdown(Long userID) {
         if (this.lastAccessLog.containsKey(userID)) {
             this.lastAccessLog.remove(userID);
         }

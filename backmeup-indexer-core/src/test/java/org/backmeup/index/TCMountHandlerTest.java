@@ -38,11 +38,11 @@ public class TCMountHandlerTest {
         Assume.assumeTrue(SystemUtils.IS_OS_WINDOWS);
         File tcTestFile = new File("src/main/resources/tests/TestTCVol1.tc");
         try {
-            TCMountHandler.mount(tcTestFile, "12345", "I");
+            String drive = TCMountHandler.mount(tcTestFile, "12345", "I");
             Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true, TCMountHandler.isDriveMounted("I"));
-            TCMountHandler.unmount("I");
+            TCMountHandler.unmount(drive);
             Assert.assertEquals("TrueCrypt Testvolume did not get unmounted properly", false,
-                    TCMountHandler.isDriveMounted("I"));
+                    TCMountHandler.isDriveMounted(drive));
         } catch (Exception e) {
             // should not happen in this test case
             Assert.fail("should never fail mounting this scenario");
@@ -54,12 +54,12 @@ public class TCMountHandlerTest {
         Assume.assumeTrue(SystemUtils.IS_OS_LINUX);
         File tcTestFile = new File("src/main/resources/tests/TestTCVol1.tc");
         try {
-            TCMountHandler.mount(tcTestFile, "12345", "/media/truecrypt1");
+            String mountingPoint = TCMountHandler.mount(tcTestFile, "12345", "/media/truecrypt1");
             Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true,
-                    TCMountHandler.isDriveMounted("/media/truecrypt1"));
-            TCMountHandler.unmount("/media/truecrypt1");
+                    TCMountHandler.isDriveMounted(mountingPoint));
+            TCMountHandler.unmount(mountingPoint);
             Assert.assertEquals("TrueCrypt Testvolume did not get unmounted properly", false,
-                    TCMountHandler.isDriveMounted("/media/truecrypt1"));
+                    TCMountHandler.isDriveMounted(mountingPoint));
         } catch (Exception e) {
             // should not happen in this test case
             Assert.fail("should never fail mounting this scenario");

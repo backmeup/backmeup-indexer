@@ -42,6 +42,13 @@ import org.slf4j.LoggerFactory;
 public class IndexManager {
 
     public static IndexManager getInstance() {
+        if (im == null) {
+            //add synchronization over threads due to IndexCoreGargabgeCollector
+            synchronized (IndexManager.class) {
+                if (im == null)
+                    im = new IndexManager();
+            }
+        }
         return im;
     }
 
@@ -52,10 +59,20 @@ public class IndexManager {
      * @param userId
      * @return
      */
-    public Client initAndCreateAndDoEverthing(Long userId) {
+    public synchronized Client initAndCreateAndDoEverthing(Long userId) {
         try {
+            /*JUST FOR QUICK DEBUGGING
+             
+                TCMountHandler.unmountAll();
+            } catch (IOException | InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }*/
             //checks if an ES instance is responding and returns a new client instance if so
-            ClusterState state = this.getESClusterState(userId);
+            this.getESClusterState(userId);
+            //keep instance running for another 20 minutes
+            IndexKeepAliveTimer.getInstance().extendTTL20(userId);
+            //return the client handle
             return this.getESTransportClient(userId.intValue());
 
         } catch (IndexManagerCoreException e) {
@@ -67,9 +84,6 @@ public class IndexManager {
             } catch (IndexManagerCoreException e1) {
                 this.log.error("failed to startup/connect with running instance and return a client object for user "
                         + userId + ". Returning null", e1);
-
-                //call rollback
-                this.shutdownInstance(userId.intValue());
 
                 //in this case return null for now.
                 return null;
@@ -97,12 +111,16 @@ public class IndexManager {
     private IndexManagerDao dao;
     private IndexCoreGarbageCollector cleanupTask;
 
-    private static IndexManager im = new IndexManager();
+    private static volatile IndexManager im;
 
     // this class is implemented as singleton
     private IndexManager() {
         try {
             createEntityManager();
+
+            //TODO JUST FOR DEBUGGING - REMOVE!! 
+            //cleanupRude();
+
             initAvailableInstances();
             this.cleanupTask = new IndexCoreGarbageCollector();
 
@@ -221,7 +239,7 @@ public class IndexManager {
      * @throws IllegalArgumentException
      *             when the TrueCrypt instance was not configured properly
      */
-    public void startupInstance(int userID) throws IndexManagerCoreException {
+    public synchronized void startupInstance(int userID) throws IndexManagerCoreException {
 
         this.log.debug("startupInstance for userID: " + userID + " started");
 
@@ -338,7 +356,7 @@ public class IndexManager {
      * 
      * @param userID
      */
-    public void shutdownInstance(int userID) {
+    public synchronized void shutdownInstance(int userID) {
         this.log.debug("shutdownInstance for userID: " + userID + " started");
 
         //1. get the perstisted records from DB
@@ -386,7 +404,7 @@ public class IndexManager {
             this.log.debug("shutdownInstance for userID: " + userID + " step5 - failed", e);
         }
 
-        //6. whipe the temp working directory
+        //6. wipe the temp working directory
         deleteLocalWorkingDir(userID);
         this.log.debug("shutdownInstance for userID: " + userID + " completed ok");
 
@@ -406,15 +424,42 @@ public class IndexManager {
     }
 
     /**
-     * Cleanup - stops all running ES instances, removes all mounted TC container - NOT RECOMMENDED
+     * Cleanup - stops all running ES instances, removes all mounted TC container and drops database records of running
+     * isntances
      */
-    public void cleanupRude() throws IOException, InterruptedException {
-        // TODO Implement as Admin method
-        // unmount all open TrueCrypt volumes
-        TCMountHandler.unmountAll();
+    private void cleanupRude() {
+
+        this.log.debug("cleanupRude: started stopping all ES instances");
         // shutdown all elastic search instances
-        ESConfigurationHandler.stopAll();
-        // TODO delete all working directories
+        ESConfigurationHandler.stopAllRude();
+        this.log.debug("cleanupRude: completed - no ES instances running");
+
+        // unmount all open TrueCrypt volumes
+        try {
+            this.log.debug("cleanupRude: started unmounting all TC instances");
+            TCMountHandler.unmountAll();
+            this.log.debug("cleanupRude: completed - all TC volumes unmounted");
+        } catch (IOException | InterruptedException e) {
+            this.log.debug("cleanupRude: unmounting all TC volumes failed", e);
+        }
+
+        //remove the userconfiguration from db and release the ports
+        this.log.debug("cleanupRude: started removing all DB records: executing " + "DELETE FROM +"
+                + RunningIndexUserConfig.class.getSimpleName());
+        this.entityManager.getTransaction().begin();
+        this.entityManager.createQuery("DELETE FROM +" + RunningIndexUserConfig.class.getSimpleName()).executeUpdate();
+        this.entityManager.getTransaction().commit();
+        this.log.debug("cleanupRude: removing all DB records: completed");
+
+        try {
+            this.log.debug("cleanupRude: started reInitializing");
+            initAvailableInstances();
+            this.log.debug("cleanupRude: completed reInitializing");
+        } catch (MalformedURLException | UnknownHostException | URISyntaxException e) {
+            this.log.debug("cleanupRude: reInitializing failed", e);
+        }
+
+        // TODO delete all working directories?
     }
 
     public RunningIndexUserConfig getRunningIndexUserConfig(int userID) {

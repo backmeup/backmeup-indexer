@@ -116,12 +116,23 @@
 			</build>
 		</profile>
 		<profile>
-			<id>TrueCryptTests</id>
+			<id>IntegrationTestsLinux</id>
 			<activation>
 				<file>
-					<exists>C:/Program Files/elasticsearch-1.2.0/bin/elasticsearch.bat</exists>
+					<exists>/usr/bin/truecrypt</exists>
 				</file>
 			</activation>
+			<build>
+				<!-- run the tests -->
+			</build>
+		</profile>
+		<profile>
+			<id>IntegrationTestsWindows</id>
+			 <activation>
+        		<file>
+					<exists>C:/Program Files/TrueCrypt/TrueCrypt.exe</exists>
+				</file>
+    		</activation>
 			<build>
 				<!-- run the tests -->
 			</build>
