@@ -61,15 +61,9 @@ public class IndexManager {
      */
     public synchronized Client initAndCreateAndDoEverthing(Long userId) {
         try {
-            /*JUST FOR QUICK DEBUGGING
-             
-                TCMountHandler.unmountAll();
-            } catch (IOException | InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }*/
             //checks if an ES instance is responding and returns a new client instance if so
             this.getESClusterState(userId);
+
             //keep instance running for another 20 minutes
             IndexKeepAliveTimer.getInstance().extendTTL20(userId);
             //return the client handle
@@ -125,7 +119,7 @@ public class IndexManager {
             this.cleanupTask = new IndexCoreGarbageCollector();
 
         } catch (MalformedURLException | URISyntaxException | UnknownHostException e) {
-            this.log.error("IndexManager initialization failed " + e);
+            this.log.error("IndexManager initialization failed ", e);
 
         }
     }

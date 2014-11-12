@@ -42,7 +42,15 @@ Truecrypt
 
  #the root directory of the themis-datasink (dummy implementation)
  themis-datasink.home.dir = D:/temp/themis/datasink
+ 
+----------------
+Database Configuration: 
+Connect to postgres on port 5432 and create the index-core database + db user
+create a database user called 'dbu_indexcore' (pw 'dbu_indexcore')
+create a database called 'bmuindexcore' and assign the dbu_indexcore user as owner
 
+Info:
+Make sure this information is reflected within src>main>resources>META-INF/persistance.xml
 
 2) Deployment
 =============
