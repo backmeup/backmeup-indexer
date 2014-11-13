@@ -9,16 +9,16 @@
 		<class>org.backmeup.index.db.RunningIndexUserConfig</class>
 		<properties>
 			<property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver" />
-			<property name="javax.persistence.jdbc.url" value="jdbc:postgresql://127.0.0.1/bmucore" />
-			<property name="javax.persistence.jdbc.user" value="dbu_core" />
-			<property name="javax.persistence.jdbc.password" value="dbu_core" />
+			<property name="javax.persistence.jdbc.url" value="jdbc:postgresql://127.0.0.1/bmuindexcore" />
+			<property name="javax.persistence.jdbc.user" value="dbu_indexcore" />
+			<property name="javax.persistence.jdbc.password" value="dbu_indexcore" />
 			<property name="hibernate.connection.driver_class" value="org.postgresql.Driver" />
-			<property name="hibernate.connection.url" value="jdbc:postgresql://127.0.0.1/bmucore" />
-			<property name="hibernate.connection.username" value="dbu_core" />
-			<property name="hibernate.connection.password" value="dbu_core" />
+			<property name="hibernate.connection.url" value="jdbc:postgresql://127.0.0.1/bmuindexcore" />
+			<property name="hibernate.connection.username" value="dbu_indexcore" />
+			<property name="hibernate.connection.password" value="dbu_indexcore" />
 			<property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect" />
 			<!--property name="hibernate.show_sql" value="true"/-->
-			<property name="hibernate.hbm2ddl.auto" value="create" />
+			<property name="hibernate.hbm2ddl.auto" value="update" />
 			<!--property name="hibernate.hbm2ddl.auto" value="create-drop" /-->
 			<!--property name="hibernate.hbm2ddl.auto" value="update" /-->
 		</properties>

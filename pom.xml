@@ -28,8 +28,6 @@
 		<java.compiler.source>1.7</java.compiler.source>
 		<java.compiler.target>1.7</java.compiler.target>
 		<project.build.java.target>1.7</project.build.java.target>
-		
-		<version.backmeup.model>2.0.0-SNAPSHOT</version.backmeup.model>
 
 		<!-- Configuration -->
 		<config.tomcat.manager.url>http://127.0.0.1:8080/manager/text</config.tomcat.manager.url>
@@ -41,6 +39,7 @@
 			 multiple artifacts of the same groupId are used  "version.<groupId>.<artifactId>"
 		-->
 		<version.ch.qos.logback>1.1.2</version.ch.qos.logback>
+		<version.com.google.code.gson>2.2.4</version.com.google.code.gson>
 		<version.com.rabbitmq>2.8.6</version.com.rabbitmq>
 		<version.com.miglayout>3.7.4</version.com.miglayout>
 		<version.commons-lang>2.3</version.commons-lang>

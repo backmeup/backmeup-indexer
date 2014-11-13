@@ -1,4 +1,4 @@
-package org.backmeup.tests.index.utils;
+package org.backmeup.index.utils.file;
 
 import java.io.IOException;
 import java.io.Reader;

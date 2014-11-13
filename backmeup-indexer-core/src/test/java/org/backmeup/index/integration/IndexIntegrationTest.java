@@ -1,4 +1,4 @@
-package org.backmeup.tests.index.integration;
+package org.backmeup.index.integration;
 
 
 public class IndexIntegrationTest {

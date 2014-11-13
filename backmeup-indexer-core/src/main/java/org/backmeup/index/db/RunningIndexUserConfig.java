@@ -27,6 +27,7 @@ public class RunningIndexUserConfig {
 
 	// Truecrypt information
 	private String mountedDriveLetter;
+	private String mountedContainerLocation;
 
 	// Timestamp created and last updated
 	@Temporal(TemporalType.TIMESTAMP)
@@ -38,12 +39,13 @@ public class RunningIndexUserConfig {
 
 	public RunningIndexUserConfig(Long userId, URL hostaddress,
 			Integer tcpPort, Integer httpPort, String clusterName,
-			String mountedDrive) {
+			String mountedDrive, String mountedContainerLocation) {
 		this.setUserID(userId);
 		this.setTcpPort(tcpPort);
 		this.setHttpPort(httpPort);
 		this.setClusterName(clusterName);
 		this.setMountedDriveLetter(mountedDrive);
+		this.setMountedContainerLocation(mountedContainerLocation);
 		this.setHostAddress(hostaddress);
 		this.timestamp = new Date();
 	}
@@ -54,6 +56,16 @@ public class RunningIndexUserConfig {
 
 	public void setMountedDriveLetter(String mountedDriveLetter) {
 		this.mountedDriveLetter = mountedDriveLetter;
+		this.timestamp = new Date();
+	}
+
+	public String getMountedContainerLocation() {
+		return this.mountedContainerLocation;
+	}
+
+	public void setMountedContainerLocation(String mountedContainerLocation) {
+		this.mountedContainerLocation = mountedContainerLocation;
+		this.timestamp = new Date();
 	}
 
 	public Integer getTcpPort() {
@@ -62,6 +74,7 @@ public class RunningIndexUserConfig {
 
 	public void setTcpPort(Integer tcpPort) {
 		this.tcpPort = tcpPort;
+		this.timestamp = new Date();
 	}
 
 	public Integer getHttpPort() {
@@ -70,6 +83,7 @@ public class RunningIndexUserConfig {
 
 	public void setHttpPort(Integer httpPort) {
 		this.httpPort = httpPort;
+		this.timestamp = new Date();
 	}
 
 	public URL getHostAddress() {
@@ -83,9 +97,11 @@ public class RunningIndexUserConfig {
 	public void setHostAddress(URL host) {
 		if ((host.getProtocol() != null) && (host.getHost() != null)) {
 			this.hostaddress = host.getProtocol() + "://" + host.getHost();
+			this.timestamp = new Date();
 		}
 		if ((host.getPort() > -1)) {
 			this.httpPort = host.getPort();
+			this.timestamp = new Date();
 		}
 
 	}
@@ -96,6 +112,7 @@ public class RunningIndexUserConfig {
 
 	public void setClusterName(String clusterName) {
 		this.clusterName = clusterName;
+		this.timestamp = new Date();
 	}
 
 	public Long getUserID() {
@@ -104,6 +121,7 @@ public class RunningIndexUserConfig {
 
 	public void setUserID(Long userID) {
 		this.userId = userID;
+		this.timestamp = new Date();
 	}
 
 }
