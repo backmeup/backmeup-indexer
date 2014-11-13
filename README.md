@@ -61,8 +61,9 @@ then change to backmeup-service project to run
 
 Note:
 The Maven integration test profile is automatically executed for this component when Elasticsearch is detected in
-C:/Program Files/elasticsearch-1.2.0/bin/elasticsearch.bat
-To manually execute the backmeup-indexer integration tests call maven with '-P TrueCryptTests'
+C:/Program Files/elasticsearch-1.2.0/bin/elasticsearch.bat or
+/usr/bin/truecrypt
+To manually execute the backmeup-indexer integration tests call maven with '-P IntegrationTestsLinux' or '-P IntegrationTestsWindows'
 
 
 Hints
