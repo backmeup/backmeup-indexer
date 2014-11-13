@@ -1,6 +1,6 @@
 backmeup-indexer
 ================
-updated: 30.10.2014
+updated: 13.11.2014
 
 BackMeUp v2 "Themis" Index Component. Provides a central interface for handling user specific index operations (mounting, sharing, ingesting, querying)
 
@@ -18,6 +18,29 @@ BackMeUp v2 "Themis" Index Component. Provides a central interface for handling 
  
 For implicitly required software artefacts and version see the project's pom.xml files
    
+1) Installing Elasticsearch 1.2.0 on Debian
+===========================================
+
+Download and install the Public Signing Key
+
+wget -qO - http://packages.elasticsearch.org/GPG-KEY-elasticsearch | sudo apt-key add -
+
+Add the following to your /etc/apt/sources.list to enable the repository
+
+deb http://packages.elasticsearch.org/elasticsearch/1.4/debian stable main
+
+Run apt-get update and the repository is ready for use. You can install it with :
+
+apt-get update && apt-get install elasticsearch
+
+
+Complete installer docu available at:
+"http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/setup-repositories.html#_yum"
+
+
+For implicitly required software artefacts and version see the project's pom.xml files
+
+
 TODO continue...
 
 Hints
