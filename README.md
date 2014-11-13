@@ -1,6 +1,6 @@
 backmeup-indexer
 ================
-updated: 30.10.2014
+updated: 13.11.2014
 
 BackMeUp v2 "Themis" Index Component. Provides a central interface for handling user specific index operations (mounting, sharing, ingesting, querying)
 
@@ -11,14 +11,45 @@ BackMeUp v2 "Themis" Index Component. Provides a central interface for handling 
  - Maven [Tested under v3.0.4]
  - PostgresSQL [Tested under  v9.3 x86]
  - JDK v1.7 [Tested under Oracle JDK 1.7 and openJDK]
- 
+
  Specific to index-core
  - Truecrypt v7.1a [from https://www.grc.com/misc/truecrypt/truecrypt.htm]
  - Elasticsearch 1.2.0 [http://www.elasticsearch.org/downloads/1-2-0/]
  
 For implicitly required software artefacts and version see the project's pom.xml files
 
-1) Configuration
+1) Installing Elasticsearch 1.2.0 on Debian
+===========================================
+
+Download and install the Public Signing Key
+
+wget -qO - http://packages.elasticsearch.org/GPG-KEY-elasticsearch | sudo apt-key add -
+
+Add the following to your /etc/apt/sources.list to enable the repository
+
+deb http://packages.elasticsearch.org/elasticsearch/1.4/debian stable main
+
+Run apt-get update and the repository is ready for use. You can install it with :
+
+apt-get update && apt-get install elasticsearch
+
+
+Complete installer docu available at:
+http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/setup-repositories.html#_yum
+_y
+
+2) Installing truecrypt
+=======================
+Get latest x64 or x32 component
+wget https://www.grc.com/misc/truecrypt/truecrypt-7.1a-linux-console-x64.tar.gz
+
+Unpack the archive
+tar xzvf truecrypt-7.1a-linux-console-x64.tar.gz
+
+Execute installer
+sudo ./truecrypt-7.1a-setup-console-x64
+
+3) Configuration
 ================
 Make sure to install TrueCrypt v7.1a and ElasticSearch v1.2.0 on your operating system. 
 Go to backmeup-indexer-core>src>main>resources>backmeup-indexer.properties and edit
@@ -52,7 +83,7 @@ create a database called 'bmuindexcore' and assign the dbu_indexcore user as own
 Info:
 Make sure this information is reflected within src>main>resources>META-INF/persistance.xml
 
-2) Deployment
+4) Deployment
 =============
 To deploy backmeup-indexer call
 * mvn clean install (-P TrueCryptTests)
@@ -64,7 +95,6 @@ The Maven integration test profile is automatically executed for this component 
 C:/Program Files/elasticsearch-1.2.0/bin/elasticsearch.bat or
 /usr/bin/truecrypt
 To manually execute the backmeup-indexer integration tests call maven with '-P IntegrationTestsLinux' or '-P IntegrationTestsWindows'
-
 
 Hints
 =====
