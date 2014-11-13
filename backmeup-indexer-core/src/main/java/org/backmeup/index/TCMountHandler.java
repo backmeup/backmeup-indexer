@@ -108,7 +108,7 @@ public class TCMountHandler {
 
         }
         if (SystemUtils.IS_OS_WINDOWS) {
-            command = "\"" + getTrueCryptExe() + "\"" + " " + "/q background " + "/v " + "\""
+            command = "\"" + getTrueCryptExe() + "\"" + " " + "/q background " + "/s " + "/v " + "\""
                     + tcVolume.getAbsolutePath() + "\" " + "/l " + driveLetter + " /p " + password;
         }
 
@@ -215,7 +215,7 @@ public class TCMountHandler {
 
         }
         if (SystemUtils.IS_OS_WINDOWS) {
-            command = getTrueCryptExe() + " " + "/q background " + "/d" + " /f";
+            command = getTrueCryptExe() + " " + "/q background" + " /s" + " /d" + " /f";
         }
         return command;
     }
@@ -260,7 +260,8 @@ public class TCMountHandler {
         }
         if (SystemUtils.IS_OS_WINDOWS) {
             // use /f to force dismount
-            command = getTrueCryptExe() + " " + "/q background " + "/d " + driveLetter + " /f";
+            // when we use /q we have to use /s or /silent which suppresses all the warnings or popup windows.
+            command = getTrueCryptExe() + " " + "/q background " + "/s " + "/d " + driveLetter + " /f";
         }
 
         return command;
