@@ -35,11 +35,19 @@ apt-get update && apt-get install elasticsearch
 
 
 Complete installer docu available at:
-"http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/setup-repositories.html#_yum"
+http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/setup-repositories.html#_yum
+_y
 
+2) Installing truecrypt
+=======================
+Get latest x64 or x32 component
+wget https://www.grc.com/misc/truecrypt/truecrypt-7.1a-linux-console-x64.tar.gz
 
-For implicitly required software artefacts and version see the project's pom.xml files
+Unpack the archive
+tar xzvf truecrypt-7.1a-linux-console-x64.tar.gz
 
+Execute installer
+sudo ./truecrypt-7.1a-setup-console-x64
 
 TODO continue...
 
