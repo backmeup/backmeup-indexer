@@ -39,7 +39,7 @@
 			 multiple artifacts of the same groupId are used  "version.<groupId>.<artifactId>"
 		-->
 		<version.ch.qos.logback>1.1.2</version.ch.qos.logback>
-		<version.com.google.code.gson>2.2.2</version.com.google.code.gson>
+		<version.com.google.code.gson>2.2.4</version.com.google.code.gson>
 		<version.com.rabbitmq>2.8.6</version.com.rabbitmq>
 		<version.com.miglayout>3.7.4</version.com.miglayout>
 		<version.commons-lang>2.3</version.commons-lang>
