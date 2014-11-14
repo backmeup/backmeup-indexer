@@ -112,9 +112,6 @@ public class IndexManager {
         try {
             createEntityManager();
 
-            //TODO JUST FOR DEBUGGING - REMOVE!! 
-            //cleanupRude();
-
             initAvailableInstances();
             this.cleanupTask = new IndexCoreGarbageCollector();
 
@@ -142,7 +139,9 @@ public class IndexManager {
 
         //stop the garbage collector
         this.cleanupTask.end();
+        this.log.debug("ended IndexKeepAliveTimer.");
 
+        this.entityManager.close();
         this.entityManagerFactory.close();
     }
 
