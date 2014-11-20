@@ -93,6 +93,14 @@
 			<version>10.11.1.1</version>
 			<scope>test</scope>
 		</dependency>
+		
+		<!-- Servlet environment provided -->     
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<version>${version.javax.servlet}</version>
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 
 	<profiles>

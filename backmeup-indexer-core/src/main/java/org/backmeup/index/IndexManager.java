@@ -131,11 +131,11 @@ public class IndexManager {
 
     @PreDestroy
     public void shutdownIndexManager() {
-        this.log.debug("shutdown() IndexManager (ApplicationScoped) started");
+        this.log.debug("shutdown IndexManager (ApplicationScoped) started");
 
         //cleanup - shutdown all running instances
         shutdownAllRunningInstances(this.defaultHost);
-        this.log.debug("shutdown() all running ElasticSearch instances on " + this.defaultHost + " completed");
+        this.log.debug("shutdown all running ElasticSearch instances on " + this.defaultHost + " completed");
 
         //stop the garbage collector
         this.cleanupTask.end();
