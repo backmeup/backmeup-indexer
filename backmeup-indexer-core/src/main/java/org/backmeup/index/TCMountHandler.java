@@ -1,7 +1,10 @@
 package org.backmeup.index;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,22 +74,21 @@ public class TCMountHandler {
         // or
         // String command =
         // "/usr/bin/truecrypt /home/themis/themis-truecrypt/elasticsearch_userdata_template_TC_150MB.tc /hmedia/truecrypt3/ --password=12345";
-
-        String command = createMountCommand(tcVolume, driveLetter, password);
-        log.debug("executing: " + command);
-
-        try {
-            // Execute the call
-            Process p = Runtime.getRuntime().exec(command);
-            // cause this process to stop until process p is terminated
-            // TODO process.wait() - is an issue in headless mode, waits for
-            // human interaction! get rid!
-            p.waitFor();
-
-        } catch (IOException | InterruptedException e) {
-            log.error("Error executing: " + command + " " + e.toString());
-            throw e;
+        
+        // 
+        String command = null;
+        if (SystemUtils.IS_OS_LINUX) {
+            // creating mountpoint 
+            command = "mkdir -p " + driveLetter;
+            executeCmd(command);
+            //    throw new IOException("Failed to create mount point: " + driveLetter);
         }
+        
+        command = createMountCommand(tcVolume, driveLetter, password);
+        executeCmd(command);
+        //    throw new IOException("Failed to mount tc voulume: " + tcVolume.getAbsolutePath());
+
+        
 
         // now check if the drive got properly mounted
         if (!isDriveMounted(driveLetter)) {
@@ -98,14 +100,37 @@ public class TCMountHandler {
         // volume
         return driveLetter;
     }
+    
+    private static void executeCmd(String command) throws IOException, InterruptedException {
+        try {
+            // Execute the call
+            log.debug("executing: " + command);
+            Process process = Runtime.getRuntime().exec(command);
+            Reader r = new InputStreamReader(process.getInputStream());
+            BufferedReader in = new BufferedReader(r);
+            String line;
+            String result = "";
+            
+            process.waitFor();
+           
+            while ((line = in.readLine())!=null) result+=line;
+            log.debug(result);
+            // cause this process to stop until process p is terminated
+            // TODO process.wait() - is an issue in headless mode, waits for
+            // human interaction! get rid!
 
+        } catch (IOException | InterruptedException e) {
+            log.error("Error executing: " + command + " " + e.toString());
+            throw e;
+        }
+    }
+    
     private static String createMountCommand(File tcVolume, String driveLetter, String password) {
 
         String command = null;
         if (SystemUtils.IS_OS_LINUX) {
-            command = getTrueCryptExe() + " -d " + tcVolume.getAbsolutePath() + " " + driveLetter + " --password="
-                    + password;
-
+            command = /*"sudo " + */getTrueCryptExe() + " --password=" + password + " --non-interactive " + tcVolume.getAbsolutePath() + " " + driveLetter;
+            //command =  getTrueCryptExe() + " " + tcVolume.getAbsolutePath() + " " + driveLetter + " --password=" + password + " --non-interactive";
         }
         if (SystemUtils.IS_OS_WINDOWS) {
             command = "\"" + getTrueCryptExe() + "\"" + " " + "/q background " + "/v " + "\""
@@ -182,8 +207,8 @@ public class TCMountHandler {
             f = new File(driveLetter);
         }
 
-        if (f != null && f.exists()) {
-            return true;
+        if ((f != null) && f.exists()) {
+	    return true;
         }
         return false;
 
@@ -235,17 +260,13 @@ public class TCMountHandler {
         }
 
         if (isDriveMounted(driveLetter)) {
-
             String command = createUnmountCommand(driveLetter);
             log.debug("unmounting: " + command);
-
-            Process p;
-            try {
-                p = Runtime.getRuntime().exec(command);
-                p.waitFor();
-            } catch (IOException | InterruptedException e) {
-                log.error("Error executing: " + command + " " + e.toString());
-                throw e;
+            executeCmd(command);
+            
+            if (SystemUtils.IS_OS_LINUX) {
+                command = "rmdir " + driveLetter;
+                executeCmd(command);
             }
         }
     }
@@ -256,7 +277,6 @@ public class TCMountHandler {
         if (SystemUtils.IS_OS_LINUX) {
             // unmount with either mounting point or Truecrypt container file
             command = getTrueCryptExe() + " -d " + driveLetter;
-
         }
         if (SystemUtils.IS_OS_WINDOWS) {
             // use /f to force dismount

@@ -9,7 +9,7 @@
     </listener>
     
     <servlet>
-        <servlet-name>backmeup-service</servlet-name>
+        <servlet-name>backmeup-indexer</servlet-name>
         <servlet-class>
             org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher
         </servlet-class>

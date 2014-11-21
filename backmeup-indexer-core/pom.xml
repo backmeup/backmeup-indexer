@@ -1,142 +1,148 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>org.backmeup</groupId>
-		<artifactId>backmeup-indexer</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
-		<relativePath>..\pom.xml</relativePath>
-	</parent>
+    <parent>
+        <groupId>org.backmeup</groupId>
+        <artifactId>backmeup-indexer</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>..\pom.xml</relativePath>
+    </parent>
 
-	<artifactId>backmeup-indexer-core</artifactId>
-	<packaging>jar</packaging>
-	<name>Backmeup Indexer Core</name>
+    <artifactId>backmeup-indexer-core</artifactId>
+    <packaging>jar</packaging>
+    <name>Backmeup Indexer Core</name>
 
-	<dependencies>
-		<dependency>
-			<groupId>org.backmeup</groupId>
-			<artifactId>backmeup-indexer-model</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+    <dependencies>
+        <dependency>
+            <groupId>org.backmeup</groupId>
+            <artifactId>backmeup-indexer-model</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>com.google.code.gson</groupId>
-			<artifactId>gson</artifactId>
-			<version>${version.com.google.code.gson}</version>
-		</dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>${version.com.google.code.gson}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>${version.org.slf4j}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<version>${version.org.apache.httpcomponents}</version>
-		</dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${version.org.slf4j}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${version.org.apache.httpcomponents}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.elasticsearch</groupId>
-			<artifactId>elasticsearch</artifactId>
-			<version>${version.org.elasticsearch}</version>
-		</dependency>
+        <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>${version.org.elasticsearch}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>javax.enterprise</groupId>
-			<artifactId>cdi-api</artifactId>
-			<version>${version.javax.enterprise.cdi-api}</version>
-		</dependency>
+        <dependency>
+            <groupId>javax.enterprise</groupId>
+            <artifactId>cdi-api</artifactId>
+            <version>${version.javax.enterprise.cdi-api}</version>
+        </dependency>
 
 		<!-- unused? -->
-		<dependency>
-			<groupId>org.codehaus.jackson</groupId>
-			<artifactId>jackson-mapper-asl</artifactId>
-			<version>${version.org.codehaus.jackson}</version>
-		</dependency>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <version>${version.org.codehaus.jackson}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.hibernate.javax.persistence</groupId>
-			<artifactId>hibernate-jpa-2.0-api</artifactId>
-			<version>${version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api}</version>
-		</dependency>
+        <dependency>
+            <groupId>org.hibernate.javax.persistence</groupId>
+            <artifactId>hibernate-jpa-2.0-api</artifactId>
+            <version>${version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api}</version>
+        </dependency>
 
 		<!-- used as JPA implementation, not referenced in source -->
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-entitymanager</artifactId>
-			<version>${version.org.hibernate.hibernate-entitymanager}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<version>${version.org.postgresql}</version>
-		</dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-entitymanager</artifactId>
+            <version>${version.org.hibernate.hibernate-entitymanager}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${version.org.postgresql}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>commons-lang</groupId>
-			<artifactId>commons-lang</artifactId>
-			<version>${version.commons-lang}</version>
-		</dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>${version.commons-lang}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-			<version>${version.commons-io}</version>
-		</dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${version.commons-io}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.apache.derby</groupId>
-			<artifactId>derby</artifactId>
-			<version>10.11.1.1</version>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derby</artifactId>
+            <version>10.11.1.1</version>
+            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.6</version>
+        </dependency>
+    </dependencies>
 
-	<profiles>
-		<profile>
-			<id>default</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-surefire-plugin</artifactId>
-						<version>${version.org.apache.maven.plugins.maven-surefire-plugin}</version>
-						<configuration>
+    <profiles>
+        <profile>
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${version.org.apache.maven.plugins.maven-surefire-plugin}</version>
+                        <configuration>
 							<!-- tests need TrueCrypt Linux installation, skip by default -->
-							<skipTests>true</skipTests>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>IntegrationTestsLinux</id>
-			<activation>
-				<file>
-					<exists>/usr/bin/truecrypt</exists>
-				</file>
-			</activation>
-			<build>
+                            <skipTests>true</skipTests>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>IntegrationTestsLinux</id>
+            <activation>
+                <file>
+                    <exists>/usr/bin/truecrypt</exists>
+                </file>
+            </activation>
+            <build>
 				<!-- run the tests -->
-			</build>
-		</profile>
-		<profile>
-			<id>IntegrationTestsWindows</id>
-			 <activation>
-        		<file>
-					<exists>C:/Program Files/TrueCrypt/TrueCrypt.exe</exists>
-				</file>
-    		</activation>
-			<build>
+            </build>
+        </profile>
+        <profile>
+            <id>IntegrationTestsWindows</id>
+            <activation>
+                <file>
+                    <exists>C:/Program Files/TrueCrypt/TrueCrypt.exe</exists>
+                </file>
+            </activation>
+            <build>
 				<!-- run the tests -->
-			</build>
-		</profile>
-	</profiles>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
