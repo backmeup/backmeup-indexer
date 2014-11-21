@@ -32,7 +32,8 @@ public class IndexManagerSetup {
 
     @AfterClass
     public static void cleanup() {
-        // ESConfigurationHandler.stopAll();
+        //done automatically within tomcat, neet to call manually within unittests
+        IndexManager.getInstance().shutdownIndexManager();
     }
 
     public void createEntityManager() {

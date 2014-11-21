@@ -8,7 +8,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TCMountHandlerTest {
@@ -136,9 +135,22 @@ public class TCMountHandlerTest {
     }
 
     @Test
-    @Ignore
-    public void mountUnsupportedDrive() {
-        Assert.fail("need to write this testcase");
+    public void unmountAllDrivesTest() throws Exception {
+        Assume.assumeTrue(SystemUtils.IS_OS_WINDOWS);
+        File tcTestFile = new File("src/main/resources/tests/TestTCVol1.tc");
+        File tcTestFile2 = new File("src/main/resources/tests/TestTCVol2.tc");
+
+        String d1 = "I";
+        d1 = TCMountHandler.mount(tcTestFile, "12345", d1);
+        Assert.assertTrue("TrueCrypt Testvolume did not get mounted", TCMountHandler.isDriveMounted(d1));
+
+        String d2 = "J";
+        d2 = TCMountHandler.mount(tcTestFile2, "12345", d2);
+        Assert.assertTrue("TrueCrypt Testvolume did not get mounted", TCMountHandler.isDriveMounted(d2));
+
+        TCMountHandler.unmountAll();
+        Assert.assertFalse("TrueCrypt Testvolume did not get mounted", TCMountHandler.isDriveMounted(d1));
+        Assert.assertFalse("TrueCrypt Testvolume did not get mounted", TCMountHandler.isDriveMounted(d2));
 
     }
 

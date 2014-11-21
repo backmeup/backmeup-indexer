@@ -112,9 +112,6 @@ public class IndexManager {
         try {
             createEntityManager();
 
-            //TODO JUST FOR DEBUGGING - REMOVE!! 
-            //cleanupRude();
-
             initAvailableInstances();
             this.cleanupTask = new IndexCoreGarbageCollector();
 
@@ -134,15 +131,17 @@ public class IndexManager {
 
     @PreDestroy
     public void shutdownIndexManager() {
-        this.log.debug("shutdown() IndexManager (ApplicationScoped) started");
+        this.log.debug("shutdown IndexManager (ApplicationScoped) started");
 
         //cleanup - shutdown all running instances
         shutdownAllRunningInstances(this.defaultHost);
-        this.log.debug("shutdown() all running ElasticSearch instances on " + this.defaultHost + " completed");
+        this.log.debug("shutdown all running ElasticSearch instances on " + this.defaultHost + " completed");
 
         //stop the garbage collector
         this.cleanupTask.end();
+        this.log.debug("ended IndexKeepAliveTimer.");
 
+        this.entityManager.close();
         this.entityManagerFactory.close();
     }
 

@@ -14,7 +14,12 @@ BackMeUp v2 "Themis" Index Component. Provides a central interface for handling 
 
  Specific to index-core
  - Truecrypt v7.1a [from https://www.grc.com/misc/truecrypt/truecrypt.htm]
- - Elasticsearch 1.2.0 [http://www.elasticsearch.org/downloads/1-2-0/]
+ - Elasticsearch 1.2.0 [http://www.elasticsearch.org/downloads/1-2-0/] 
+ -- Elasticsearch Marvel Dashboard [https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.2.0.zip]
+
+Elasticsearch + Marvel beide in Version 1.2.0 zum download zur Verfügung gestellt:
+http://www.share-online.biz/dl/Q2AY2ZEN8ZP
+
  
 For implicitly required software artefacts and version see the project's pom.xml files
 

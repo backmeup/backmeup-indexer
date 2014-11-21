@@ -99,7 +99,16 @@
             <artifactId>slf4j-simple</artifactId>
             <version>1.7.6</version>
         </dependency>
+		
+        <!-- Servlet environment provided -->     
+        <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>javax.servlet-api</artifactId>
+                <version>${version.javax.servlet}</version>
+                <scope>provided</scope>
+        </dependency>
     </dependencies>
+
 
     <profiles>
         <profile>

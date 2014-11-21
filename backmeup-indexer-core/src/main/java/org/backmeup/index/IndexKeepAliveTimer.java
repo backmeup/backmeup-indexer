@@ -1,5 +1,6 @@
 package org.backmeup.index;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -7,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @ApplicationScoped
 public class IndexKeepAliveTimer {
@@ -16,7 +20,10 @@ public class IndexKeepAliveTimer {
     private static IndexKeepAliveTimer tm = new IndexKeepAliveTimer();
     private int minutes = 20;
 
+    private final Logger log = LoggerFactory.getLogger(IndexKeepAliveTimer.class);
+
     private IndexKeepAliveTimer() {
+        System.out.println("created new IndexKeepAliveTimer object");
     }
 
     public static IndexKeepAliveTimer getInstance() {
@@ -30,6 +37,10 @@ public class IndexKeepAliveTimer {
      */
     public synchronized void extendTTL20(Long userID) {
         Date d = new Date(System.currentTimeMillis() + this.minutes * 60 * 1000);
+        this.log.debug("IndexKeepAliveTimer extended ES Instance TTL for userID: " + userID + "until: "
+                + getFormatedDate(d));
+
+        this.lastAccessLog.put(userID, d);
     }
 
     /**
@@ -39,11 +50,15 @@ public class IndexKeepAliveTimer {
      */
     public synchronized List<Long> getUsersToShutdown() {
         List<Long> ret = new ArrayList<Long>();
+        this.log.debug("IndexKeepALiveTimer checking users to shutdown...");
         for (Map.Entry<Long, Date> entry : this.lastAccessLog.entrySet()) {
             Date timestamp = entry.getValue();
+            this.log.debug("checking entries for userID: " + entry.getKey() + " and timestamp "
+                    + getFormatedDate(timestamp));
             if (isOverdue(timestamp)) {
                 //perform cleanup and take down from list
                 ret.add(entry.getKey());
+                this.log.debug("IndexKeepALiveTimer - adding userID: " + entry.getKey() + " in the list to shutdown");
             }
         }
         return ret;
@@ -57,6 +72,8 @@ public class IndexKeepAliveTimer {
     public synchronized void flagAsShutdown(Long userID) {
         if (this.lastAccessLog.containsKey(userID)) {
             this.lastAccessLog.remove(userID);
+            this.log.debug("IndexKeepAliveTimer flag ES instances for userID: " + userID
+                    + "as shutdown, removed reocrds in timer");
         }
     }
 
@@ -66,5 +83,10 @@ public class IndexKeepAliveTimer {
         } else {
             return false;
         }
+    }
+
+    private String getFormatedDate(Date d) {
+        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSS");
+        return sdf.format(d);
     }
 }
