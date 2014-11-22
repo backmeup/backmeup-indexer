@@ -16,6 +16,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.backmeup.data.dummy.ElasticSearchIndexClient;
+import org.backmeup.index.api.IndexServer;
 import org.backmeup.index.model.FileInfo;
 import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.IndexClient;
@@ -24,12 +25,13 @@ import org.backmeup.index.model.SearchResultAccumulator;
 
 @Path("index")
 @Produces(MediaType.APPLICATION_JSON)
-public class Index {
+public class Index implements IndexServer {
 
     protected IndexClient getIndexClient(Long userId) {
         return new ElasticSearchIndexClient(userId);
     }
 
+    @Override
     @GET
     @Path("/{userId}")
     public SearchResultAccumulator query( //
@@ -49,6 +51,7 @@ public class Index {
         }
     }
 
+    @Override
     @GET
     @Path("/{userId}/files")
     public Set<FileItem> filesForJob( //
@@ -63,6 +66,7 @@ public class Index {
         }
     }
 
+    @Override
     @GET
     @Path("/{userId}/files/{fileId}/info")
     public FileInfo fileInfoForFile( //
@@ -77,6 +81,7 @@ public class Index {
         }
     }
 
+    @Override
     @GET
     @Path("/{userId}/files/{fileId}/thumbnail")
     public String thumbnailPathForFile( //
@@ -91,22 +96,44 @@ public class Index {
         }
     }
 
-    @DELETE
-    @Path("/{userId}")
-    public Response delete( //
-            @PathParam("userId") Long userId, //
-            @QueryParam("job") Long jobId, // optional for user and timestamp 
-            @QueryParam("time") Long timestamp) { // optional
+    @Override
+    public String delete( //
+            Long userId, //
+            Long jobId, //  
+            Long timestamp) { // optional
 
         try (IndexClient indexClient = getIndexClient(userId)) {
 
             if (jobId != null && jobId != 0) {
                 indexClient.deleteRecordsForJobAndTimestamp(jobId, timestamp);
-                return status(Response.Status.ACCEPTED, "records of job deleted");
+                return "records of job deleted";
             }
 
             indexClient.deleteRecordsForUser();
-            return status(Response.Status.ACCEPTED, "records of user deleted");
+            return "records of user deleted";
+
+        }
+    }
+
+    @DELETE
+    @Path("/{userId}")
+    public Response deleteRS( //
+            @PathParam("userId") Long userId, //
+            @QueryParam("job") Long jobId, // optional for user and timestamp 
+            @QueryParam("time") Long timestamp) { // optional
+        
+        return status(Response.Status.ACCEPTED, delete(userId, jobId, timestamp));
+    }
+
+    @Override
+    public String index( //
+            @PathParam("userId") Long userId, //
+            IndexDocument document) throws IOException {
+
+        try (IndexClient indexClient = getIndexClient(userId)) {
+
+            indexClient.index(document);
+            return "document indexed";
 
         }
     }
@@ -114,18 +141,13 @@ public class Index {
     @POST
     @Path("/{userId}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response index( //
+    public Response indexRS( //
             @PathParam("userId") Long userId, //
             IndexDocument document) throws IOException {
-
-        try (IndexClient indexClient = getIndexClient(userId)) {
-
-            indexClient.index(document);
-            return status(Response.Status.CREATED, "document indexed");
-
-        }
+        
+        return status(Response.Status.CREATED, index(userId, document));
     }
-
+    
     private void mandatory(String name, String value) {
         if (value == null) {
             badRequestMissingParameter(name);
