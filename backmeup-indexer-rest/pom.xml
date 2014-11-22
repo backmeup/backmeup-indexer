@@ -25,12 +25,6 @@
             <artifactId>backmeup-indexer-core</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <!-- TODO PK remove after search impl has been moved from client to core  -->
-            <groupId>org.backmeup</groupId>
-            <artifactId>backmeup-indexer-client</artifactId>
-            <version>${project.version}</version>
-        </dependency>
 
         <!-- Servlet environment provided -->        
 		<dependency>

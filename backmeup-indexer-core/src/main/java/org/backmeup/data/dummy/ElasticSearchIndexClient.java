@@ -1,4 +1,4 @@
-package org.backmeup.index.client;
+package org.backmeup.data.dummy;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.backmeup.data.dummy.ElasticContentBuilder;
 import org.backmeup.index.IndexManager;
 import org.backmeup.index.model.FileInfo;
+import org.backmeup.index.model.IndexClient;
 import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.IndexFields;

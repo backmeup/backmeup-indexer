@@ -15,10 +15,10 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.backmeup.index.client.IndexClient;
-import org.backmeup.index.client.IndexClientFactory;
+import org.backmeup.data.dummy.ElasticSearchIndexClient;
 import org.backmeup.index.model.FileInfo;
 import org.backmeup.index.model.FileItem;
+import org.backmeup.index.model.IndexClient;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.SearchResultAccumulator;
 
@@ -27,7 +27,7 @@ import org.backmeup.index.model.SearchResultAccumulator;
 public class Index {
 
     protected IndexClient getIndexClient(Long userId) {
-        return new IndexClientFactory().getIndexClient(userId);
+        return new ElasticSearchIndexClient(userId);
     }
 
     @GET
