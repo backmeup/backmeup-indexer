@@ -12,7 +12,7 @@ import java.util.Set;
  */
 public interface IndexClient extends Closeable {
 
-    SearchResultAccumulator queryBackup(String query, String source, String type, String job, String username);
+    SearchResultAccumulator queryBackup(String query, String filterBySource, String filterByType, String filterByJob, String username);
 
     Set<FileItem> searchAllFileItemsForJob(Long jobId);
 
