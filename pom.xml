@@ -29,7 +29,9 @@
 		<java.compiler.target>1.7</java.compiler.target>
 		<project.build.java.target>1.7</project.build.java.target>
 
-		<!-- Configuration -->
+        <!-- Configuration -->
+        <config.localBuildArtefactDirectory>../autodeploy</config.localBuildArtefactDirectory>
+
 		<config.tomcat.manager.url>http://127.0.0.1:8080/manager/text</config.tomcat.manager.url>
 		<config.tomcat.authentication.id>backmeup.indexer.tomcat</config.tomcat.authentication.id>
 
@@ -63,6 +65,7 @@
 		<version.org.postgresql>9.3-1100-jdbc41</version.org.postgresql>
 				
 		<!-- Maven Plugin versions -->
+        <version.org.apache.felix.maven-bundle-plugin>2.4.0</version.org.apache.felix.maven-bundle-plugin>
 		<version.org.apache.maven.plugins.maven-compiler-plugin>3.1</version.org.apache.maven.plugins.maven-compiler-plugin>
 		<version.org.apache.maven.plugins.maven-dependency-plugin>2.8</version.org.apache.maven.plugins.maven-dependency-plugin>
 		<version.org.apache.maven.plugins.maven-failsafe-plugin>2.16</version.org.apache.maven.plugins.maven-failsafe-plugin>
