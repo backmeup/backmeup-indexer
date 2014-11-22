@@ -55,9 +55,6 @@ public class IndexManager {
     /**
      * Startup or fetches a running ElasticSearch Instance for a given user and returns a client handle for
      * communication
-     * 
-     * @param userId
-     * @return
      */
     public synchronized Client initAndCreateAndDoEverthing(Long userId) {
         try {
@@ -221,13 +218,9 @@ public class IndexManager {
      * truecrypt container, create user specific ES launch configuration (yml file), start ES instance for user
      * elasticsearch -Des.config="C:\Program Files\elasticsearch-1.2.0\config\elasticsearch.user0.yml"
      * 
-     * @throws IOException
-     *             when the required artifact files are not properly created
      * @throws NumberFormatException
      *             when the available range of supported ports on ES is used up
      * @throws ExceptionInInitializerError
-     *             when issuing the call to TrueCrypt failed
-     * @throws InterruptedException
      *             when issuing the call to TrueCrypt failed
      * @throws IllegalArgumentException
      *             when the TrueCrypt instance was not configured properly
@@ -346,8 +339,6 @@ public class IndexManager {
 
     /**
      * Handles the shutdown (rollback) of TC, ES, Sharing, DB-persistency, etc. for a given instance
-     * 
-     * @param userID
      */
     public synchronized void shutdownInstance(int userID) {
         this.log.debug("shutdownInstance for userID: " + userID + " started");
@@ -509,9 +500,6 @@ public class IndexManager {
 
     /**
      * Configures and returns a Client to ElasticSearch to interact with for a specific user
-     * 
-     * @param userID
-     * @return
      */
     public Client getESTransportClient(int userID) throws IndexManagerCoreException {
         //TODO Keep Clients and last accessed timestamp? 
@@ -524,17 +512,15 @@ public class IndexManager {
             Client client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(conf
                     .getHostAddress().getHost(), conf.getTcpPort()));
             return client;
-        } else {
-            throw new IndexManagerCoreException("Failed to create ES TransportClient for userID: " + userID
-                    + " due to missing RunningIndexUserConfig");
         }
+        
+        throw new IndexManagerCoreException("Failed to create ES TransportClient for userID: " + userID
+                + " due to missing RunningIndexUserConfig");
     }
 
     /**
      * Retrieves the ClusterState of a mounted ES cluster for a given userID
      * 
-     * @param userId
-     * @return
      * @throws IndexManagerCoreException
      *             if now instance is available
      */
@@ -549,9 +535,9 @@ public class IndexManager {
             client.close();
             this.log.debug("Clusterstate for userID: " + userId + " " + clusterState.prettyPrint());
             return clusterState;
-        } else {
-            throw new IndexManagerCoreException("Clusterstate for userID: " + userId + " " + "Cluster not responding");
         }
+        
+        throw new IndexManagerCoreException("Clusterstate for userID: " + userId + " " + "Cluster not responding");
     }
 
     /**

@@ -30,9 +30,6 @@ public class IndexSharingHandler {
      * and gets ingested into elasticsearch when the user logs into the system. The object must have already been stored
      * in the data sink and is references via UUID Shared objects will have the same UUID for two different users
      * 
-     * @param fromUserID
-     * @param withUserID
-     * @param indexFragment
      * @return the UUID of the object for userB
      */
     public static UUID shareIndexFragment(int fromUserID, int withUserID, UUID objectID) throws IOException {
@@ -59,8 +56,6 @@ public class IndexSharingHandler {
     /**
      * The ES index gets dropped. The IndexDocuments within the user's fragment directory + the shared fragments from
      * other users are taken to rebuild the index from scratch
-     * 
-     * @param userID
      */
     public static void rebuildESIndexFromFileBasis(int userID) {
         // TODO drop ES index, take all fragments on disk an rebuild it
@@ -68,8 +63,6 @@ public class IndexSharingHandler {
 
     /**
      * Imports all user owned index fragments into ES which have not yet been imported into the index
-     * 
-     * @param userID
      */
     public void importOwnedIndexFragmentInES(int userID) {
 

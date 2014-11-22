@@ -85,19 +85,19 @@ public class ThemisDataSinkTest {
 
 	@Test
 	public void testStoreIndexTCContainerFileForUser() throws IOException {
-		File tcTemplateFile = new File(
+		File templateFile = new File(
 				"src/main/resources/elasticsearch_userdata_template_TC_150MB.tc");
 
-		ThemisDataSink.saveIndexTrueCryptContainer(tcTemplateFile, 99999);
+		ThemisDataSink.saveIndexTrueCryptContainer(templateFile, 99999);
 	}
 
 	@Test
 	public void testGetIndexTCContainerFileForUser() {
 
-		File tcTemplateFile = new File(
+		File templateFile = new File(
 				"src/main/resources/elasticsearch_userdata_template_TC_150MB.tc");
 		try {
-			ThemisDataSink.saveIndexTrueCryptContainer(tcTemplateFile, 99999);
+			ThemisDataSink.saveIndexTrueCryptContainer(templateFile, 99999);
 		} catch (IOException e) {
 			Assert.fail("Should not reach this part of the testcase " + e);
 		}

@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 @ApplicationScoped
 public class IndexKeepAliveTimer {
 
-    private Map<Long, Date> lastAccessLog = new HashMap<Long, Date>();
+    private Map<Long, Date> lastAccessLog = new HashMap<>();
 
     private static IndexKeepAliveTimer tm = new IndexKeepAliveTimer();
     private int minutes = 20;
@@ -32,8 +32,6 @@ public class IndexKeepAliveTimer {
 
     /**
      * Extends the time to life for a index instance with +20 minutes from now
-     * 
-     * @param userID
      */
     public synchronized void extendTTL20(Long userID) {
         Date d = new Date(System.currentTimeMillis() + this.minutes * 60 * 1000);
@@ -49,7 +47,7 @@ public class IndexKeepAliveTimer {
      * @return userID
      */
     public synchronized List<Long> getUsersToShutdown() {
-        List<Long> ret = new ArrayList<Long>();
+        List<Long> ret = new ArrayList<>();
         this.log.debug("IndexKeepALiveTimer checking users to shutdown...");
         for (Map.Entry<Long, Date> entry : this.lastAccessLog.entrySet()) {
             Date timestamp = entry.getValue();
@@ -66,8 +64,6 @@ public class IndexKeepAliveTimer {
 
     /**
      * Mark a running index instance as shutdown. No cleanup required for these instances anymore
-     * 
-     * @param userID
      */
     public synchronized void flagAsShutdown(Long userID) {
         if (this.lastAccessLog.containsKey(userID)) {
@@ -78,11 +74,7 @@ public class IndexKeepAliveTimer {
     }
 
     private boolean isOverdue(Date testDate) {
-        if (testDate.before(new Date(System.currentTimeMillis() - this.minutes * 60 * 1000))) {
-            return true;
-        } else {
-            return false;
-        }
+        return testDate.before(new Date(System.currentTimeMillis() - this.minutes * 60 * 1000));
     }
 
     private String getFormatedDate(Date d) {

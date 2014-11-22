@@ -169,11 +169,11 @@ public class TCMountHandler {
             return Configuration.getPropertyList("truecrypt.mountable.drives");
         }
 
-        return new ArrayList<String>();
+        return new ArrayList<>();
     }
 
     private static List<String> generateSupportedDrivesForLinux() {
-        List<String> r = new ArrayList<String>();
+        List<String> r = new ArrayList<>();
         for (int i = 0; i < 50; i++) {
             r.add("/media/themis/volume" + i);
         }

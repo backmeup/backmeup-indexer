@@ -101,11 +101,6 @@ public class ThemisDataSink {
 
 	/**
 	 * Persists a shared IndexDocument from userA with userB
-	 * 
-	 * @param userIDShares
-	 * @param userIDToShareWith
-	 * @param indexFragmentRef
-	 * @throws IOException
 	 */
 	public static void saveSharedIndexFragment(int userIDShares,
 			int userIDToShareWith, UUID indexFragmentRef) throws IOException {
@@ -156,14 +151,14 @@ public class ThemisDataSink {
 							+ uuid + ".serindexdocument"), serializedIndexDoc);
 			return uuid;
 
-		} else {
-			throw new IOException(
-					"Error persisting serialized IndexDocument in user space"
-							+ getDataSinkHome(userID) + "/user" + userID
-							+ "/index-fragments/" + type.getStorageLocation()
-							+ uuid + ".serindexdocument" + " for userID: "
-							+ userID);
 		}
+        
+		throw new IOException(
+        		"Error persisting serialized IndexDocument in user space"
+        				+ getDataSinkHome(userID) + "/user" + userID
+        				+ "/index-fragments/" + type.getStorageLocation()
+        				+ uuid + ".serindexdocument" + " for userID: "
+        				+ userID);
 
 	}
 
@@ -183,13 +178,13 @@ public class ThemisDataSink {
 					IndexDocument.class);
 
 			return indexDoc;
-		} else {
-			throw new IOException("Error getting index fragment: "
-					+ getDataSinkHome(userID) + "/user" + userID
-					+ "/index-fragments/" + type.getStorageLocation()
-					+ objectID + ".serindexdocument" + ", file exists? "
-					+ f.exists() + ", file is readable? " + f.canRead());
 		}
+		
+        throw new IOException("Error getting index fragment: "
+        		+ getDataSinkHome(userID) + "/user" + userID
+        		+ "/index-fragments/" + type.getStorageLocation()
+        		+ objectID + ".serindexdocument" + ", file exists? "
+        		+ f.exists() + ", file is readable? " + f.canRead());
 	}
 
 	private static File getIndexFragmentFile(UUID objectID, int userID,
@@ -202,13 +197,10 @@ public class ThemisDataSink {
 	/**
 	 * Returns a list of all index-fragment UUIDs the user currently has stored
 	 * within his data source repository
-	 * 
-	 * @param userID
-	 * @return
 	 */
 	public static List<UUID> getAllIndexFragmentUUIDs(int userID,
 			IndexFragmentType type) {
-		List<UUID> ret = new ArrayList<UUID>();
+		List<UUID> ret = new ArrayList<>();
 		File f = new File(getDataSinkHome(userID) + "/user" + userID
 				+ "/index-fragments/" + type.getStorageLocation());
 
@@ -216,11 +208,7 @@ public class ThemisDataSink {
 			@Override
 			public boolean accept(File dir, String name) {
 				String lowercaseName = name.toLowerCase();
-				if (lowercaseName.endsWith(".serindexdocument")) {
-					return true;
-				} else {
-					return false;
-				}
+				return lowercaseName.endsWith(".serindexdocument");
 			}
 		};
 

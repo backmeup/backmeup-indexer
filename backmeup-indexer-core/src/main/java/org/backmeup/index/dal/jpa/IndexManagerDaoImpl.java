@@ -64,39 +64,31 @@ public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
 	}
 
 	private RunningIndexUserConfig executeQuerySelectFirst(Query q) {
-		List<RunningIndexUserConfig> indexConfig = q.getResultList();
-		RunningIndexUserConfig u = indexConfig.size() > 0 ? indexConfig.get(0)
-				: null;
-		return u;
+		List<RunningIndexUserConfig> indexConfig = executeQuery(q);
+        return indexConfig.size() > 0 ? indexConfig.get(0) : null;
 	}
+
+    private List<RunningIndexUserConfig> executeQuery(Query q) {
+        List<RunningIndexUserConfig> indexConfig = q.getResultList();
+        if (indexConfig != null && indexConfig.size() > 0) {
+            return indexConfig;
+        } 
+        return new ArrayList<>();
+    }
 
 	@Override
 	public List<RunningIndexUserConfig> getAllESInstanceConfigs() {
 		Query q = this.em.createQuery("SELECT u FROM " + TABLENAME + " u");
-		List<RunningIndexUserConfig> indexConfig = q.getResultList();
-		if (indexConfig != null && indexConfig.size() > 0) {
-			return indexConfig;
-		} 
-		return new ArrayList<>();
+        return executeQuery(q);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.backmeup.index.dal.IndexManagerDao#getAllESInstanceConfigs(java.net
-	 * .URL)
-	 */
 	@Override
 	public List<RunningIndexUserConfig> getAllESInstanceConfigs(URL url) {
 		if (url != null) {
 			Query q = this.em.createQuery("SELECT u FROM " + TABLENAME
 					+ " u WHERE u.hostaddress = :instance");
 			q.setParameter("instance", url.toExternalForm());
-			List<RunningIndexUserConfig> indexConfig = q.getResultList();
-			if (indexConfig != null && indexConfig.size() > 0) {
-				return indexConfig;
-			} 
+			return executeQuery(q);
 		} 
 
 		return new ArrayList<>();
