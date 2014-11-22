@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class SearchEntry {
-    
+
     private String fileId;
     private Date timeStamp;
     private String title;
@@ -117,8 +117,15 @@ public class SearchEntry {
 
     public void copyProperty(String key, Map<String, Object> source) {
         if (source.get(key) != null) {
-        	setProperty(key, source.get(key).toString());
+            setProperty(key, source.get(key).toString());
         }
+    }
+
+    @Override
+    public String toString() {
+        return "SearchEntry [fileId=" + fileId + ", timeStamp=" + timeStamp + ", title=" + title + ", type=" + type + ", thumbnailUrl="
+                + thumbnailUrl + ", datasource=" + datasource + ", datasourceId=" + datasourceId + ", jobName=" + jobName + ", preview="
+                + preview + ", properties=" + properties + "]";
     }
 
 }

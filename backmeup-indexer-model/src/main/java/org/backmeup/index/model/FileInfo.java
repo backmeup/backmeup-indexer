@@ -1,7 +1,7 @@
 package org.backmeup.index.model;
 
 public class FileInfo {
-    
+
     private String fileId;
     private String source;
     private Long sourceId;
@@ -95,4 +95,11 @@ public class FileInfo {
     public void setSourceId(Long sourceId) {
         this.sourceId = sourceId;
     }
+
+    @Override
+    public String toString() {
+        return "FileInfo [fileId=" + fileId + ", source=" + source + ", sourceId=" + sourceId + ", timeStamp=" + timeStamp + ", title="
+                + title + ", type=" + type + ", thumbnailURL=" + thumbnailURL + ", path=" + path + ", sink=" + sink + "]";
+    }
+
 }

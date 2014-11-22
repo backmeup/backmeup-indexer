@@ -51,4 +51,9 @@ public class FileItem {
         this.fileId = fileId;
     }
 
+    @Override
+    public String toString() {
+        return "FileItem [fileId=" + fileId + ", thumbnailURL=" + thumbnailURL + ", title=" + title + ", timeStamp=" + timeStamp + "]";
+    }
+
 }
