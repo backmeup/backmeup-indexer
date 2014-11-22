@@ -7,9 +7,9 @@ import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.backmeup.data.dummy.ThemisDataSink.IndexFragmentType;
+import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.config.Configuration;
 import org.backmeup.index.model.IndexDocument;
-import org.backmeup.index.model.IndexFields;
 import org.backmeup.index.serializer.JsonSerializer;
 import org.junit.After;
 import org.junit.AfterClass;

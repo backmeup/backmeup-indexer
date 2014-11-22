@@ -9,10 +9,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.model.CountedEntry;
 import org.backmeup.index.model.FileInfo;
 import org.backmeup.index.model.FileItem;
-import org.backmeup.index.model.IndexFields;
 import org.backmeup.index.model.SearchEntry;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.query.BoolQueryBuilder;

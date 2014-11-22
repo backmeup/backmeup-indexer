@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
+import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.config.Configuration;
 import org.backmeup.index.model.IndexDocument;
-import org.backmeup.index.model.IndexFields;
 import org.backmeup.index.serializer.JsonSerializer;
 
 /**

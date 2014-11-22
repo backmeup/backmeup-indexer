@@ -1,4 +1,4 @@
-package org.backmeup.index.model;
+package org.backmeup.index.api;
 
 /**
  * Symbolic names of content fields of the data to be indexed.

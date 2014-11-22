@@ -1,8 +1,13 @@
-package org.backmeup.index.model;
+package org.backmeup.index.api;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Set;
+
+import org.backmeup.index.model.FileInfo;
+import org.backmeup.index.model.FileItem;
+import org.backmeup.index.model.IndexDocument;
+import org.backmeup.index.model.SearchResultAccumulator;
 
 /**
  * A client to the index. The client can be directly using Elastic Search or

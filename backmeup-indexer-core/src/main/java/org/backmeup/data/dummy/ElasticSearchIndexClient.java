@@ -8,11 +8,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.backmeup.index.IndexManager;
+import org.backmeup.index.api.IndexClient;
+import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.model.FileInfo;
-import org.backmeup.index.model.IndexClient;
 import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.IndexDocument;
-import org.backmeup.index.model.IndexFields;
 import org.backmeup.index.model.SearchResultAccumulator;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;

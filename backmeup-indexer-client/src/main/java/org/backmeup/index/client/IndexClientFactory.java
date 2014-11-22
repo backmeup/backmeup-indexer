@@ -1,7 +1,7 @@
 package org.backmeup.index.client;
 
 import org.backmeup.data.dummy.ElasticSearchIndexClient;
-import org.backmeup.index.model.IndexClient;
+import org.backmeup.index.api.IndexClient;
 
 public class IndexClientFactory {
 
