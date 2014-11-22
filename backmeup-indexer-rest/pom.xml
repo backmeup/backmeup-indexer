@@ -12,7 +12,7 @@
 	
 	<artifactId>backmeup-indexer-rest</artifactId>
 	<packaging>war</packaging>
-	<name>BackMeUp Indexer</name>
+	<name>BackMeUp Indexer Rest Web Application</name>
 	
 	<dependencies>
         <dependency>
