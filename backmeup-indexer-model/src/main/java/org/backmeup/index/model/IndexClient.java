@@ -4,6 +4,12 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Set;
 
+/**
+ * A client to the index. The client can be directly using Elastic Search or
+ * call the Rest API.
+ * 
+ * @author <a href="http://www.code-cop.org/">Peter Kofler</a>
+ */
 public interface IndexClient extends Closeable {
 
     SearchResultAccumulator queryBackup(String query, String source, String type, String job, String username);
