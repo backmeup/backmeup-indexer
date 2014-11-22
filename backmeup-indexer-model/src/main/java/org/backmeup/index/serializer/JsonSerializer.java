@@ -42,4 +42,9 @@ public class JsonSerializer {
         Gson gson = builder.create();
         return gson.fromJson(entry, clazz);
     }
+
+    public static <T> T deserialize(String entry, Type type) {
+        Gson gson = builder.create();
+        return gson.fromJson(entry, type);
+    }
 }
