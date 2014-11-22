@@ -8,7 +8,7 @@ import org.backmeup.data.dummy.ElasticContentBuilder;
 import org.backmeup.data.dummy.ThemisDataSink;
 import org.backmeup.data.dummy.ThemisDataSink.IndexFragmentType;
 import org.backmeup.index.model.IndexDocument;
-import org.backmeup.index.utils.file.JsonSerializer;
+import org.backmeup.index.serializer.JsonSerializer;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;

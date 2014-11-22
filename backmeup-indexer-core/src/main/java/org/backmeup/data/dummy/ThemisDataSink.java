@@ -13,7 +13,7 @@ import org.apache.commons.io.FileUtils;
 import org.backmeup.index.config.Configuration;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.IndexFields;
-import org.backmeup.index.utils.file.JsonSerializer;
+import org.backmeup.index.serializer.JsonSerializer;
 
 /**
  * dummy implementation of a themis data sink currently with file operations for

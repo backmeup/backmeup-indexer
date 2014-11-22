@@ -10,7 +10,7 @@ import org.backmeup.data.dummy.ThemisDataSink.IndexFragmentType;
 import org.backmeup.index.config.Configuration;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.IndexFields;
-import org.backmeup.index.utils.file.JsonSerializer;
+import org.backmeup.index.serializer.JsonSerializer;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
