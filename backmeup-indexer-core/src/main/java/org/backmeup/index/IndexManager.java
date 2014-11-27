@@ -509,7 +509,7 @@ public class IndexManager {
         //TODO Keep Clients and last accessed timestamp? 
         RunningIndexUserConfig conf = getRunningIndexUserConfig(userID);
         if (conf != null) {
-            Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", "user" + userID).build();
+            Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", conf.getClusterName()).build();
 
             // now try to connect with the TransportClient - requires the
             // transport.tcp.port for connection
