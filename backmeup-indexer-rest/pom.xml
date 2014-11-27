@@ -40,6 +40,13 @@
 			<scope>provided</scope>
 		</dependency>
 		
+        <!-- used as log implementation, not referenced in source -->        
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>${version.ch.qos.logback}</version>
+		</dependency> 		
+
         <!-- used as CDI implementation, not referenced in source -->        
 		<dependency>
 			<groupId>org.jboss.weld.servlet</groupId>

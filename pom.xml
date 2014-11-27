@@ -33,7 +33,7 @@
         <config.localBuildArtefactDirectory>../autodeploy</config.localBuildArtefactDirectory>
 
 		<config.tomcat.manager.url>http://127.0.0.1:8080/manager/text</config.tomcat.manager.url>
-		<config.tomcat.authentication.id>backmeup.indexer.tomcat</config.tomcat.authentication.id>
+		<config.tomcat.authentication.id>backmeup.service.tomcat</config.tomcat.authentication.id>
 
 		<!-- Dependency versions
 			 Please keep alphabetical
