@@ -149,7 +149,7 @@ public class Index implements IndexServer {
     }
 
     private void mandatory(String name, String value) {
-        if (value == null) {
+        if (value == null || value.isEmpty()) {
             badRequestMissingParameter(name);
         }
     }
