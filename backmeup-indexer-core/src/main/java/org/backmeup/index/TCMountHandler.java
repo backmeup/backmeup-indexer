@@ -59,7 +59,7 @@ public class TCMountHandler {
 
             // if we still haven't found one we have a problem - we don't have
             // any more
-            if (bFoundOne == false) {
+            if (!bFoundOne) {
                 throw new ExceptionInInitializerError("Cannot initialize mount process, no more unmounted drives left");
             }
         }
@@ -74,7 +74,7 @@ public class TCMountHandler {
         // or
         // String command =
         // "/usr/bin/truecrypt /home/themis/themis-truecrypt/elasticsearch_userdata_template_TC_150MB.tc /hmedia/truecrypt3/ --password=12345";
-        
+
         // 
         String command = null;
         if (SystemUtils.IS_OS_LINUX) {
@@ -83,12 +83,18 @@ public class TCMountHandler {
             executeCmd(command);
             //    throw new IOException("Failed to create mount point: " + driveLetter);
         }
-        
+
         command = createMountCommand(tcVolume, driveLetter, password);
         executeCmd(command);
         //    throw new IOException("Failed to mount tc voulume: " + tcVolume.getAbsolutePath());
 
-        
+        // wait until mouinted at max 5 sec
+        for (int i = 0; i < 5 * 2; i++) { // TODO Andrew Constant 5 Seconds
+            if (isDriveMounted(driveLetter)) {
+                break;
+            }
+            Thread.sleep(1000 / 2);
+        }
 
         // now check if the drive got properly mounted
         if (!isDriveMounted(driveLetter)) {
@@ -100,36 +106,39 @@ public class TCMountHandler {
         // volume
         return driveLetter;
     }
-    
+
     private static void executeCmd(String command) throws IOException, InterruptedException {
         try {
             // Execute the call
             log.debug("executing: " + command);
             Process process = Runtime.getRuntime().exec(command);
+            // TODO ProcessBuilder
             Reader r = new InputStreamReader(process.getInputStream());
             BufferedReader in = new BufferedReader(r);
             String line;
             String result = "";
-            
-            process.waitFor();
-           
-            while ((line = in.readLine())!=null) result+=line;
+
+            // TODO int errorCode = process.waitFor();
+            // TODO Andrew, use the exit code if maybe it is ok
+            Thread.sleep(100);
+
+            while ((line = in.readLine()) != null) {
+                result += line;
+            }
             log.debug(result);
-            // cause this process to stop until process p is terminated
-            // TODO process.wait() - is an issue in headless mode, waits for
-            // human interaction! get rid!
 
         } catch (IOException | InterruptedException e) {
             log.error("Error executing: " + command + " " + e.toString());
             throw e;
         }
     }
-    
+
     private static String createMountCommand(File tcVolume, String driveLetter, String password) {
 
         String command = null;
         if (SystemUtils.IS_OS_LINUX) {
-            command = /*"sudo " + */getTrueCryptExe() + " --password=" + password + " --non-interactive " + tcVolume.getAbsolutePath() + " " + driveLetter;
+            command = /*"sudo " + */getTrueCryptExe() + " --password=" + password + " --non-interactive "
+                    + tcVolume.getAbsolutePath() + " " + driveLetter;
             //command =  getTrueCryptExe() + " " + tcVolume.getAbsolutePath() + " " + driveLetter + " --password=" + password + " --non-interactive";
         }
         if (SystemUtils.IS_OS_WINDOWS) {
@@ -208,7 +217,7 @@ public class TCMountHandler {
         }
 
         if ((f != null) && f.exists()) {
-	    return true;
+            return true;
         }
         return false;
 
@@ -263,7 +272,7 @@ public class TCMountHandler {
             String command = createUnmountCommand(driveLetter);
             log.debug("unmounting: " + command);
             executeCmd(command);
-            
+
             if (SystemUtils.IS_OS_LINUX) {
                 command = "rmdir " + driveLetter;
                 executeCmd(command);
