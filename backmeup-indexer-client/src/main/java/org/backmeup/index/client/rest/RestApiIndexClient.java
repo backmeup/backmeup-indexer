@@ -17,7 +17,7 @@ import org.backmeup.index.model.SearchResultAccumulator;
  */
 public class RestApiIndexClient implements IndexClient {
 
-    private final IndexServer server = new RestApiServerStub();
+    private final IndexServer server = new RestApiServerStub(RestApiConfig.DEFAULT);
     private final Long userId;
 
     public RestApiIndexClient(Long userId) {

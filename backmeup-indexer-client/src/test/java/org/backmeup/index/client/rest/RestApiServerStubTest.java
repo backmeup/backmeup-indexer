@@ -17,9 +17,13 @@ public class RestApiServerStubTest {
         server.setStatusCode(200);
         server.setResourceFileName("query.json");
 
-        SearchResultAccumulator searchResult = new RestApiServerStub().query(1L, "find_me", null, null, "", "peter");
+        SearchResultAccumulator searchResult = new RestApiServerStub(testConfig()).query(1L, "find_me", null, null, "", "peter");
         assertNotNull(searchResult);
         assertEquals(2, searchResult.getBySource().size());
+    }
+
+    private RestApiConfig testConfig() {
+        return new RestApiConfig("127.0.0.1", 7654, "");
     }
 
     @Test

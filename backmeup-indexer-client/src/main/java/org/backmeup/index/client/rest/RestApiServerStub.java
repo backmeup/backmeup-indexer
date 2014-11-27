@@ -18,7 +18,11 @@ import com.google.gson.reflect.TypeToken;
 public class RestApiServerStub implements IndexServer {
 
     private final HttpMethods http = new HttpMethods();
-    private final RestUrls urls = new RestUrls();
+    private final RestUrls urls;
+
+    public RestApiServerStub(RestApiConfig config) {
+        urls = new RestUrls(config);
+    }
 
     @Override
     public SearchResultAccumulator query(Long userId, String query, String filterBySource, String filterByType, String filterByJob,

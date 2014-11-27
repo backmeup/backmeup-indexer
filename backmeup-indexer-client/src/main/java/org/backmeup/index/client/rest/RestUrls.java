@@ -7,13 +7,18 @@ import org.apache.http.client.utils.URIBuilder;
 
 public class RestUrls {
 
-    // TODO PK read values from config
-    private String host = "127.0.0.1";
-    private int port = 7654;
-    private String basePath = "/index";
+    private final String host;
+    private final int port;
+    private final String basePath;
 
-    public URI forQuery(Long userId, String query, String filterBySource, String filterByType, String filterByJob, String username)
-            throws URISyntaxException {
+    public RestUrls(RestApiConfig config) {
+        this.host = config.host;
+        this.port = config.port;
+        this.basePath = config.basepath + "/index";
+    }
+
+    public URI forQuery(Long userId, String query, String filterBySource, String filterByType, String filterByJob,
+            String username) throws URISyntaxException {
         URIBuilder urlBuilder = startWithBaseUrl(userId, "");
         addMandatoryParameter(urlBuilder, "query", query);
         addOptionalParameter(urlBuilder, "source", filterBySource);
@@ -51,7 +56,7 @@ public class RestUrls {
     // private
 
     private URIBuilder startWithBaseUrl(Long userId, String path) throws URISyntaxException {
-        return new URIBuilder("http://" + host + ":" + port + basePath + "/" + userId + "/" + path);
+        return new URIBuilder("http://" + this.host + ":" + this.port + this.basePath + "/" + userId + "/" + path);
     }
 
     private void addMandatoryParameter(URIBuilder url, String key, String value) {

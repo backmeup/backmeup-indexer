@@ -44,15 +44,17 @@ public class HttpMethods {
     }
 
     public String invoke(HttpRequestBase method, int expectedCode) throws IOException, ClientProtocolException {
-        HttpResponse response = httpClient.execute(method);
-        checkStatusIs(expectedCode, response);
-        return getBodyOf(response);
+        HttpResponse response = this.httpClient.execute(method);
+        String body = getBodyOf(response);
+        checkStatusIs(expectedCode, response, body);
+        return body;
     }
 
-    private void checkStatusIs(int expectedCode, HttpResponse response) {
+    private void checkStatusIs(int expectedCode, HttpResponse response, String body) {
         int responseCode = response.getStatusLine().getStatusCode();
         if (responseCode != expectedCode) {
-            throw new IllegalArgumentException("expected HTTP response code " + expectedCode + " but was " + responseCode);
+            throw new IllegalArgumentException("expected HTTP response code " + expectedCode + " but was "
+                    + responseCode + "\nbody: " + body);
         }
     }
 
