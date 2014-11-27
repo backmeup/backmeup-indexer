@@ -21,9 +21,9 @@ import org.slf4j.LoggerFactory;
  * once the index is started i.e. the user logs onto the system
  * 
  */
-public class IndexSharingHandler {
+public class IndexContentManager {
 
-    private static final Logger log = LoggerFactory.getLogger(IndexSharingHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(IndexContentManager.class);
 
     /**
      * User A grants permission to user B on a specific indexDocument This is copied into user B's public drop off area
