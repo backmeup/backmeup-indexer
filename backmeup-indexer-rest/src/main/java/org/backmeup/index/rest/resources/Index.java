@@ -121,13 +121,13 @@ public class Index implements IndexServer {
             @PathParam("userId") Long userId, //
             @QueryParam("job") Long jobId, // optional for user and timestamp 
             @QueryParam("time") Long timestamp) { // optional
-        
+
         return status(Response.Status.ACCEPTED, delete(userId, jobId, timestamp));
     }
 
     @Override
     public String index( //
-            @PathParam("userId") Long userId, //
+            Long userId, //
             IndexDocument document) throws IOException {
 
         try (IndexClient indexClient = getIndexClient(userId)) {
@@ -144,10 +144,10 @@ public class Index implements IndexServer {
     public Response indexRS( //
             @PathParam("userId") Long userId, //
             IndexDocument document) throws IOException {
-        
+
         return status(Response.Status.CREATED, index(userId, document));
     }
-    
+
     private void mandatory(String name, String value) {
         if (value == null) {
             badRequestMissingParameter(name);
