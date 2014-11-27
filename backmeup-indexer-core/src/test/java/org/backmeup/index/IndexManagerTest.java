@@ -1,5 +1,8 @@
 package org.backmeup.index;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -17,6 +20,7 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.cluster.ClusterName;
 import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
@@ -38,13 +42,14 @@ public class IndexManagerTest extends IndexManagerSetup {
     @Test
     public void testESandTCLaunchTest() throws IndexManagerCoreException, IOException {
         this.indexManager.startupInstance(999992);
-        RunningIndexUserConfig conf = this.indexManager.getRunningIndexUserConfig(999992);
 
+        RunningIndexUserConfig conf = this.indexManager.getRunningIndexUserConfig(999992);
         int httpPort = conf.getHttpPort();
         String drive = conf.getMountedTCDriveLetter();
         Assert.assertNotNull("mounting TC data drive for user should not fail", drive);
         Assert.assertTrue("ES http portnumber should have been assigned", httpPort > -1);
         System.out.println("user 999992 on port: " + httpPort + " and TC volume: " + drive);
+
         // check instance up and running
         Assert.assertTrue("ES Instance is not running ",
                 ESConfigurationHandler.isElasticSearchInstanceRunning(conf.getHostAddress(), httpPort));
@@ -62,17 +67,19 @@ public class IndexManagerTest extends IndexManagerSetup {
     }
 
     @Test
-    public void testRetrieveTransportClientAndClusterState() throws IndexManagerCoreException {
+    public void testFailForMissingConfig() throws IndexManagerCoreException {
         this.exception.expect(IndexManagerCoreException.class);
-        Client client = this.indexManager.getESTransportClient(999992);
-        Assert.assertNull(client);
+        this.indexManager.getESTransportClient(999992);
+    }
 
+    @Test
+    public void testRetrieveTransportClientAndClusterState() throws IndexManagerCoreException {
         //startup or get running instance
-        client = this.indexManager.initAndCreateAndDoEverthing(999992L);
+        Client client = this.indexManager.initAndCreateAndDoEverthing(999992L);
+        assertNotNull(client);
         ClusterState state = this.indexManager.getESClusterState(999992L);
-        Assert.assertNotNull(state);
-        Assert.assertTrue(state.getClusterName().equals("user999992"));
-
+        assertNotNull(state);
+        assertEquals(new ClusterName("user999992"), state.getClusterName());
         client.close();
     }
 

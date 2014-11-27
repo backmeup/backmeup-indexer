@@ -33,7 +33,7 @@ public class IndexManagerSetup {
     @AfterClass
     public static void cleanup() {
         //done automatically within tomcat, neet to call manually within unittests
-        IndexManager.getInstance().shutdownIndexManager();
+        IndexManager.getInstance().shutdownGarbageCollection();
     }
 
     public void createEntityManager() {
