@@ -134,12 +134,16 @@ public class IndexManager {
         shutdownAllRunningInstances(this.defaultHost);
         this.log.debug("shutdown all running ElasticSearch instances on " + this.defaultHost + " completed");
 
-        //stop the garbage collector
-        this.cleanupTask.end();
-        this.log.debug("ended IndexKeepAliveTimer.");
+        shutdownGarbageCollection();
 
         this.entityManager.close();
         this.entityManagerFactory.close();
+    }
+
+    void shutdownGarbageCollection() {
+        //stop the garbage collector
+        this.cleanupTask.end();
+        this.log.debug("ended IndexKeepAliveTimer.");
     }
 
     // ========================================================================
@@ -513,7 +517,7 @@ public class IndexManager {
                     .getHostAddress().getHost(), conf.getTcpPort()));
             return client;
         }
-        
+
         throw new IndexManagerCoreException("Failed to create ES TransportClient for userID: " + userID
                 + " due to missing RunningIndexUserConfig");
     }
@@ -536,7 +540,7 @@ public class IndexManager {
             this.log.debug("Clusterstate for userID: " + userId + " " + clusterState.prettyPrint());
             return clusterState;
         }
-        
+
         throw new IndexManagerCoreException("Clusterstate for userID: " + userId + " " + "Cluster not responding");
     }
 
