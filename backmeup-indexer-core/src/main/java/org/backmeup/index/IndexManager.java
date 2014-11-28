@@ -30,6 +30,7 @@ import org.backmeup.index.db.RunningIndexUserConfig;
 import org.backmeup.index.utils.file.FileUtils;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.common.settings.ImmutableSettings;
@@ -532,13 +533,18 @@ public class IndexManager {
         //check if we've got a DB record
         RunningIndexUserConfig config = getRunningIndexUserConfig(userId.intValue());
 
-        if (config != null) {
-            Client client = this.getESTransportClient(userId.intValue());
-            ClusterState clusterState = client.admin().cluster().state(new ClusterStateRequest())
-                    .actionGet(10, TimeUnit.SECONDS).getState();
-            client.close();
-            this.log.debug("Clusterstate for userID: " + userId + " " + clusterState.prettyPrint());
-            return clusterState;
+        try {
+            if (config != null) {
+                Client client = this.getESTransportClient(userId.intValue());
+                ClusterState clusterState = client.admin().cluster().state(new ClusterStateRequest())
+                        .actionGet(10, TimeUnit.SECONDS).getState();
+                client.close();
+                this.log.debug("Clusterstate for userID: " + userId + " " + clusterState.prettyPrint());
+                return clusterState;
+            }
+        } catch (NoNodeAvailableException e) {
+            //TODO AL update to ElasticSearch 1.2.1 which fixes the NoNodeAvailableExeption which sometimes occurs
+            //https://github.com/jprante/elasticsearch-knapsack/issues/49
         }
 
         throw new IndexManagerCoreException("Clusterstate for userID: " + userId + " " + "Cluster not responding");
