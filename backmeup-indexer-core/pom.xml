@@ -109,14 +109,6 @@
             <version>${version.org.slf4j}</version>
             <scope>test</scope>
         </dependency>
-		
-        <!-- Servlet environment provided -->     
-        <dependency>
-                <groupId>javax.servlet</groupId>
-                <artifactId>javax.servlet-api</artifactId>
-                <version>${version.javax.servlet}</version>
-                <scope>provided</scope>
-        </dependency>
     </dependencies>
 
     <profiles>
@@ -132,8 +124,14 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>${version.org.apache.maven.plugins.maven-surefire-plugin}</version>
                         <configuration>
-							<!-- tests need TrueCrypt Linux installation, skip by default -->
-                            <skipTests>true</skipTests>
+                            <excludes>
+                                <!-- tests need Elastic Search installation, skip by default -->
+    							<!-- tests need TrueCrypt Linux installation, skip by default -->
+                                <exclude>org/backmeup/data/dummy/ThemisDataSinkTest.java</exclude>
+                                <exclude>org/backmeup/index/ESConfigurationHandlerTest.java</exclude>
+                                <exclude>org/backmeup/index/TCMountHandlerTest.java</exclude>
+                                <exclude>org/backmeup/index/Index*.java</exclude>
+                            </excludes>
                         </configuration>
                     </plugin>
                 </plugins>
