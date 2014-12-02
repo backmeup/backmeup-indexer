@@ -16,7 +16,6 @@ public class JsonSerializerTest {
     public void shouldPreserveLongs() throws IOException {
         IndexDocument document = deserialize();
         assertEquals(16384L, document.getFields().get(IndexFields.FIELD_OWNER_ID));
-        // TODO PK deserialized does not look too good, has double instead of int/long
     }
 
     @Test
@@ -25,13 +24,32 @@ public class JsonSerializerTest {
         assertEquals("john.doe", document.getFields().get(IndexFields.FIELD_OWNER_NAME));
     }
 
-    private IndexDocument deserialize() throws IOException {
-        try (InputStream resource = getClass().getClassLoader().getResourceAsStream("sampleIndexDocument.serindexdocument")) {
-            String json = IOUtils.toString(resource);
-            return JsonSerializer.deserialize(json, IndexDocument.class);
-        }
+    @Test
+    public void shouldDeserialiseLargeFields() throws IOException {
+        IndexDocument document = deserialize();
+        assertEquals("b", document.getLargeFields().get("a"));
     }
 
-    // TODO PK Test UUID
+    @Test
+    public void shouldBeTheSameAfterFullRoundTrip() throws IOException {
+        IndexDocument document = deserialize();
+        IndexDocument againDeserialized = deserialize(JsonSerializer.serialize(document));
+        assertEquals(document.getFields(), againDeserialized.getFields());
+        assertEquals(document.getLargeFields(), againDeserialized.getLargeFields());
+    }
+
+    private IndexDocument deserialize() throws IOException {
+        return deserialize(load());
+    }
+
+    private IndexDocument deserialize(String json) {
+        return JsonSerializer.deserialize(json, IndexDocument.class);
+    }
+
+    private String load() throws IOException {
+        try (InputStream resource = getClass().getClassLoader().getResourceAsStream("sampleIndexDocument.serindexdocument")) {
+            return IOUtils.toString(resource);
+        }
+    }
 
 }

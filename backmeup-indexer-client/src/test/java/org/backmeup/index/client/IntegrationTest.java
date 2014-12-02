@@ -61,7 +61,7 @@ public class IntegrationTest {
     }
 
     private void deleteDocument(IndexDocument document) {
-        Long timestamp = Long.valueOf((String) document.getFields().get(IndexFields.FIELD_BACKUP_AT));
+        Long timestamp = (Long) document.getFields().get(IndexFields.FIELD_BACKUP_AT);
         Long jobid = Long.valueOf((String) document.getFields().get(IndexFields.FIELD_JOB_ID));
         client.deleteRecordsForJobAndTimestamp(jobid, timestamp);
     }
