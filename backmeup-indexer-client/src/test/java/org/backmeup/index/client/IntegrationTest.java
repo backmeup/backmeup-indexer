@@ -1,6 +1,7 @@
 package org.backmeup.index.client;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -21,7 +22,7 @@ public class IntegrationTest {
     private static final long USER = 16384;
 
     @Test
-    public void shouldIndexAndQuery() throws IOException {
+    public void shouldIndexAndQueryAndDelete() throws IOException {
         IndexClient client = new IndexClientFactory().getIndexClient(USER);
 
         IndexDocument document = deserialize();
@@ -29,7 +30,16 @@ public class IntegrationTest {
         client.index(document);
 
         SearchResultAccumulator result = client.queryBackup("*", null, null, null, "username");
+        //TODO PK,AL not the proper asserts here
         assertTrue(result.getFiles().size() > 0);
+
+        Long timestamp = Long.valueOf((String) document.getFields().get(IndexFields.FIELD_BACKUP_AT));
+        Long jobid = Long.valueOf((String) document.getFields().get(IndexFields.FIELD_JOB_ID));
+
+        client.deleteRecordsForJobAndTimestamp(jobid, timestamp);
+        result = client.queryBackup("*", null, null, null, "username");
+        //TODO PK,AL not the proper asserts here
+        assertFalse(result.getFiles().size() > 0);
     }
 
     private IndexDocument deserialize() throws IOException {
