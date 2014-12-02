@@ -26,6 +26,17 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${version.org.slf4j}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${version.commons-io}</version>
+        </dependency>
+
         <!-- Servlet environment provided -->        
 		<dependency>
 			<groupId>javax.el</groupId>
@@ -78,6 +89,7 @@
     		</exclusions>
 		</dependency>
 
+        <!-- Test -->
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>tjws</artifactId>
