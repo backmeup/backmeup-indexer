@@ -1,5 +1,9 @@
 package org.backmeup.data.dummy;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -112,47 +116,35 @@ public class ThemisDataSinkTest {
     }
 
     @Test
-    public void testPersistLoadAndDeleteIndexFragmentForUser() {
+    public void testPersistLoadAndDeleteIndexFragmentForUser() throws IOException {
+        UUID fileID = ThemisDataSink
+                .saveIndexFragment(this.indexDoc, 99998, IndexFragmentType.TO_IMPORT_USER_OWNED);
+        assertNotNull(fileID);
 
-        try {
-            UUID fileID = ThemisDataSink
-                    .saveIndexFragment(this.indexDoc, 99998, IndexFragmentType.TO_IMPORT_USER_OWNED);
-            Assert.assertNotNull(fileID);
+        List<UUID> lUUIDs = ThemisDataSink.getAllIndexFragmentUUIDs(99998, IndexFragmentType.TO_IMPORT_USER_OWNED);
+        assertNotNull(lUUIDs);
 
-            List<UUID> lUUIDs = ThemisDataSink.getAllIndexFragmentUUIDs(99998, IndexFragmentType.TO_IMPORT_USER_OWNED);
-            Assert.assertNotNull(lUUIDs);
+        assertTrue(lUUIDs.contains(fileID));
 
-            Assert.assertTrue(lUUIDs.contains(fileID));
+        IndexDocument fragment = ThemisDataSink.getIndexFragment(fileID, 99998,
+                IndexFragmentType.TO_IMPORT_USER_OWNED);
+        assertNotNull(fragment);
 
-            IndexDocument fragment = ThemisDataSink.getIndexFragment(fileID, 99998,
-                    IndexFragmentType.TO_IMPORT_USER_OWNED);
-            Assert.assertNotNull(fragment);
-
-            ThemisDataSink.deleteIndexFragment(fileID, 99998, IndexFragmentType.TO_IMPORT_USER_OWNED);
-
-        } catch (IOException e) {
-            Assert.fail("failed saving, getting or deleting indexFragment: " + e.toString());
-        }
+        ThemisDataSink.deleteIndexFragment(fileID, 99998, IndexFragmentType.TO_IMPORT_USER_OWNED);
     }
 
     @Test
-    public void testAddUUIDtoRecordWhenPersisting() {
+    public void testAddUUIDtoRecordWhenPersisting() throws IOException {
+        assertFalse("Document should not contain an UUID yet",
+                this.indexDoc.getFields().containsKey(IndexFields.FIELD_INDEX_UUID));
+        UUID fileID = ThemisDataSink
+                .saveIndexFragment(this.indexDoc, 99997, IndexFragmentType.TO_IMPORT_USER_OWNED);
 
-        try {
-            Assert.assertFalse("Document should not contain an UUID yet",
-                    this.indexDoc.getFields().containsKey(IndexFields.FIELD_INDEX_UUID));
-            UUID fileID = ThemisDataSink
-                    .saveIndexFragment(this.indexDoc, 99997, IndexFragmentType.TO_IMPORT_USER_OWNED);
-
-            IndexDocument fragment = ThemisDataSink.getIndexFragment(fileID, 99997,
-                    IndexFragmentType.TO_IMPORT_USER_OWNED);
-            Assert.assertNotNull("The returned IndexDocument must not be null", fragment);
-            Assert.assertTrue("The UUID should be written within the object",
-                    fragment.getFields().containsKey(IndexFields.FIELD_INDEX_UUID));
-
-        } catch (IOException e) {
-            Assert.fail("failed saving, getting or deleting indexFragment: " + e.toString());
-        }
+        IndexDocument fragment = ThemisDataSink.getIndexFragment(fileID, 99997,
+                IndexFragmentType.TO_IMPORT_USER_OWNED);
+        assertNotNull("The returned IndexDocument must not be null", fragment);
+        assertTrue("The UUID should be written within the object",
+                fragment.getFields().containsKey(IndexFields.FIELD_INDEX_UUID));
     }
 
     @Test
@@ -163,8 +155,7 @@ public class ThemisDataSinkTest {
         ThemisDataSink.deleteIndexFragment(fileID, 99997, IndexFragmentType.TO_IMPORT_USER_OWNED);
 
         this.exception.expect(IOException.class);
-        IndexDocument fragment = ThemisDataSink.getIndexFragment(fileID, 99997, IndexFragmentType.TO_IMPORT_USER_OWNED);
-
+        ThemisDataSink.getIndexFragment(fileID, 99997, IndexFragmentType.TO_IMPORT_USER_OWNED);
     }
 
 }

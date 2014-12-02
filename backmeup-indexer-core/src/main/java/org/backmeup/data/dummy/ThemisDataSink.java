@@ -120,16 +120,16 @@ public class ThemisDataSink {
         // check if we need to generate a unique file name or if if it's sharing
         if (indexFragment.getFields().containsKey(IndexFields.FIELD_INDEX_UUID)) {
             // existing object, has already assigned a UUID
-            uuid = (UUID) indexFragment.getFields().get(IndexFields.FIELD_INDEX_UUID);
+            String uuidString = (String) indexFragment.getFields().get(IndexFields.FIELD_INDEX_UUID);
+            uuid = UUID.fromString(uuidString);
         } else {
             uuid = UUID.randomUUID();
             // before serializing we add the UUID as element within the object
-            indexFragment.field(IndexFields.FIELD_INDEX_UUID, uuid);
+            indexFragment.field(IndexFields.FIELD_INDEX_UUID, uuid.toString());
         }
 
         // serialize the IndexDocument to JSON
         String serializedIndexDoc = JsonSerializer.serialize(indexFragment);
-
         if (serializedIndexDoc != null) {
 
             FileUtils.writeStringToFile(new File(getDataSinkHome(userID) + "/user" + userID + "/index-fragments/"
