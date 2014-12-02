@@ -17,6 +17,8 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Wrapper around http-commons for the call of the index server.
@@ -24,6 +26,8 @@ import org.apache.http.impl.client.HttpClientBuilder;
  * @author <a href="http://www.code-cop.org/">Peter Kofler</a>
  */
 public class HttpMethods {
+    
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final HttpClient httpClient = HttpClientBuilder.create().build();
 
@@ -44,6 +48,7 @@ public class HttpMethods {
     }
 
     public String invoke(HttpRequestBase method, int expectedCode) throws IOException, ClientProtocolException {
+        log.debug("Index request sending to server URI %s", method.getURI());
         HttpResponse response = this.httpClient.execute(method);
         String body = getBodyOf(response);
         checkStatusIs(expectedCode, response, body);
@@ -61,7 +66,9 @@ public class HttpMethods {
     private String getBodyOf(HttpResponse response) throws IOException {
         HttpEntity entity = response.getEntity();
         String encoding = getEncodingFrom(entity);
-        return read(entity, encoding);
+        String body = read(entity, encoding);
+        log.debug("Body received from server with encoding %s\n%s", encoding, body);
+        return body;
     }
 
     private String getEncodingFrom(HttpEntity entity) {
@@ -77,7 +84,6 @@ public class HttpMethods {
             } else {
                 body = IOUtils.toString(content, encoding);
             }
-            System.out.println(body);
             return body;
         }
     }
