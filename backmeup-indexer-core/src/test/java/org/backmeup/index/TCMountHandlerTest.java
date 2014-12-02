@@ -35,7 +35,7 @@ public class TCMountHandlerTest {
     @Test
     public void mountAndUnmountTestContainerWindows() {
         Assume.assumeTrue(SystemUtils.IS_OS_WINDOWS);
-        File tcTestFile = new File("src/main/resources/tests/TestTCVol1.tc");
+        File tcTestFile = new File("src/test/resources/tests/TestTCVol1.tc");
         try {
             String drive = TCMountHandler.mount(tcTestFile, "12345", "I");
             Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true, TCMountHandler.isDriveMounted("I"));
@@ -52,7 +52,7 @@ public class TCMountHandlerTest {
     @Test
     public void mountAndUnmountTestContainerLinux() {
         Assume.assumeTrue(SystemUtils.IS_OS_LINUX);
-        File tcTestFile = new File("src/main/resources/tests/TestTCVol1.tc");
+        File tcTestFile = new File("src/test/resources/tests/TestTCVol1.tc");
         try {
             String mountingPoint = TCMountHandler.mount(tcTestFile, "12345", "/media/themis/volume0");
             System.out.println(mountingPoint);
@@ -76,7 +76,7 @@ public class TCMountHandlerTest {
         Assume.assumeTrue(SystemUtils.IS_OS_LINUX);
         // mounting the same TrueCrypt Volume file twice at the same time is not
         // possible
-        File tcTestFile = new File("src/main/resources/tests/TestTCVol1.tc");
+        File tcTestFile = new File("src/test/resources/tests/TestTCVol1.tc");
         try {
             String mountingPoint = TCMountHandler.mount(tcTestFile, "12345", "/media/themis/volume0");
 
@@ -100,7 +100,7 @@ public class TCMountHandlerTest {
         Assume.assumeTrue(SystemUtils.IS_OS_WINDOWS);
         // mounting the same TrueCrypt Volume file twice at the same time is not
         // possible
-        File tcTestFile = new File("src/main/resources/tests/TestTCVol1.tc");
+        File tcTestFile = new File("src/test/resources/tests/TestTCVol1.tc");
         try {
             String drive1 = "I";
             drive1 = TCMountHandler.mount(tcTestFile, "12345", drive1);
@@ -122,8 +122,8 @@ public class TCMountHandlerTest {
     @Test
     public void mountTwiceOnSameDrive() {
         Assume.assumeTrue(SystemUtils.IS_OS_WINDOWS);
-        File tcTestFile = new File("src/main/resources/tests/TestTCVol1.tc");
-        File tcTestFile2 = new File("src/main/resources/tests/TestTCVol2.tc");
+        File tcTestFile = new File("src/test/resources/tests/TestTCVol1.tc");
+        File tcTestFile2 = new File("src/test/resources/tests/TestTCVol2.tc");
         try {
             String drive1 = "I";
             drive1 = TCMountHandler.mount(tcTestFile, "12345", drive1);
@@ -141,8 +141,8 @@ public class TCMountHandlerTest {
     @Test
     public void unmountAllDrivesTest() throws Exception {
         Assume.assumeTrue(SystemUtils.IS_OS_WINDOWS);
-        File tcTestFile = new File("src/main/resources/tests/TestTCVol1.tc");
-        File tcTestFile2 = new File("src/main/resources/tests/TestTCVol2.tc");
+        File tcTestFile = new File("src/test/resources/tests/TestTCVol1.tc");
+        File tcTestFile2 = new File("src/test/resources/tests/TestTCVol2.tc");
 
         String d1 = "I";
         d1 = TCMountHandler.mount(tcTestFile, "12345", d1);
