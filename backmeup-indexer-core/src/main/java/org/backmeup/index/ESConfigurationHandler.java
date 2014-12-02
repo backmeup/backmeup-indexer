@@ -145,8 +145,8 @@ public class ESConfigurationHandler {
         try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
             log.debug("Issuing shutdown request: " + shutdownRequest);
             try (CloseableHttpResponse response = httpClient.execute(shutdownRequest)) {
-                if (response.getStatusLine().getStatusCode() != 200) {
-                    log.debug("shutdown down ok");
+                if (response.getStatusLine().getStatusCode() == 200) {
+                    log.debug("shutdown down ok - status code 200");
                     httpClient.close();
                 } else {
                     httpClient.close();

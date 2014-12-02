@@ -23,7 +23,7 @@ public class IndexKeepAliveTimer {
     private final Logger log = LoggerFactory.getLogger(IndexKeepAliveTimer.class);
 
     private IndexKeepAliveTimer() {
-        System.out.println("created new IndexKeepAliveTimer object");
+        this.log.debug("created new IndexKeepAliveTimer");
     }
 
     public static IndexKeepAliveTimer getInstance() {
