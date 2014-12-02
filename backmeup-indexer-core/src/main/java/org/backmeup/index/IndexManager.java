@@ -378,9 +378,8 @@ public class IndexManager {
             this.log.debug("shutdownInstance for userID: " + userID
                     + " step1 - failed, no configuration persisted in db");
             return;
-        } else {
-            this.log.debug("shutdownInstance for userID: " + userID + " step1 - ok");
-        }
+        } 
+        this.log.debug("shutdownInstance for userID: " + userID + " step1 - ok");
 
         //2. shutdown the ElasticSearch Instance
         try {

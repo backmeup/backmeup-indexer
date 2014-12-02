@@ -57,6 +57,7 @@ public class ThemisDataSink {
      * @param f
      *            the user specific yml ES startup file
      */
+    @SuppressWarnings("resource") // new FileInputStream(f) is closed inside FileUtils.copyInputStreamToFile
     public static void saveIndexTrueCryptContainer(File f, int userID) throws IOException {
         if (f == null) {
             throw new IOException("file f is null");
