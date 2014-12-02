@@ -166,7 +166,7 @@ public class IndexManager {
      */
     private void initAvailableInstances() throws MalformedURLException, URISyntaxException, UnknownHostException {
 
-        this.defaultHost = new URI("http", InetAddress.getLocalHost().getHostAddress() + "", "", "").toURL();
+        this.defaultHost = new URI("http", InetAddress.getLocalHost().getHostAddress() + "", null, null).toURL();
 
         List<Integer> supportedTcpPorts = new ArrayList<>();
         List<Integer> supportedHttpPorts = new ArrayList<>();
@@ -184,7 +184,7 @@ public class IndexManager {
         AvailableESInstanceState esInstance1 = new AvailableESInstanceState(supportedTcpPorts, supportedHttpPorts);
         this.availableESInstances.put(this.defaultHost, esInstance1);
 
-        syncAvailablePortswithPortsInUseFromDB(this.defaultHost);
+        syncManagerAfterStartupFromDBRecords(this.defaultHost);
     }
 
     /**
@@ -192,14 +192,18 @@ public class IndexManager {
      * is persisted within the DB - if a given instance is not up and running anymore issue shutdown otherwise keep
      * instance running and reconnect
      */
-    private void syncAvailablePortswithPortsInUseFromDB(URL host) {
+    private void syncManagerAfterStartupFromDBRecords(URL host) {
+
+        this.log.debug("syncManagerAfterStartupFromDBRecords for host: " + host);
 
         // get all running instances according to the DB entries
         List<RunningIndexUserConfig> runningConfigs = this.dao.getAllESInstanceConfigs(host);
+        this.log.debug("found " + runningConfigs.size()
+                + " running index configuration records from DB - check for each if ElasticSearch is still active");
 
         // update the list of available ports for this host
         for (RunningIndexUserConfig config : runningConfigs) {
-            if ((config.getHostAddress() != null) && (config.getHttpPort() != null))
+            if ((config.getHostAddress() != null) && (config.getHttpPort() != null)) {
                 if (this.availableESInstances.get(config.getHostAddress()) != null) {
                     //check the instance's state
                     try {
@@ -210,11 +214,30 @@ public class IndexManager {
                                 config.getHttpPort());
                         this.availableESInstances.get(config.getHostAddress()).removeAvailableTCPPort(
                                 config.getTcpPort());
+                        //register this instance for GarbageCollection
+                        IndexKeepAliveTimer.getInstance().extendTTL20(config.getUserID());
+
+                        this.log.debug("properly recovered running ElasticSearch instance for "
+                                + config.getHostAddress() + " and userID: " + config.getUserID() + " and httpPort: "
+                                + config.getHttpPort());
+
                     } catch (IndexManagerCoreException e) {
+                        this.log.debug("skipping recovery - instance not responding for " + config.getHostAddress()
+                                + " and userID: " + config.getUserID() + " and httpPort: " + config.getHttpPort());
                         //not reachable - try to clean up the mess
                         this.shutdownInstance(config.getUserID().intValue());
                     }
+                } else {
+                    this.log.debug("skipping recovery - " + config.getHostAddress()
+                            + "  no longer supported. Deleting RunninInstanceUserConfig for userID: "
+                            + config.getUserID());
+                    this.dao.delete(config);
                 }
+            } else {
+                this.log.debug("skipping recovery - due to malformed DB record. Deleting RunninInstanceUserConfig for userID: "
+                        + config.getUserID());
+                this.dao.delete(config);
+            }
         }
     }
 
@@ -539,12 +562,14 @@ public class IndexManager {
                 ClusterState clusterState = client.admin().cluster().state(new ClusterStateRequest())
                         .actionGet(10, TimeUnit.SECONDS).getState();
                 client.close();
-                this.log.debug("Clusterstate for userID: " + userId + " " + clusterState.prettyPrint());
+
+                this.log.debug("get ES Cluster state for userID: " + userId + " " + clusterState.status().toString());
                 return clusterState;
             }
         } catch (NoNodeAvailableException e) {
             //TODO AL update to ElasticSearch 1.2.1 which fixes the NoNodeAvailableExeption which sometimes occurs
             //https://github.com/jprante/elasticsearch-knapsack/issues/49
+            this.log.debug("Get ES cluster state for userID: " + userId + " threw exception: " + e.toString());
         }
 
         throw new IndexManagerCoreException("Clusterstate for userID: " + userId + " " + "Cluster not responding");
