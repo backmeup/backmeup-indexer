@@ -1,11 +1,12 @@
 package org.backmeup.index.integration;
 
+import org.junit.Ignore;
 
+@Ignore("only integration with running and deployed Indexer WAR")
 public class IndexIntegrationTest {
 
 }
 
-// @Category(IntegrationTest.class)
 // public class IndexIntegrationTest extends IntegrationTestBase {
 //
 // @Test
