@@ -62,7 +62,7 @@ public class ThemisDataSinkTest {
         ThemisDataSink.saveIndexTrueCryptContainer(this.tcTemplateFile, 99998);
 
         // for indexFragment tests
-        File fIndexDocument = new File("src/main/resources/sampleIndexDocument.serindexdocument");
+        File fIndexDocument = new File("src/test/resources/sampleIndexDocument.serindexdocument");
         String sampleFragment = FileUtils.readFileToString(fIndexDocument, "UTF-8");
         this.indexDoc = JsonSerializer.deserialize(sampleFragment, IndexDocument.class);
     }
