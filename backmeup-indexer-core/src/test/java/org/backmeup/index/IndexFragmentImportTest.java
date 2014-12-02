@@ -1,14 +1,5 @@
 package org.backmeup.index;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import java.io.InputStream;
-
-import org.apache.commons.io.IOUtils;
-import org.backmeup.index.api.IndexFields;
-import org.backmeup.index.model.IndexDocument;
-import org.backmeup.index.serializer.JsonSerializer;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -28,21 +19,6 @@ public class IndexFragmentImportTest extends IndexManagerSetup {
         URL host = conf.getHostAddress();
         Assert.assertTrue("ES instance up and running?",
                 ESConfigurationHandler.isElasticSearchInstanceRunning(host, httpPort));*/
-    }
-
-    @Test
-    public void serializationOfIndexDocument() throws IOException {
-
-        IndexDocument document = deserialize();
-        assertEquals(16384L, document.getFields().get(IndexFields.FIELD_OWNER_ID));
-    }
-
-    private IndexDocument deserialize() throws IOException {
-        try (InputStream resource = getClass().getClassLoader().getResourceAsStream(
-                "sampleIndexDocument.serindexdocument")) {
-            String json = IOUtils.toString(resource);
-            return JsonSerializer.deserialize(json, IndexDocument.class);
-        }
     }
 
 }

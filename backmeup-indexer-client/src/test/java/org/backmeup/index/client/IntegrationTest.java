@@ -38,7 +38,6 @@ public class IntegrationTest {
     public void shouldIndexAndQueryAndDelete() throws IOException {
         IndexDocument document = deserializeStoredDocument();
         assertEquals(USER, document.getFields().get(IndexFields.FIELD_OWNER_ID));
-
         client.index(document);
 
         assertHasDocuments();
@@ -52,7 +51,6 @@ public class IntegrationTest {
         try (InputStream resource = getClass().getClassLoader().getResourceAsStream("indexDocument.json")) {
             String json = IOUtils.toString(resource);
             return JsonSerializer.deserialize(json, IndexDocument.class);
-            // TODO PK deserialized does not look too good, has double instead of int/long
         }
     }
 
