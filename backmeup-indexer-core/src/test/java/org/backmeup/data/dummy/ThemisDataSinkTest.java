@@ -24,170 +24,147 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ThemisDataSinkTest {
 
-	@Rule
-	public ExpectedException exception = ExpectedException.none();
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
 
-	@After
-	public void after() {
-		try {
-			ThemisDataSink.deleteIndexTrueCryptContainer(99998);
-		} catch (IOException e) {
-		}
-		try {
-			ThemisDataSink.deleteAllIndexFragments(99997,
-					IndexFragmentType.TO_IMPORT_USER_OWNED);
-		} catch (IOException e) {
-		}
-	}
+    @After
+    public void after() {
+        try {
+            ThemisDataSink.deleteIndexTrueCryptContainer(99998);
+        } catch (IOException e) {
+        }
+        try {
+            ThemisDataSink.deleteAllIndexFragments(99997, IndexFragmentType.TO_IMPORT_USER_OWNED);
+        } catch (IOException e) {
+        }
+    }
 
-	@AfterClass
-	public static void afterclass() {
-		try {
-			ThemisDataSink.deleteIndexTrueCryptContainer(99998);
-		} catch (IOException e) {
-		}
-		try {
-			ThemisDataSink.deleteIndexTrueCryptContainer(99999);
-		} catch (IOException e) {
-		}
-		try {
-			ThemisDataSink.deleteAllIndexFragments(99998,
-					IndexFragmentType.TO_IMPORT_USER_OWNED);
-		} catch (IOException e) {
-		}
-	}
+    @AfterClass
+    public static void afterclass() {
+        try {
+            ThemisDataSink.deleteIndexTrueCryptContainer(99998);
+        } catch (IOException e) {
+        }
+        try {
+            ThemisDataSink.deleteIndexTrueCryptContainer(99999);
+        } catch (IOException e) {
+        }
+        try {
+            ThemisDataSink.deleteAllIndexFragments(99998, IndexFragmentType.TO_IMPORT_USER_OWNED);
+        } catch (IOException e) {
+        }
+    }
 
-	@Before
-	public void before() throws IOException {
-		this.tcTemplateFile = new File(
-				"src/main/resources/elasticsearch_userdata_template_TC_150MB.tc");
-		// for Truecrypt container tests
-		ThemisDataSink.saveIndexTrueCryptContainer(this.tcTemplateFile,
-				99998);
+    @Before
+    public void before() throws IOException {
+        this.tcTemplateFile = new File("src/main/resources/elasticsearch_userdata_template_TC_150MB.tc");
+        // for Truecrypt container tests
+        ThemisDataSink.saveIndexTrueCryptContainer(this.tcTemplateFile, 99998);
 
-		// for indexFragment tests
-		File fIndexDocument = new File(
-				"src/main/resources/tests/sampleIndexDocument.serindexdocument");
-		String sampleFragment = FileUtils.readFileToString(fIndexDocument,
-				"UTF-8");
-		this.indexDoc = JsonSerializer.deserialize(sampleFragment,
-				IndexDocument.class);
-	}
+        // for indexFragment tests
+        File fIndexDocument = new File("src/main/resources/sampleIndexDocument.serindexdocument");
+        String sampleFragment = FileUtils.readFileToString(fIndexDocument, "UTF-8");
+        this.indexDoc = JsonSerializer.deserialize(sampleFragment, IndexDocument.class);
+    }
 
-	public File tcTemplateFile;
-	public IndexDocument indexDoc;
+    public File tcTemplateFile;
+    public IndexDocument indexDoc;
 
-	@Test
-	public void testHomeDirSet() {
-		String eshome = Configuration.getProperty("themis-datasink.home.dir");
-		Assert.assertNotNull(eshome);
-	}
+    @Test
+    public void testHomeDirSet() {
+        String eshome = Configuration.getProperty("themis-datasink.home.dir");
+        Assert.assertNotNull(eshome);
+    }
 
-	@Test
-	public void testStoreIndexTCContainerFileForUser() throws IOException {
-		File templateFile = new File(
-				"src/main/resources/elasticsearch_userdata_template_TC_150MB.tc");
+    @Test
+    public void testStoreIndexTCContainerFileForUser() throws IOException {
+        File templateFile = new File("src/main/resources/elasticsearch_userdata_template_TC_150MB.tc");
 
-		ThemisDataSink.saveIndexTrueCryptContainer(templateFile, 99999);
-	}
+        ThemisDataSink.saveIndexTrueCryptContainer(templateFile, 99999);
+    }
 
-	@Test
-	public void testGetIndexTCContainerFileForUser() {
+    @Test
+    public void testGetIndexTCContainerFileForUser() {
 
-		File templateFile = new File(
-				"src/main/resources/elasticsearch_userdata_template_TC_150MB.tc");
-		try {
-			ThemisDataSink.saveIndexTrueCryptContainer(templateFile, 99999);
-		} catch (IOException e) {
-			Assert.fail("Should not reach this part of the testcase " + e);
-		}
+        File templateFile = new File("src/main/resources/elasticsearch_userdata_template_TC_150MB.tc");
+        try {
+            ThemisDataSink.saveIndexTrueCryptContainer(templateFile, 99999);
+        } catch (IOException e) {
+            Assert.fail("Should not reach this part of the testcase " + e);
+        }
 
-	}
+    }
 
-	@Test
-	public void testDeleteIndexTCContainerFileForUser() {
-		try {
-			ThemisDataSink.deleteIndexTrueCryptContainer(99998);
-		} catch (IOException e) {
-			Assert.fail("Should not reach this part of the testcase ");
-		}
-		try {
-			ThemisDataSink.getIndexTrueCryptContainer(99998);
+    @Test
+    public void testDeleteIndexTCContainerFileForUser() {
+        try {
+            ThemisDataSink.deleteIndexTrueCryptContainer(99998);
+        } catch (IOException e) {
+            Assert.fail("Should not reach this part of the testcase ");
+        }
+        try {
+            ThemisDataSink.getIndexTrueCryptContainer(99998);
 
-			Assert.fail("Should not be able to fetch a index truecrypt container file for this user");
-		} catch (IOException e) {
-			Assert.assertTrue(
-					"Index Truecrypt container file for user properly deleted",
-					true);
-		}
-	}
+            Assert.fail("Should not be able to fetch a index truecrypt container file for this user");
+        } catch (IOException e) {
+            Assert.assertTrue("Index Truecrypt container file for user properly deleted", true);
+        }
+    }
 
-	@Test
-	public void testPersistLoadAndDeleteIndexFragmentForUser() {
+    @Test
+    public void testPersistLoadAndDeleteIndexFragmentForUser() {
 
-		try {
-			UUID fileID = ThemisDataSink.saveIndexFragment(this.indexDoc,
-					99998, IndexFragmentType.TO_IMPORT_USER_OWNED);
-			Assert.assertNotNull(fileID);
+        try {
+            UUID fileID = ThemisDataSink
+                    .saveIndexFragment(this.indexDoc, 99998, IndexFragmentType.TO_IMPORT_USER_OWNED);
+            Assert.assertNotNull(fileID);
 
-			List<UUID> lUUIDs = ThemisDataSink.getAllIndexFragmentUUIDs(99998,
-					IndexFragmentType.TO_IMPORT_USER_OWNED);
-			Assert.assertNotNull(lUUIDs);
+            List<UUID> lUUIDs = ThemisDataSink.getAllIndexFragmentUUIDs(99998, IndexFragmentType.TO_IMPORT_USER_OWNED);
+            Assert.assertNotNull(lUUIDs);
 
-			Assert.assertTrue(lUUIDs.contains(fileID));
+            Assert.assertTrue(lUUIDs.contains(fileID));
 
-			IndexDocument fragment = ThemisDataSink.getIndexFragment(fileID,
-					99998, IndexFragmentType.TO_IMPORT_USER_OWNED);
-			Assert.assertNotNull(fragment);
+            IndexDocument fragment = ThemisDataSink.getIndexFragment(fileID, 99998,
+                    IndexFragmentType.TO_IMPORT_USER_OWNED);
+            Assert.assertNotNull(fragment);
 
-			ThemisDataSink.deleteIndexFragment(fileID, 99998,
-					IndexFragmentType.TO_IMPORT_USER_OWNED);
+            ThemisDataSink.deleteIndexFragment(fileID, 99998, IndexFragmentType.TO_IMPORT_USER_OWNED);
 
-		} catch (IOException e) {
-			Assert.fail("failed saving, getting or deleting indexFragment: "
-					+ e.toString());
-		}
-	}
+        } catch (IOException e) {
+            Assert.fail("failed saving, getting or deleting indexFragment: " + e.toString());
+        }
+    }
 
-	@Test
-	public void testAddUUIDtoRecordWhenPersisting() {
+    @Test
+    public void testAddUUIDtoRecordWhenPersisting() {
 
-		try {
-			Assert.assertFalse(
-					"Document should not contain an UUID yet",
-					this.indexDoc.getFields().containsKey(
-							IndexFields.FIELD_INDEX_UUID));
-			UUID fileID = ThemisDataSink.saveIndexFragment(this.indexDoc,
-					99997, IndexFragmentType.TO_IMPORT_USER_OWNED);
+        try {
+            Assert.assertFalse("Document should not contain an UUID yet",
+                    this.indexDoc.getFields().containsKey(IndexFields.FIELD_INDEX_UUID));
+            UUID fileID = ThemisDataSink
+                    .saveIndexFragment(this.indexDoc, 99997, IndexFragmentType.TO_IMPORT_USER_OWNED);
 
-			IndexDocument fragment = ThemisDataSink.getIndexFragment(fileID,
-					99997, IndexFragmentType.TO_IMPORT_USER_OWNED);
-			Assert.assertNotNull("The returned IndexDocument must not be null",
-					fragment);
-			Assert.assertTrue(
-					"The UUID should be written within the object",
-					fragment.getFields().containsKey(
-							IndexFields.FIELD_INDEX_UUID));
+            IndexDocument fragment = ThemisDataSink.getIndexFragment(fileID, 99997,
+                    IndexFragmentType.TO_IMPORT_USER_OWNED);
+            Assert.assertNotNull("The returned IndexDocument must not be null", fragment);
+            Assert.assertTrue("The UUID should be written within the object",
+                    fragment.getFields().containsKey(IndexFields.FIELD_INDEX_UUID));
 
-		} catch (IOException e) {
-			Assert.fail("failed saving, getting or deleting indexFragment: "
-					+ e.toString());
-		}
-	}
+        } catch (IOException e) {
+            Assert.fail("failed saving, getting or deleting indexFragment: " + e.toString());
+        }
+    }
 
-	@Test
-	public void testDeleteAndMoveFragment() throws IOException {
-		UUID fileID = null;
-		fileID = ThemisDataSink.saveIndexFragment(this.indexDoc, 99997,
-				IndexFragmentType.TO_IMPORT_USER_OWNED);
+    @Test
+    public void testDeleteAndMoveFragment() throws IOException {
+        UUID fileID = null;
+        fileID = ThemisDataSink.saveIndexFragment(this.indexDoc, 99997, IndexFragmentType.TO_IMPORT_USER_OWNED);
 
-		ThemisDataSink.deleteIndexFragment(fileID, 99997,
-				IndexFragmentType.TO_IMPORT_USER_OWNED);
+        ThemisDataSink.deleteIndexFragment(fileID, 99997, IndexFragmentType.TO_IMPORT_USER_OWNED);
 
-		this.exception.expect(IOException.class);
-		IndexDocument fragment = ThemisDataSink.getIndexFragment(fileID, 99997,
-				IndexFragmentType.TO_IMPORT_USER_OWNED);
+        this.exception.expect(IOException.class);
+        IndexDocument fragment = ThemisDataSink.getIndexFragment(fileID, 99997, IndexFragmentType.TO_IMPORT_USER_OWNED);
 
-	}
+    }
 
 }
