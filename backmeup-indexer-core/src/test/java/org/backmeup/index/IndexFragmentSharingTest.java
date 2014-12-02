@@ -2,16 +2,13 @@ package org.backmeup.index;
 
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 /**
  * Contains tests for sharing index fragments with other users - Includes the physical data operations (copying
- * IndexDocuments, etc) - Importing and deleting fragments from Elasticsearch itself - rebuilding an ES index from
+ * IndexDocuments, etc) - Importing and deleting fragments from Elastic search itself - rebuilding an ES index from
  * scratch (file basis)
  */
-@RunWith(JUnit4.class)
-public class IndexFragmentSharingTests extends IndexManagerSetup {
+public class IndexFragmentSharingTest extends IndexManagerSetup {
 
     // TODO Add Startup Class for all Integration Tests
     // TODO @Before -> Put IndexFragment to-import

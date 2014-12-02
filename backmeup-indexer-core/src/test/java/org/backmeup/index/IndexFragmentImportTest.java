@@ -11,11 +11,8 @@ import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.serializer.JsonSerializer;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
-@RunWith(JUnit4.class)
-public class IndexFragmentImportTests extends IndexManagerSetup {
+public class IndexFragmentImportTest extends IndexManagerSetup {
 
     //TODO Datei händisch im Workspace anlegen oder mit UnitTest hin kopieren 
 
@@ -45,7 +42,6 @@ public class IndexFragmentImportTests extends IndexManagerSetup {
                 "sampleIndexDocument.serindexdocument")) {
             String json = IOUtils.toString(resource);
             return JsonSerializer.deserialize(json, IndexDocument.class);
-            // TODO PK deserialized does not look too good, has double instead of long, date correct?
         }
     }
 
