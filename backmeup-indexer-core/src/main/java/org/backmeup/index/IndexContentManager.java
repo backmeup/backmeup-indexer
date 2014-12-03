@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
 import org.backmeup.data.dummy.ElasticContentBuilder;
 import org.backmeup.data.dummy.ThemisDataSink;
 import org.backmeup.data.dummy.ThemisDataSink.IndexFragmentType;
@@ -20,11 +23,14 @@ import org.slf4j.LoggerFactory;
  * This class represents the handle for importing and deleting shared index fragments When a backup is shared with
  * another user IndexDocument is stored in a deposit box encrypted with the users public key which gets then updated
  * once the index is started i.e. the user logs onto the system
- * 
  */
+@ApplicationScoped
 public class IndexContentManager {
 
-    private static final Logger log = LoggerFactory.getLogger(IndexContentManager.class);
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
+    @Inject
+    private static IndexManager indexManager;
 
     /**
      * User A grants permission to user B on a specific indexDocument This is copied into user B's public drop off area
@@ -88,10 +94,9 @@ public class IndexContentManager {
         }
     }
 
-    private static void importIndexFragmentInES(IndexDocument doc, int userID) {
-
+    private void importIndexFragmentInES(IndexDocument doc, int userID) {
         try {
-            Client client = IndexManager.getInstance().getESTransportClient(userID);
+            Client client = indexManager.getESTransportClient(userID);
             index(client, doc);
 
         } catch (SearchProviderException e) {
@@ -103,7 +108,7 @@ public class IndexContentManager {
         }
     }
 
-    private static IndexResponse index(Client client, IndexDocument document) throws IOException {
+    private IndexResponse index(Client client, IndexDocument document) throws IOException {
         log.debug("Sending IndexDocument to ES index...");
         XContentBuilder elasticBuilder = new ElasticContentBuilder(document).asElastic();
         IndexResponse response = client

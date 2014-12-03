@@ -3,6 +3,7 @@ package org.backmeup.index.rest.resources;
 import java.io.IOException;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -16,6 +17,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.backmeup.data.dummy.ElasticSearchIndexClient;
+import org.backmeup.index.IndexManager;
 import org.backmeup.index.api.IndexClient;
 import org.backmeup.index.api.IndexServer;
 import org.backmeup.index.model.FileInfo;
@@ -27,8 +29,11 @@ import org.backmeup.index.model.SearchResultAccumulator;
 @Produces(MediaType.APPLICATION_JSON)
 public class Index implements IndexServer {
 
+    @Inject
+    private IndexManager indexManager;
+
     protected IndexClient getIndexClient(Long userId) {
-        return new ElasticSearchIndexClient(userId);
+        return new ElasticSearchIndexClient(userId, indexManager);
     }
 
     @Override

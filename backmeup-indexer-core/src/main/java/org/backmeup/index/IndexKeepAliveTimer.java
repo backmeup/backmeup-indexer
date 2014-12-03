@@ -15,20 +15,10 @@ import org.slf4j.LoggerFactory;
 @ApplicationScoped
 public class IndexKeepAliveTimer {
 
-    private Map<Long, Date> lastAccessLog = new HashMap<>();
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private static IndexKeepAliveTimer tm = new IndexKeepAliveTimer();
+    private final Map<Long, Date> lastAccessLog = new HashMap<>();
     private int minutes = 20;
-
-    private final Logger log = LoggerFactory.getLogger(IndexKeepAliveTimer.class);
-
-    private IndexKeepAliveTimer() {
-        this.log.debug("created new IndexKeepAliveTimer");
-    }
-
-    public static IndexKeepAliveTimer getInstance() {
-        return tm;
-    }
 
     /**
      * Extends the time to life for a index instance with +20 minutes from now

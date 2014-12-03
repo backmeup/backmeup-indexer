@@ -8,39 +8,45 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Periodically checks for no longer required running ElasticSearch instances and issues a shutdown request
- *
+ * Periodically checks for no longer required running ElasticSearch instances
+ * and issues a shutdown request
  */
+@ApplicationScoped
 public class IndexCoreGarbageCollector {
 
-    private final Logger log = LoggerFactory.getLogger(IndexCoreGarbageCollector.class);
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    @Inject
+    private IndexManager indexManager;
+    @Inject
+    private IndexKeepAliveTimer indexKeepAliveTimer;
 
-    public IndexCoreGarbageCollector() {
-        init();
-    }
-
+    @PostConstruct
     public void init() {
         final Runnable cleanup = new Runnable() {
             @Override
             public void run() {
-                IndexCoreGarbageCollector.this.log
-                        .debug("started running garbage collection for ElasticSearch Instances no longer in use at "
-                                + getFormatedDate(new Date(System.currentTimeMillis())));
-                List<Long> userIDs = IndexKeepAliveTimer.getInstance().getUsersToShutdown();
-                IndexCoreGarbageCollector.this.log.debug("found " + userIDs.size() + " instances to shutdown");
+                log.debug("started running garbage collection for ElasticSearch Instances no longer in use at "
+                        + getFormatedDate(new Date(System.currentTimeMillis())));
+                List<Long> userIDs = indexKeepAliveTimer.getUsersToShutdown();
+                log.debug("found " + userIDs.size() + " instances to shutdown");
+
                 for (Long userId : userIDs) {
-                    IndexCoreGarbageCollector.this.log.info("IndexCoreGarbageCollector executing shutdown for userID: "
-                            + userId);
+                    log.info("IndexCoreGarbageCollector executing shutdown for userID: " + userId);
                     //iterate over all instances to shutdown
-                    IndexManager.getInstance().shutdownInstance(userId.intValue());
+                    indexManager.shutdownInstance(userId.intValue());
                     //flag them as done within the timer
-                    IndexKeepAliveTimer.getInstance().flagAsShutdown(userId);
+                    indexKeepAliveTimer.flagAsShutdown(userId);
                 }
             }
         };
@@ -48,9 +54,11 @@ public class IndexCoreGarbageCollector {
         this.scheduler.scheduleAtFixedRate(cleanup, 10, 10, MINUTES);
     }
 
+    @PreDestroy
     public void end() {
+        //stop the garbage collector
         this.scheduler.shutdown();
-        IndexCoreGarbageCollector.this.log.debug("shutdown garbage collector timer");
+        log.debug("shutdown garbage collector timer");
     }
 
     private String getFormatedDate(Date d) {

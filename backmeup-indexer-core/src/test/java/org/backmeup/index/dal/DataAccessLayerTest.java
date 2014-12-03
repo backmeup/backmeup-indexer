@@ -11,8 +11,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
-import org.backmeup.index.dal.DataAccessLayer;
-import org.backmeup.index.dal.IndexManagerDao;
 import org.backmeup.index.dal.jpa.DataAccessLayerImpl;
 import org.backmeup.index.db.RunningIndexUserConfig;
 import org.junit.After;
@@ -27,7 +25,7 @@ import org.junit.Test;
 public class DataAccessLayerTest {
 
 	private EntityManagerFactory entityManagerFactory;
-	private DataAccessLayer dal;
+	private DataAccessLayerImpl dal;
 	private EntityManager entityManager;
 
 	@Before

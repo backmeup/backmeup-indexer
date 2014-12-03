@@ -37,8 +37,8 @@ public class ElasticSearchIndexClient implements IndexClient {
     private final Long userId;
     private final Client client;
 
-    public ElasticSearchIndexClient(Long userId) {
-        this(userId, IndexManager.getInstance().initAndCreateAndDoEverthing(userId));
+    public ElasticSearchIndexClient(Long userId, IndexManager indexManager) {
+        this(userId, indexManager.initAndCreateAndDoEverthing(userId));
     }
 
     public ElasticSearchIndexClient(Long userId, Client client) {

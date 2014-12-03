@@ -76,6 +76,11 @@
             <artifactId>weld-servlet</artifactId>
             <version>${version.org.jboss.weld.servlet}</version>
         </dependency>
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-cdi</artifactId>
+            <version>${version.org.jboss.resteasy}</version>
+        </dependency>
 
         <!-- used as JAX-RS implementation, not referenced in source,
              see http://docs.jboss.org/resteasy/docs/3.0.7.Final/userguide/html_single/ -->

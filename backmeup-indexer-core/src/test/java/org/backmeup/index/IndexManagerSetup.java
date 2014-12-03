@@ -7,7 +7,6 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
 
 public class IndexManagerSetup {
@@ -18,27 +17,19 @@ public class IndexManagerSetup {
 
     @After
     public void after() {
-        IndexManager.getInstance().shutdownInstance(999991);
-        IndexManager.getInstance().shutdownInstance(999992);
+        indexManager.shutdownInstance(999991);
+        indexManager.shutdownInstance(999992);
         closeEntityManager();
     }
 
     @Before
     public void before() {
         createEntityManager();
-        this.indexManager = IndexManager.getInstance();
-        this.indexManager.setEntityManager(this.entityManager);
-    }
-
-    @AfterClass
-    public static void cleanup() {
-        //done automatically within tomcat, neet to call manually within unittests
-        IndexManager.getInstance().shutdownGarbageCollection();
+        createIndexManager();
     }
 
     public void createEntityManager() {
-        this.entityManagerFactory = Persistence.createEntityManagerFactory("org.backmeup.index.jpa",
-                overwrittenJPAProps());
+        this.entityManagerFactory = Persistence.createEntityManagerFactory("org.backmeup.index.jpa", overwrittenJPAProps());
         this.entityManager = this.entityManagerFactory.createEntityManager();
     }
 
@@ -53,6 +44,12 @@ public class IndexManagerSetup {
         overwrittenJPAProps.setProperty("hibernate.hbm2ddl.auto", "create");
 
         return overwrittenJPAProps;
+    }
+
+    private void createIndexManager() {
+        this.indexManager = new IndexManager();
+        this.indexManager.setEntityManager(this.entityManager);
+        this.indexManager.startupIndexManager();
     }
 
     private void closeEntityManager() {

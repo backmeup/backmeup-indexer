@@ -129,8 +129,8 @@ public class ESConfigurationHandler {
         }
     }
 
-    public static void stopElasticSearch(int userID) throws ClientProtocolException, IOException {
-        RunningIndexUserConfig config = IndexManager.getInstance().getRunningIndexUserConfig(userID);
+    public static void stopElasticSearch(int userID, IndexManager indexManager) throws ClientProtocolException, IOException {
+        RunningIndexUserConfig config = indexManager.getRunningIndexUserConfig(userID);
         if (config != null) {
             HttpPost shutdownRequest = new HttpPost(config.getHostAddress() + ":" + config.getHttpPort() + "/_shutdown");
             shutdownElasticSearch(shutdownRequest);

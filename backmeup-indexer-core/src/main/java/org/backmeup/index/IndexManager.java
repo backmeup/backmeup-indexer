@@ -11,19 +11,18 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 
 import org.backmeup.data.dummy.ThemisDataSink;
 import org.backmeup.index.config.AvailableESInstanceState;
 import org.backmeup.index.config.Configuration;
-import org.backmeup.index.dal.DataAccessLayer;
 import org.backmeup.index.dal.IndexManagerDao;
 import org.backmeup.index.dal.jpa.DataAccessLayerImpl;
 import org.backmeup.index.db.RunningIndexUserConfig;
@@ -46,17 +45,6 @@ import org.slf4j.LoggerFactory;
 @ApplicationScoped
 public class IndexManager {
 
-    public static IndexManager getInstance() {
-        if (im == null) {
-            //add synchronization over threads due to IndexCoreGargabgeCollector
-            synchronized (IndexManager.class) {
-                if (im == null)
-                    im = new IndexManager();
-            }
-        }
-        return im;
-    }
-
     /**
      * Startup or fetches a running ElasticSearch Instance for a given user and returns a client handle for
      * communication
@@ -67,7 +55,7 @@ public class IndexManager {
             this.getESClusterState(userId);
 
             //keep instance running for another 20 minutes
-            IndexKeepAliveTimer.getInstance().extendTTL20(userId);
+            indexKeepAliveTimer.extendTTL20(userId);
             //return the client handle
             return this.getESTransportClient(userId.intValue());
 
@@ -90,44 +78,30 @@ public class IndexManager {
     // TODO @see ESConfigurationHandler.checkPortRangeAccepted - these values
     // are currently hardcoded there
 
-    private final Logger log = LoggerFactory.getLogger(IndexManager.class);
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Map<URL, AvailableESInstanceState> availableESInstances = new HashMap<>();
+    private URL defaultHost;
 
-    private HashMap<URL, AvailableESInstanceState> availableESInstances = new HashMap<>();
-
-    private URL defaultHost = null;
-
-    // @Inject
-    // protected Connection conn;
-
-    // @Inject
-    protected DataAccessLayer dal;
-
-    private EntityManagerFactory entityManagerFactory;
+    @Inject
     private EntityManager entityManager;
+    
+    @Inject
     private IndexManagerDao dao;
+    @Inject
+    private IndexKeepAliveTimer indexKeepAliveTimer;
+    
+    @SuppressWarnings("unused") // need to instantiate in order for the timer to start running
+    @Inject
     private IndexCoreGarbageCollector cleanupTask;
 
-    private static volatile IndexManager im;
-
-    // this class is implemented as singleton
-    private IndexManager() {
+    @PostConstruct
+    public void startupIndexManager() {
         try {
-            createEntityManager();
-
             initAvailableInstances();
-            this.cleanupTask = new IndexCoreGarbageCollector();
-
         } catch (MalformedURLException | URISyntaxException | UnknownHostException e) {
             this.log.error("IndexManager initialization failed ", e);
 
         }
-    }
-
-    // ========================================================================
-
-    // CDI lifecycle methods --------------------------------------------------
-    @PostConstruct
-    public void startupIndexManager() {
         this.log.debug("startup() IndexManager (ApplicationScoped) completed");
     }
 
@@ -138,30 +112,9 @@ public class IndexManager {
         //cleanup - shutdown all running instances
         shutdownAllRunningInstances(this.defaultHost);
         this.log.debug("shutdown all running ElasticSearch instances on " + this.defaultHost + " completed");
-
-        shutdownGarbageCollection();
-
-        this.entityManager.close();
-        this.entityManagerFactory.close();
-    }
-
-    void shutdownGarbageCollection() {
-        //stop the garbage collector
-        this.cleanupTask.end();
-        this.log.debug("ended IndexKeepAliveTimer.");
     }
 
     // ========================================================================
-
-    private void createEntityManager() {
-        // TODO @Inject
-        this.entityManagerFactory = Persistence.createEntityManagerFactory("org.backmeup.index.jpa");
-
-        this.dal = new DataAccessLayerImpl();
-        this.entityManager = this.entityManagerFactory.createEntityManager();
-        this.dal.setEntityManager(this.entityManager);
-        this.dao = this.dal.createIndexManagerDao();
-    }
 
     /**
      * For now this information is static and only synced with running records stored within the DB. TODO - add the
@@ -219,7 +172,7 @@ public class IndexManager {
                         this.availableESInstances.get(config.getHostAddress()).removeAvailableTCPPort(
                                 config.getTcpPort());
                         //register this instance for GarbageCollection
-                        IndexKeepAliveTimer.getInstance().extendTTL20(config.getUserID());
+                        indexKeepAliveTimer.extendTTL20(config.getUserID());
 
                         this.log.debug("properly recovered running ElasticSearch instance for "
                                 + config.getHostAddress() + " and userID: " + config.getUserID() + " and httpPort: "
@@ -366,7 +319,7 @@ public class IndexManager {
         }
 
         // 8) register a timeout for this instance
-        IndexKeepAliveTimer.getInstance().extendTTL20(Long.valueOf(userID));
+        indexKeepAliveTimer.extendTTL20(Long.valueOf(userID));
     }
 
     /**
@@ -387,7 +340,7 @@ public class IndexManager {
 
         //2. shutdown the ElasticSearch Instance
         try {
-            ESConfigurationHandler.stopElasticSearch(userID);
+            ESConfigurationHandler.stopElasticSearch(userID, this);
             this.log.debug("shutdownInstance for userID: " + userID + " step2 - ok");
         } catch (IOException e) {
             this.log.debug("shutdownInstance for userID: " + userID + " step2 - failed", e);
@@ -424,7 +377,7 @@ public class IndexManager {
         this.log.debug("shutdownInstance for userID: " + userID + " completed ok");
 
         //7. remove entries in the garbage collector
-        IndexKeepAliveTimer.getInstance().flagAsShutdown(Long.valueOf(userID));
+        indexKeepAliveTimer.flagAsShutdown(Long.valueOf(userID));
     }
 
     /**
@@ -621,7 +574,6 @@ public class IndexManager {
         if (f.exists()) {
             FileUtils.deleteDirectory(f);
         }
-
     }
 
     /**
@@ -629,9 +581,9 @@ public class IndexManager {
      */
     public void setEntityManager(EntityManager em) {
         this.entityManager = em;
-        this.dal = new DataAccessLayerImpl();
-        this.dal.setEntityManager(this.entityManager);
-        this.dao = this.dal.createIndexManagerDao();
+        DataAccessLayerImpl dal = new DataAccessLayerImpl();
+        dal.setEntityManager(this.entityManager);
+        this.dao = dal.createIndexManagerDao();
     }
 
 }
