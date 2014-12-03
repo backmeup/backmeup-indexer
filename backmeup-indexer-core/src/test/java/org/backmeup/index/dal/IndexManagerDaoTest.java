@@ -11,7 +11,6 @@ import java.util.Properties;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 
 import org.backmeup.index.core.model.RunningIndexUserConfig;
 import org.backmeup.index.dal.jpa.JPADataAccessLayer;
