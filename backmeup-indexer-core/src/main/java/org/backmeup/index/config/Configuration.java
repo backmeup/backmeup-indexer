@@ -23,12 +23,10 @@ public final class Configuration {
 				properties.load(loader.getResourceAsStream(PROPERTYFILE));
 			} else {
 				// seems to be the local JUnit Test Environment
-				BufferedInputStream stream;
-
-				stream = new BufferedInputStream(new FileInputStream(
-						"src/main/resources/" + PROPERTYFILE));
-				properties.load(stream);
-				stream.close();
+				try (BufferedInputStream stream = new BufferedInputStream(new FileInputStream(
+						"src/main/resources/" + PROPERTYFILE))) {
+				    properties.load(stream);
+				}
 			}
 
 			// check if finally properties were loaded
