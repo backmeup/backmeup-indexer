@@ -1,4 +1,4 @@
-package org.backmeup.index.core.model;
+package org.backmeup.index.core.elasticsearch;
 
 import java.util.List;
 

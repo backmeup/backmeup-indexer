@@ -117,11 +117,11 @@
                         <version>${version.org.apache.maven.plugins.maven-surefire-plugin}</version>
                         <configuration>
                             <excludes>
-                                <!-- tests need Elastic Search installation, skip by default -->
     							<!-- tests need TrueCrypt Linux installation, skip by default -->
                                 <exclude>org/backmeup/data/dummy/ThemisDataSinkTest.java</exclude>
-                                <exclude>org/backmeup/index/ESConfigurationHandlerTest.java</exclude>
-                                <exclude>org/backmeup/index/TCMountHandlerTest.java</exclude>
+                                <!-- tests need Elastic Search installation, skip by default -->
+                                <exclude>org/backmeup/index/core/elasticsearch/ESConfigurationHandlerTest.java</exclude>
+                                <exclude>org/backmeup/index/core/truecrypt/TCMountHandlerTest.java</exclude>
                                 <exclude>org/backmeup/index/Index*.java</exclude>
                             </excludes>
                         </configuration>

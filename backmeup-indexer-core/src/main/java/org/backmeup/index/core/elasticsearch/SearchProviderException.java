@@ -1,4 +1,6 @@
-package org.backmeup.index.error;
+package org.backmeup.index.core.elasticsearch;
+
+import org.backmeup.index.error.IndexManagerCoreException;
 
 public class SearchProviderException extends IndexManagerCoreException {
 

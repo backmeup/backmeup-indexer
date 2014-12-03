@@ -15,6 +15,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.backmeup.index.core.elasticsearch.ESConfigurationHandler;
 import org.backmeup.index.core.model.RunningIndexUserConfig;
 import org.backmeup.index.error.IndexManagerCoreException;
 import org.elasticsearch.action.delete.DeleteResponse;

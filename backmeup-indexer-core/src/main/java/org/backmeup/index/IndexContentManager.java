@@ -10,7 +10,7 @@ import javax.inject.Inject;
 import org.backmeup.data.dummy.ElasticContentBuilder;
 import org.backmeup.data.dummy.ThemisDataSink;
 import org.backmeup.data.dummy.ThemisDataSink.IndexFragmentType;
-import org.backmeup.index.error.SearchProviderException;
+import org.backmeup.index.core.elasticsearch.SearchProviderException;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.serializer.Json;
 import org.elasticsearch.action.index.IndexResponse;

@@ -1,4 +1,4 @@
-package org.backmeup.index;
+package org.backmeup.index.core.elasticsearch;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -18,10 +18,11 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.backmeup.index.IndexManager;
 import org.backmeup.index.config.Configuration;
+import org.backmeup.index.core.elasticsearch.tokenreader.MapTokenResolver;
+import org.backmeup.index.core.elasticsearch.tokenreader.TokenReplaceReader;
 import org.backmeup.index.core.model.RunningIndexUserConfig;
-import org.backmeup.index.utils.tokenreader.MapTokenResolver;
-import org.backmeup.index.utils.tokenreader.TokenReplaceReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
