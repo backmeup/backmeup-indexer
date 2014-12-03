@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.backmeup.data.dummy.ElasticContentBuilder;
 import org.backmeup.data.dummy.ThemisDataSink;
 import org.backmeup.data.dummy.ThemisDataSink.IndexFragmentType;
+import org.backmeup.index.error.SearchProviderException;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.serializer.JsonSerializer;
 import org.elasticsearch.action.index.IndexResponse;
@@ -93,10 +94,12 @@ public class IndexContentManager {
             Client client = IndexManager.getInstance().getESTransportClient(userID);
             index(client, doc);
 
-        } catch (IndexManagerCoreException | IOException e) {
-            log.error("failed to add IndexDocument " + JsonSerializer.serialize(doc) + " for userID: " + userID + " "
-                    + e);
-            // TODO ADD PROPER EXCEPTION
+        } catch (SearchProviderException e) {
+            log.error("failed to add IndexDocument " + JsonSerializer.serialize(doc) + " for userID: " + userID + " " + e);
+            throw e;
+        } catch (IOException e) {
+            log.error("failed to add IndexDocument " + JsonSerializer.serialize(doc) + " for userID: " + userID + " " + e);
+            throw new SearchProviderException(e);
         }
     }
 

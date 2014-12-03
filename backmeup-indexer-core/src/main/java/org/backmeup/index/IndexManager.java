@@ -27,6 +27,10 @@ import org.backmeup.index.dal.DataAccessLayer;
 import org.backmeup.index.dal.IndexManagerDao;
 import org.backmeup.index.dal.jpa.DataAccessLayerImpl;
 import org.backmeup.index.db.RunningIndexUserConfig;
+import org.backmeup.index.error.EncryptionProviderException;
+import org.backmeup.index.error.IndexManagerCoreException;
+import org.backmeup.index.error.SearchProviderException;
+import org.backmeup.index.error.UserDataStorageException;
 import org.backmeup.index.utils.file.FileUtils;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
 import org.elasticsearch.client.Client;
@@ -67,7 +71,7 @@ public class IndexManager {
             //return the client handle
             return this.getESTransportClient(userId.intValue());
 
-        } catch (IndexManagerCoreException e) {
+        } catch (SearchProviderException e) {
             //in this case we need to fire up an ES instance for this user
             try {
                 this.startupInstance(userId.intValue());
@@ -78,7 +82,7 @@ public class IndexManager {
                         + userId + ". Returning null", e1);
 
                 //in this case return null for now.
-                return null;
+                throw e1;
             }
         }
     }
@@ -221,7 +225,7 @@ public class IndexManager {
                                 + config.getHostAddress() + " and userID: " + config.getUserID() + " and httpPort: "
                                 + config.getHttpPort());
 
-                    } catch (IndexManagerCoreException e) {
+                    } catch (SearchProviderException e) {
                         this.log.debug("skipping recovery - instance not responding for " + config.getHostAddress()
                                 + " and userID: " + config.getUserID() + " and httpPort: " + config.getHttpPort());
                         //not reachable - try to clean up the mess
@@ -270,7 +274,7 @@ public class IndexManager {
             } catch (IOException e1) {
                 String s = "startupInstance for userID: " + userID + " step1 - failed";
                 this.log.debug(s, e1);
-                throw new IndexManagerCoreException(s, e1);
+                throw new UserDataStorageException(s, e1);
             }
         }
         this.log.debug("startupInstance for userID: " + userID + " step1 - ok");
@@ -283,7 +287,7 @@ public class IndexManager {
         } catch (IOException e1) {
             String s = "startupInstance for userID: " + userID + " step2 - failed";
             this.log.debug(s, e1);
-            throw new IndexManagerCoreException(s, e1);
+            throw new UserDataStorageException(s, e1);
         }
 
         // 3) Now mount the ES data volume
@@ -298,7 +302,7 @@ public class IndexManager {
         } catch (ExceptionInInitializerError | IllegalArgumentException | IOException | InterruptedException e1) {
             String s = "startupInstance for userID: " + userID + " step3 - failed";
             this.log.debug(s, e1);
-            throw new IndexManagerCoreException(s, e1);
+            throw new EncryptionProviderException(s, e1);
         }
 
         // 4) crate a user specific ElasticSearch startup configuration file
@@ -314,7 +318,7 @@ public class IndexManager {
         } catch (NumberFormatException | ExceptionInInitializerError | IOException e1) {
             String s = "startupInstance for userID: " + userID + " step4 - failed";
             this.log.debug(s, e1);
-            throw new IndexManagerCoreException(s, e1);
+            throw new SearchProviderException(s, e1);
         }
 
         // 5) persist the configuration within the database
@@ -332,10 +336,10 @@ public class IndexManager {
             this.entityManager.getTransaction().commit();
             this.log.debug("startupInstance for userID: " + userID + " step5 - ok");
 
-        } catch (Exception e1) {
+        } catch (URISyntaxException | UnknownHostException | MalformedURLException e1) {
             String s = "startupInstance for userID: " + userID + " step5 - failed";
             this.log.debug(s, e1);
-            throw new IndexManagerCoreException(s, e1);
+            throw new SearchProviderException(s, e1);
         }
 
         // 6) now power on elasticsearch
@@ -349,16 +353,16 @@ public class IndexManager {
         } catch (IOException | InterruptedException e1) {
             String s = "startupInstance for userID: " + userID + " step6 - failed";
             this.log.debug(s, e1);
-            throw new IndexManagerCoreException(s, e1);
+            throw new SearchProviderException(s, e1);
         }
 
         // 7) check instance up and running
         try {
             getESClusterState(Long.valueOf(userID));
-        } catch (IndexManagerCoreException e1) {
+        } catch (SearchProviderException e1) {
             String s = "startupInstance for userID: " + userID + " step7 - failed";
             this.log.debug(s, e1);
-            throw new IndexManagerCoreException(s, e1);
+            throw e1;
         }
 
         // 8) register a timeout for this instance
@@ -528,7 +532,7 @@ public class IndexManager {
     /**
      * Configures and returns a Client to ElasticSearch to interact with for a specific user
      */
-    public Client getESTransportClient(int userID) throws IndexManagerCoreException {
+    public Client getESTransportClient(int userID) throws SearchProviderException {
         //TODO Keep Clients and last accessed timestamp? 
         RunningIndexUserConfig conf = getRunningIndexUserConfig(userID);
         if (conf != null) {
@@ -541,17 +545,17 @@ public class IndexManager {
             return client;
         }
 
-        throw new IndexManagerCoreException("Failed to create ES TransportClient for userID: " + userID
+        throw new SearchProviderException("Failed to create ES TransportClient for userID: " + userID
                 + " due to missing RunningIndexUserConfig");
     }
 
     /**
      * Retrieves the ClusterState of a mounted ES cluster for a given userID
      * 
-     * @throws IndexManagerCoreException
+     * @throws SearchProviderException
      *             if now instance is available
      */
-    public ClusterState getESClusterState(Long userId) throws IndexManagerCoreException {
+    public ClusterState getESClusterState(Long userId) throws SearchProviderException {
         //check if we've got a DB record
         RunningIndexUserConfig config = getRunningIndexUserConfig(userId.intValue());
 
@@ -571,7 +575,7 @@ public class IndexManager {
             this.log.debug("Get ES cluster state for userID: " + userId + " threw exception: " + e.toString());
         }
 
-        throw new IndexManagerCoreException("Clusterstate for userID: " + userId + " " + "Cluster not responding");
+        throw new SearchProviderException("Clusterstate for userID: " + userId + " " + "Cluster not responding");
     }
 
     /**
