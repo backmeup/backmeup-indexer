@@ -10,8 +10,4 @@ public class EncryptionProviderException extends IndexManagerCoreException {
         super(message);
     }
 
-    public EncryptionProviderException(Throwable cause) {
-        super(cause);
-    }
-
 }

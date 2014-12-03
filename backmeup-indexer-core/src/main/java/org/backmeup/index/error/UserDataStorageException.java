@@ -10,8 +10,4 @@ public class UserDataStorageException extends IndexManagerCoreException {
         super(message);
     }
 
-    public UserDataStorageException(Throwable cause) {
-        super(cause);
-    }
-
 }

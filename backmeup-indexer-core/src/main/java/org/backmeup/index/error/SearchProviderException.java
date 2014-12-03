@@ -10,8 +10,4 @@ public class SearchProviderException extends IndexManagerCoreException {
         super(message);
     }
 
-    public SearchProviderException(Throwable cause) {
-        super(cause);
-    }
-
 }
