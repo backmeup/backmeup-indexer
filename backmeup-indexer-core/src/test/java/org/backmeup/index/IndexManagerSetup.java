@@ -48,7 +48,7 @@ public class IndexManagerSetup {
 
     private void createIndexManager() {
         this.indexManager = new IndexManager();
-        this.indexManager.setEntityManager(this.entityManager);
+        this.indexManager.injectForTests(this.entityManager);
         this.indexManager.startupIndexManager();
     }
 

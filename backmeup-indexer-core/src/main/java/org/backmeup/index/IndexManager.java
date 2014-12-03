@@ -55,7 +55,7 @@ public class IndexManager {
             this.getESClusterState(userId);
 
             //keep instance running for another 20 minutes
-            indexKeepAliveTimer.extendTTL20(userId);
+            this.indexKeepAliveTimer.extendTTL20(userId);
             //return the client handle
             return this.getESTransportClient(userId.intValue());
 
@@ -84,13 +84,14 @@ public class IndexManager {
 
     @Inject
     private EntityManager entityManager;
-    
+
     @Inject
     private IndexManagerDao dao;
     @Inject
     private IndexKeepAliveTimer indexKeepAliveTimer;
-    
-    @SuppressWarnings("unused") // need to instantiate in order for the timer to start running
+
+    @SuppressWarnings("unused")
+    // need to instantiate in order for the timer to start running
     @Inject
     private IndexCoreGarbageCollector cleanupTask;
 
@@ -172,7 +173,7 @@ public class IndexManager {
                         this.availableESInstances.get(config.getHostAddress()).removeAvailableTCPPort(
                                 config.getTcpPort());
                         //register this instance for GarbageCollection
-                        indexKeepAliveTimer.extendTTL20(config.getUserID());
+                        this.indexKeepAliveTimer.extendTTL20(config.getUserID());
 
                         this.log.debug("properly recovered running ElasticSearch instance for "
                                 + config.getHostAddress() + " and userID: " + config.getUserID() + " and httpPort: "
@@ -319,7 +320,7 @@ public class IndexManager {
         }
 
         // 8) register a timeout for this instance
-        indexKeepAliveTimer.extendTTL20(Long.valueOf(userID));
+        this.indexKeepAliveTimer.extendTTL20(Long.valueOf(userID));
     }
 
     /**
@@ -335,7 +336,7 @@ public class IndexManager {
             this.log.debug("shutdownInstance for userID: " + userID
                     + " step1 - failed, no configuration persisted in db");
             return;
-        } 
+        }
         this.log.debug("shutdownInstance for userID: " + userID + " step1 - ok");
 
         //2. shutdown the ElasticSearch Instance
@@ -377,7 +378,7 @@ public class IndexManager {
         this.log.debug("shutdownInstance for userID: " + userID + " completed ok");
 
         //7. remove entries in the garbage collector
-        indexKeepAliveTimer.flagAsShutdown(Long.valueOf(userID));
+        this.indexKeepAliveTimer.flagAsShutdown(Long.valueOf(userID));
     }
 
     /**
@@ -511,24 +512,23 @@ public class IndexManager {
     public ClusterState getESClusterState(Long userId) throws SearchProviderException {
         //check if we've got a DB record
         RunningIndexUserConfig config = getRunningIndexUserConfig(userId.intValue());
-
+        if (config == null) {
+            throw new SearchProviderException("No RunningIndexUserConfig found for userId: " + userId);
+        }
         try {
-            if (config != null) {
-                Client client = this.getESTransportClient(userId.intValue());
-                ClusterState clusterState = client.admin().cluster().state(new ClusterStateRequest())
-                        .actionGet(10, TimeUnit.SECONDS).getState();
-                client.close();
+            Client client = this.getESTransportClient(userId.intValue());
+            ClusterState clusterState = client.admin().cluster().state(new ClusterStateRequest())
+                    .actionGet(10, TimeUnit.SECONDS).getState();
+            client.close();
 
-                this.log.debug("get ES Cluster state for userID: " + userId + " " + clusterState.status().toString());
-                return clusterState;
-            }
+            this.log.debug("get ES Cluster state for userID: " + userId + " " + clusterState.status().toString());
+            return clusterState;
         } catch (NoNodeAvailableException e) {
             //TODO AL update to ElasticSearch 1.2.1 which fixes the NoNodeAvailableExeption which sometimes occurs
             //https://github.com/jprante/elasticsearch-knapsack/issues/49
             this.log.debug("Get ES cluster state for userID: " + userId + " threw exception: " + e.toString());
+            throw new SearchProviderException("Clusterstate for userID: " + userId + " " + "Cluster not responding");
         }
-
-        throw new SearchProviderException("Clusterstate for userID: " + userId + " " + "Cluster not responding");
     }
 
     /**
@@ -579,11 +579,12 @@ public class IndexManager {
     /**
      * required for testing purposes to inject a different db configuration
      */
-    public void setEntityManager(EntityManager em) {
+    public void injectForTests(EntityManager em) {
         this.entityManager = em;
         DataAccessLayerImpl dal = new DataAccessLayerImpl();
         dal.setEntityManager(this.entityManager);
         this.dao = dal.createIndexManagerDao();
+        this.indexKeepAliveTimer = new IndexKeepAliveTimer();
     }
 
 }
