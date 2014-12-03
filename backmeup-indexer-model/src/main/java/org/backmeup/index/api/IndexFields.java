@@ -1,7 +1,8 @@
 package org.backmeup.index.api;
 
 /**
- * Symbolic names of content fields of the data to be indexed.
+ * Symbolic names of content fields of the data to be indexed. All fields are
+ * either String or Long.
  */
 public class IndexFields {
 

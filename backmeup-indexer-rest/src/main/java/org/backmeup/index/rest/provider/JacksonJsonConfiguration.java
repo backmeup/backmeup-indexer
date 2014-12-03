@@ -18,9 +18,10 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 @Provider
-@Consumes({MediaType.APPLICATION_JSON, "text/json"})
-@Produces({MediaType.APPLICATION_JSON, "text/json"})
+@Consumes({ MediaType.APPLICATION_JSON, "text/json" })
+@Produces({ MediaType.APPLICATION_JSON, "text/json" })
 public class JacksonJsonConfiguration extends JacksonJsonProvider {
+    
     @Override
     public void writeTo(Object value, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType,
             MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException {

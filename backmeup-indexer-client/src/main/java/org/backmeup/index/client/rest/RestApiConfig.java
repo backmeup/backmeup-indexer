@@ -1,5 +1,10 @@
 package org.backmeup.index.client.rest;
 
+/**
+ * Configuration of the location of the index component.
+ * 
+ * @author <a href="http://www.code-cop.org/">Peter Kofler</a>
+ */
 public class RestApiConfig {
 
     public static final RestApiConfig DEFAULT = new RestApiConfig("127.0.0.1", 8080, "/backmeup-indexer-rest");

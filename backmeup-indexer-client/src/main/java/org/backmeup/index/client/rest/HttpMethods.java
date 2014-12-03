@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Wrapper around http-commons for the call of the index server.
+ * Wrapper around HTTP-commons for the call of the index server.
  * 
  * @author <a href="http://www.code-cop.org/">Peter Kofler</a>
  */
