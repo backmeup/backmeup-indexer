@@ -1,6 +1,8 @@
 package org.backmeup.index.dal;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -14,7 +16,6 @@ import javax.persistence.Persistence;
 import org.backmeup.index.dal.jpa.DataAccessLayerImpl;
 import org.backmeup.index.db.RunningIndexUserConfig;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -24,132 +25,100 @@ import org.junit.Test;
  */
 public class DataAccessLayerTest {
 
-	private EntityManagerFactory entityManagerFactory;
-	private DataAccessLayerImpl dal;
-	private EntityManager entityManager;
+    private EntityManagerFactory entityManagerFactory;
+    private EntityManager entityManager;
+    private IndexManagerDao indexManagerDao;
 
-	@Before
-	public void createEntityManager() {
-		this.entityManagerFactory = Persistence.createEntityManagerFactory(
-				"org.backmeup.index.jpa", overwrittenJPAProps());
+    @Before
+    public void createEntityManager() {
+        this.entityManagerFactory = Persistence.createEntityManagerFactory("org.backmeup.index.jpa", overwrittenJPAProps());
 
-		this.dal = new DataAccessLayerImpl();
-		this.entityManager = this.entityManagerFactory.createEntityManager();
-		this.dal.setEntityManager(this.entityManager);
-	}
+        this.entityManager = this.entityManagerFactory.createEntityManager();
 
-	private Properties overwrittenJPAProps() {
-		Properties overwrittenJPAProps = new Properties();
+        DataAccessLayerImpl dal = new DataAccessLayerImpl();
+        dal.setEntityManager(this.entityManager);
 
-		overwrittenJPAProps.setProperty("javax.persistence.jdbc.driver",
-				"org.apache.derby.jdbc.EmbeddedDriver");
-		overwrittenJPAProps.setProperty("hibernate.connection.driver_class",
-				"org.apache.derby.jdbc.EmbeddedDriver");
-		overwrittenJPAProps.setProperty("javax.persistence.jdbc.url",
-				"jdbc:derby:target/junit;create=true");
-		overwrittenJPAProps.setProperty("hibernate.connection.url",
-				"jdbc:derby:target/junit;create=true");
+        indexManagerDao = dal.createIndexManagerDao();
+    }
 
-		overwrittenJPAProps.setProperty("hibernate.dialect",
-				"org.hibernate.dialect.DerbyDialect");
-		overwrittenJPAProps.setProperty("hibernate.hbm2ddl.auto", "create");
+    private Properties overwrittenJPAProps() {
+        Properties overwrittenJPAProps = new Properties();
 
-		return overwrittenJPAProps;
-	}
+        overwrittenJPAProps.setProperty("javax.persistence.jdbc.driver", "org.apache.derby.jdbc.EmbeddedDriver");
+        overwrittenJPAProps.setProperty("javax.persistence.jdbc.url", "jdbc:derby:target/junit;create=true");
 
-	@After
-	public void closeEntityManager() {
-		this.entityManager.close();
-		this.entityManagerFactory.close();
-	}
+        overwrittenJPAProps.setProperty("hibernate.dialect", "org.hibernate.dialect.DerbyDialect");
+        overwrittenJPAProps.setProperty("hibernate.hbm2ddl.auto", "create");
 
-	@Test
-	public void shouldStoreConfigurationAndReadFromDBByHttpPort() {
-		RunningIndexUserConfig config = createConfig();
+        return overwrittenJPAProps;
+    }
 
-		this.entityManager.getTransaction().begin();
-		IndexManagerDao im = this.dal.createIndexManagerDao();
-		im.save(config);
-		this.entityManager.getTransaction().commit();
+    @After
+    public void closeEntityManager() {
+        this.entityManager.close();
+        this.entityManagerFactory.close();
+    }
 
-		URL host;
-		try {
-			host = new URL("http", "localhost", 9999, "");
-			RunningIndexUserConfig found = im.findConfigByHttpPort(host);
-			assertNotNull("config with port 9999", found);
-		} catch (MalformedURLException e) {
-			Assert.fail("Testconfiguration not properly setup");
-			e.printStackTrace();
-		}
-	}
+    @Test
+    public void shouldStoreConfigurationAndReadFromDBByHttpPort() throws MalformedURLException {
+        RunningIndexUserConfig config = createConfig();
+        persistInTransaction(config);
 
-	@Test
-	public void shouldStoreConfigurationAndReadFromDBByUserId() {
-		RunningIndexUserConfig config = createConfig();
+        URL host = new URL("http", "localhost", 9999, "");
+        RunningIndexUserConfig found = indexManagerDao.findConfigByHttpPort(host);
+        assertNotNull("config with port 9999", found);
+    }
 
-		this.entityManager.getTransaction().begin();
-		IndexManagerDao im = this.dal.createIndexManagerDao();
-		im.save(config);
-		this.entityManager.getTransaction().commit();
+    @Test
+    public void shouldStoreConfigurationAndReadFromDBByUserId() throws MalformedURLException {
+        RunningIndexUserConfig config = createConfig();
+        persistInTransaction(config);
 
-		RunningIndexUserConfig found = im.findConfigByUserId(77L);
-		assertNotNull(found);
-		Assert.assertEquals(config.getUserID(), found.getUserID());
-	}
+        RunningIndexUserConfig found = indexManagerDao.findConfigByUserId(77L);
+        assertNotNull(found);
+        assertEquals(config.getUserID(), found.getUserID());
+    }
 
-	@Test
-	public void shouldStoreConfigurationAndReadAllFromDB() {
-		RunningIndexUserConfig config = createConfig();
+    @Test
+    public void shouldStoreConfigurationAndReadAllFromDB() throws MalformedURLException {
+        RunningIndexUserConfig config = createConfig();
+        persistInTransaction(config);
 
-		this.entityManager.getTransaction().begin();
-		IndexManagerDao im = this.dal.createIndexManagerDao();
-		im.save(config);
-		this.entityManager.getTransaction().commit();
+        List<RunningIndexUserConfig> found = indexManagerDao.getAllESInstanceConfigs();
+        assertNotNull(found);
+        assertTrue(found.size() > 0);
+        assertEquals(config.getUserID(), found.get(0).getUserID());
+    }
 
-		List<RunningIndexUserConfig> found = im.getAllESInstanceConfigs();
-		assertNotNull(found);
-		Assert.assertTrue(found.size() > 0);
-		Assert.assertEquals(config.getUserID(), found.get(0).getUserID());
-	}
+    @Test
+    public void shouldFilterConfigurationByHostAddress() throws MalformedURLException {
+        RunningIndexUserConfig config = createConfig();
+        persistInTransaction(config);
 
-	@Test
-	public void shouldFilterConfigurationByHostAddress() {
-		RunningIndexUserConfig config = createConfig();
+        List<RunningIndexUserConfig> found = indexManagerDao.getAllESInstanceConfigs(new URL("http://localhost"));
+        assertNotNull(found);
+        assertTrue(found.size() > 0);
+        assertEquals(config.getUserID(), found.get(0).getUserID());
+        found = indexManagerDao.getAllESInstanceConfigs(new URL("http://localhost2"));
+        assertNotNull(found);
+        assertTrue(found.size() == 0);
+    }
 
-		this.entityManager.getTransaction().begin();
-		IndexManagerDao im = this.dal.createIndexManagerDao();
-		im.save(config);
-		this.entityManager.getTransaction().commit();
+    private RunningIndexUserConfig createConfig() throws MalformedURLException {
+        RunningIndexUserConfig config = new RunningIndexUserConfig();
+        config.setHostAddress(new URL("http://localhost"));
+        config.setHttpPort(9999);
+        config.setTcpPort(8888);
+        config.setClusterName("testname");
+        config.setMountedDriveLetter("/etc/home");
+        config.setUserID(Long.valueOf(77));
+        return config;
+    }
 
-		List<RunningIndexUserConfig> found;
-		try {
-			found = im.getAllESInstanceConfigs(new URL("http://localhost"));
-			assertNotNull(found);
-			Assert.assertTrue(found.size() > 0);
-			Assert.assertEquals(config.getUserID(), found.get(0).getUserID());
-			found = im.getAllESInstanceConfigs(new URL("http://localhost2"));
-			Assert.assertNotNull(found);
-			Assert.assertTrue(found.size() == 0);
-
-		} catch (MalformedURLException e) {
-			Assert.fail("Malformed Instance request");
-		}
-	}
-
-	private RunningIndexUserConfig createConfig() {
-		RunningIndexUserConfig config = new RunningIndexUserConfig();
-		try {
-			config.setHostAddress(new URL("http://localhost"));
-		} catch (MalformedURLException e) {
-			Assert.fail();
-			e.printStackTrace();
-		}
-		config.setHttpPort(9999);
-		config.setTcpPort(8888);
-		config.setClusterName("testname");
-		config.setMountedDriveLetter("/etc/home");
-		config.setUserID(Long.valueOf(77));
-		return config;
-	}
+    private void persistInTransaction(RunningIndexUserConfig config) {
+        this.entityManager.getTransaction().begin();
+        indexManagerDao.save(config);
+        this.entityManager.getTransaction().commit();
+    }
 
 }
