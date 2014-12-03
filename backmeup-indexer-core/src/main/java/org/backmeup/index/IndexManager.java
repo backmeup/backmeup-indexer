@@ -21,11 +21,11 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 
 import org.backmeup.data.dummy.ThemisDataSink;
-import org.backmeup.index.config.AvailableESInstanceState;
 import org.backmeup.index.config.Configuration;
+import org.backmeup.index.core.model.AvailableESInstanceState;
+import org.backmeup.index.core.model.RunningIndexUserConfig;
 import org.backmeup.index.dal.IndexManagerDao;
-import org.backmeup.index.dal.jpa.DataAccessLayerImpl;
-import org.backmeup.index.db.RunningIndexUserConfig;
+import org.backmeup.index.dal.jpa.JPADataAccessLayer;
 import org.backmeup.index.error.EncryptionProviderException;
 import org.backmeup.index.error.IndexManagerCoreException;
 import org.backmeup.index.error.SearchProviderException;
@@ -581,7 +581,7 @@ public class IndexManager {
      */
     public void injectForTests(EntityManager em) {
         this.entityManager = em;
-        DataAccessLayerImpl dal = new DataAccessLayerImpl();
+        JPADataAccessLayer dal = new JPADataAccessLayer();
         dal.setEntityManager(this.entityManager);
         this.dao = dal.createIndexManagerDao();
         this.indexKeepAliveTimer = new IndexKeepAliveTimer();

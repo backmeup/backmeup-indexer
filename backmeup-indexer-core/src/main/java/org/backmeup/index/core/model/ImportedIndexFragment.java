@@ -1,4 +1,4 @@
-package org.backmeup.index.db;
+package org.backmeup.index.core.model;
 
 public class ImportedIndexFragment {
 
