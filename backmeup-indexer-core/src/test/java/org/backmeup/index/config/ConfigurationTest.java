@@ -33,4 +33,16 @@ public class ConfigurationTest {
         assertEquals(false, ret.isEmpty());
     }
 
+    @Test
+    public void testHomeDirSet() {
+        String eshome = Configuration.getProperty("themis-datasink.home.dir");
+        assertNotNull(eshome);
+    }
+
+    @Test
+    public void testESHomeDirSet() {
+        String eshome = Configuration.getProperty("elasticsearch.home.dir");
+        assertNotNull(eshome);
+    }
+
 }

@@ -7,8 +7,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.backmeup.index.ESConfigurationHandler;
-import org.backmeup.index.config.Configuration;
 import org.backmeup.index.utils.file.FileUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -25,12 +23,6 @@ public class ESConfigurationHandlerTest {
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
-	}
-
-	@Test
-	public void testESHomeDirSet() {
-		String eshome = Configuration.getProperty("elasticsearch.home.dir");
-		Assert.assertNotNull(eshome);
 	}
 
 	@Test

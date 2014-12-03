@@ -12,7 +12,6 @@ import java.util.UUID;
 import org.apache.commons.io.FileUtils;
 import org.backmeup.data.dummy.ThemisDataSink.IndexFragmentType;
 import org.backmeup.index.api.IndexFields;
-import org.backmeup.index.config.Configuration;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.serializer.Json;
 import org.junit.After;
@@ -73,12 +72,6 @@ public class ThemisDataSinkTest {
 
     public File tcTemplateFile;
     public IndexDocument indexDoc;
-
-    @Test
-    public void testHomeDirSet() {
-        String eshome = Configuration.getProperty("themis-datasink.home.dir");
-        Assert.assertNotNull(eshome);
-    }
 
     @Test
     public void testStoreIndexTCContainerFileForUser() throws IOException {
