@@ -14,7 +14,7 @@ import org.backmeup.data.dummy.ThemisDataSink.IndexFragmentType;
 import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.config.Configuration;
 import org.backmeup.index.model.IndexDocument;
-import org.backmeup.index.serializer.JsonSerializer;
+import org.backmeup.index.serializer.Json;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -68,7 +68,7 @@ public class ThemisDataSinkTest {
         // for indexFragment tests
         File fIndexDocument = new File("src/test/resources/sampleIndexDocument.serindexdocument");
         String sampleFragment = FileUtils.readFileToString(fIndexDocument, "UTF-8");
-        this.indexDoc = JsonSerializer.deserialize(sampleFragment, IndexDocument.class);
+        this.indexDoc = Json.deserialize(sampleFragment, IndexDocument.class);
     }
 
     public File tcTemplateFile;

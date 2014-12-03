@@ -11,7 +11,7 @@ import org.backmeup.index.api.IndexClient;
 import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.SearchResultAccumulator;
-import org.backmeup.index.serializer.JsonSerializer;
+import org.backmeup.index.serializer.Json;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -50,7 +50,7 @@ public class IntegrationTest {
     private IndexDocument deserializeStoredDocument() throws IOException {
         try (InputStream resource = getClass().getClassLoader().getResourceAsStream("indexDocument.json")) {
             String json = IOUtils.toString(resource);
-            return JsonSerializer.deserialize(json, IndexDocument.class);
+            return Json.deserialize(json, IndexDocument.class);
         }
     }
 

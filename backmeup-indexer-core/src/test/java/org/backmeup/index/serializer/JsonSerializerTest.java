@@ -33,7 +33,7 @@ public class JsonSerializerTest {
     @Test
     public void shouldBeTheSameAfterFullRoundTrip() throws IOException {
         IndexDocument document = deserialize();
-        IndexDocument againDeserialized = deserialize(JsonSerializer.serialize(document));
+        IndexDocument againDeserialized = deserialize(Json.serialize(document));
         assertEquals(document.getFields(), againDeserialized.getFields());
         assertEquals(document.getLargeFields(), againDeserialized.getLargeFields());
     }
@@ -43,7 +43,7 @@ public class JsonSerializerTest {
     }
 
     private IndexDocument deserialize(String json) {
-        return JsonSerializer.deserialize(json, IndexDocument.class);
+        return Json.deserialize(json, IndexDocument.class);
     }
 
     private String load() throws IOException {

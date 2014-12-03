@@ -6,15 +6,18 @@ import java.net.URISyntaxException;
 import java.util.Set;
 
 import org.backmeup.index.api.IndexServer;
-import org.backmeup.index.client.IndexerException;
+import org.backmeup.index.client.IndexClientException;
 import org.backmeup.index.model.FileInfo;
 import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.SearchResultAccumulator;
-import org.backmeup.index.serializer.JsonSerializer;
+import org.backmeup.index.serializer.Json;
 
-import com.google.gson.reflect.TypeToken;
-
+/**
+ * Remote stub of the RESTful index server component.
+ * 
+ * @author <a href="http://www.code-cop.org/">Peter Kofler</a>
+ */
 public class RestApiServerStub implements IndexServer {
 
     private final HttpMethods http = new HttpMethods();
@@ -31,7 +34,7 @@ public class RestApiServerStub implements IndexServer {
 
             URI url = urls.forQuery(userId, query, filterBySource, filterByType, filterByJob, username);
             String body = http.get(url, 200);
-            return deserialize(body, SearchResultAccumulator.class);
+            return Json.deserialize(body, SearchResultAccumulator.class);
 
         } catch (IOException | URISyntaxException e) {
             throw failedToContactServer(e);
@@ -44,7 +47,7 @@ public class RestApiServerStub implements IndexServer {
 
             URI url = urls.forFilesOfJob(userId, jobId);
             String body = http.get(url, 200);
-            return deserializeSetOfFileItems(body);
+            return Json.deserializeSetOfFileItems(body);
 
         } catch (IOException | URISyntaxException e) {
             throw failedToContactServer(e);
@@ -57,7 +60,7 @@ public class RestApiServerStub implements IndexServer {
 
             URI url = urls.forFileInfo(userId, fileId);
             String body = http.get(url, 200);
-            return deserialize(body, FileInfo.class);
+            return Json.deserialize(body, FileInfo.class);
 
         } catch (IOException | URISyntaxException e) {
             throw failedToContactServer(e);
@@ -95,7 +98,7 @@ public class RestApiServerStub implements IndexServer {
         try {
 
             URI url = urls.forNewDocument(userId);
-            String jsonPayload = JsonSerializer.serialize(document);
+            String jsonPayload = Json.serialize(document);
             String body = http.post(url, jsonPayload, 201);
             return body;
 
@@ -104,17 +107,8 @@ public class RestApiServerStub implements IndexServer {
         }
     }
 
-    private <T> T deserialize(String body, Class<T> type) {
-        return JsonSerializer.deserialize(body, type);
-    }
-
-    private Set<FileItem> deserializeSetOfFileItems(String body) {
-        return JsonSerializer.deserialize(body, new TypeToken<Set<FileItem>>() {
-        }.getType());
-    }
-
-    private IndexerException failedToContactServer(Exception problem) {
-        return new IndexerException("faled to contact index server", problem);
+    private IndexClientException failedToContactServer(Exception problem) {
+        return new IndexClientException("faled to contact index server", problem);
     }
 
 }
