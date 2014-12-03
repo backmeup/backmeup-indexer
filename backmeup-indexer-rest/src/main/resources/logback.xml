@@ -1,38 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration> <!-- configuration is extremely flexible - it is not possible to specify a DTD -->
 <configuration>
-	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-		<!-- encoders are assigned the type ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
-		<encoder>
-			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-		</encoder>
-	</appender>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are assigned the type ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
 
-	<appender name="FILE"
-		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<!-- daily rollover -->
-			<!-- <fileNamePattern>${catalina.home}/logs/backmeup-service_%d{yyyy-MM-dd}.log</fileNamePattern> -->
-			<fileNamePattern>${catalina.home}/logs/backmeup-indexer_%d{yyyy-MM-dd}.log</fileNamePattern>
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <!-- <fileNamePattern>${catalina.home}/logs/backmeup-service_%d{yyyy-MM-dd}.log</fileNamePattern> -->
+            <fileNamePattern>${catalina.home}/logs/backmeup-indexer_%d{yyyy-MM-dd}.log</fileNamePattern>
 
-			<!-- keep 30 days' worth of history <maxHistory>30</maxHistory> -->
-		</rollingPolicy>
+            <!-- keep 30 days' worth of history <maxHistory>30</maxHistory> -->
+        </rollingPolicy>
 
-		<encoder>
-			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-		</encoder>
-	</appender>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
 
-	<logger name="org.backmeup" level="debug" />
-	
-	<logger name="org.jboss.resteasy.core" level="debug" />
-	<logger name="org.jboss.resteasy.specimpl" level="debug" />
-	<logger name="org.jboss.resteasy.plugins.server" level="debug" />
-	<logger name="org.hibernate" level="info" />
-	<logger name="org.elasticsearch" level="info" />
-	
-	<root level="info">
-		<appender-ref ref="STDOUT" />
-		<appender-ref ref="FILE" />
-	</root>
+    <logger name="org.backmeup" level="debug" />
+
+    <logger name="org.jboss.resteasy.core" level="debug" />
+    <logger name="org.jboss.resteasy.specimpl" level="debug" />
+    <logger name="org.jboss.resteasy.plugins.server" level="debug" />
+    <logger name="org.hibernate" level="info" />
+    <logger name="org.elasticsearch" level="info" />
+
+    <root level="info">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </root>
 
 </configuration>
