@@ -29,11 +29,11 @@ public class ESConfigurationHandler {
 
     private static final Logger log = LoggerFactory.getLogger(ESConfigurationHandler.class);
 
-    public static int TCPPORT_MIN = 9300;
-    public static int TCPPORT_MAX = 9399;
+    private static int TCPPORT_MIN = 9300;
+    private static int TCPPORT_MAX = 9399;
 
-    public static int HTTPPORT_MIN = 9200;
-    public static int HTTPPORT_MAX = 9299;
+    private static int HTTPPORT_MIN = 9200;
+    private static int HTTPPORT_MAX = 9299;
 
     /**
      * The elasticsearch_template.yml file contains tokens for http and tcp port configuration which need to be replaced
@@ -229,21 +229,6 @@ public class ESConfigurationHandler {
             throw new NumberFormatException("Provided ElasticSearch httpport " + httpport
                     + " is out of accepted range " + HTTPPORT_MIN + "-" + HTTPPORT_MAX);
         }
-    }
-
-    public static String getESHomePath() throws ExceptionInInitializerError {
-        String s = Configuration.getProperty("elasticsearch.home.dir");
-
-        if (s != null && s.length() > 0 && !s.contains("\"")) {
-            File f = new File(s);
-            if (f.isDirectory() && f.exists()) {
-                return f.getAbsolutePath();
-            }
-            throw new ExceptionInInitializerError(
-                    "ElasticSearch home.dir does not exist or is not accessible to system");
-        }
-        throw new ExceptionInInitializerError(
-                "ElasticSearch Home not properly configured within backmeup-indexer.properties");
     }
 
 }
