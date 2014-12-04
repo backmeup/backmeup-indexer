@@ -1,4 +1,6 @@
-package org.backmeup.index.error;
+package org.backmeup.index.core.truecrypt;
+
+import org.backmeup.index.error.IndexManagerCoreException;
 
 public class EncryptionProviderException extends IndexManagerCoreException {
 
@@ -8,10 +10,6 @@ public class EncryptionProviderException extends IndexManagerCoreException {
 
     public EncryptionProviderException(String message) {
         super(message);
-    }
-
-    public EncryptionProviderException(Throwable cause) {
-        super(cause);
     }
 
 }

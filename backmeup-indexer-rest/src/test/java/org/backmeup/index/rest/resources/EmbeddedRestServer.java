@@ -4,7 +4,7 @@ import org.jboss.resteasy.plugins.server.tjws.TJWSEmbeddedJaxrsServer;
 import org.junit.rules.ExternalResource;
 
 /**
- * Start and stop an embedded RestEasy for tests.
+ * Start and stop an embedded RestEasy for tests and add a single resource.
  * 
  * @author Peter Kofler
  */
@@ -26,7 +26,6 @@ public class EmbeddedRestServer extends ExternalResource {
     protected void before() {
         server = new TJWSEmbeddedJaxrsServer();
         server.setPort(PORT);
-        // server.getDeployment().getActualProviderClasses().add(AllowAllSecurityInterceptor.class);
         server.getDeployment().getActualResourceClasses().add(resource);
         server.start();
     }

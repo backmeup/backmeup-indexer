@@ -13,7 +13,7 @@ import org.apache.commons.io.FileUtils;
 import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.config.Configuration;
 import org.backmeup.index.model.IndexDocument;
-import org.backmeup.index.serializer.JsonSerializer;
+import org.backmeup.index.serializer.Json;
 
 /**
  * dummy implementation of a themis data sink currently with file operations for Truecrypt container files required to
@@ -129,7 +129,7 @@ public class ThemisDataSink {
         }
 
         // serialize the IndexDocument to JSON
-        String serializedIndexDoc = JsonSerializer.serialize(indexFragment);
+        String serializedIndexDoc = Json.serialize(indexFragment);
         if (serializedIndexDoc != null) {
 
             FileUtils.writeStringToFile(new File(getDataSinkHome(userID) + "/user" + userID + "/index-fragments/"
@@ -155,7 +155,7 @@ public class ThemisDataSink {
                 serObject += l;
             }
             // deserialize the object
-            IndexDocument indexDoc = JsonSerializer.deserialize(serObject, IndexDocument.class);
+            IndexDocument indexDoc = Json.deserialize(serObject, IndexDocument.class);
 
             return indexDoc;
         }

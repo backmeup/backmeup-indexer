@@ -3,7 +3,7 @@ package org.backmeup.index.dal;
 import java.net.URL;
 import java.util.List;
 
-import org.backmeup.index.db.RunningIndexUserConfig;
+import org.backmeup.index.core.model.RunningIndexUserConfig;
 
 /**
  * The IndexManagerDao contains all database relevant operations for the model

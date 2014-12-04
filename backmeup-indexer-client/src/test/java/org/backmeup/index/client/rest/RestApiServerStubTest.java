@@ -26,27 +26,4 @@ public class RestApiServerStubTest {
         return new RestApiConfig("127.0.0.1", 7654, "");
     }
 
-    @Test
-    public void testSearchAllFileItemsForJob() {
-    }
-
-    @Test
-    public void testGetFileInfoForFile() {
-    }
-
-    @Test
-    public void testGetThumbnailPathForFile() {
-    }
-
-    @Test
-    public void testDeleteRecordsForUser() {
-    }
-
-    @Test
-    public void testDeleteRecordsForJobAndTimestamp() {
-    }
-
-    @Test
-    public void testIndex() {
-    }
 }

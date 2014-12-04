@@ -8,14 +8,14 @@ import javax.enterprise.context.RequestScoped;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import org.backmeup.index.core.model.RunningIndexUserConfig;
 import org.backmeup.index.dal.IndexManagerDao;
-import org.backmeup.index.db.RunningIndexUserConfig;
 
 @RequestScoped
 public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
 		implements IndexManagerDao {
 
-	public static final String TABLENAME = RunningIndexUserConfig.class
+	private static final String TABLENAME = RunningIndexUserConfig.class
 			.getSimpleName();
 
 	public IndexManagerDaoImpl(EntityManager em) {

@@ -11,7 +11,7 @@ import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.SearchResultAccumulator;
 
 /**
- * Adapts the local index client to the remove index server.
+ * Adapts the local index client to the remote index server.
  * 
  * @author <a href="http://www.code-cop.org/">Peter Kofler</a>
  */

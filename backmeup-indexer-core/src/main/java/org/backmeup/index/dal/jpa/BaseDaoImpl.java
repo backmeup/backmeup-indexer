@@ -16,7 +16,7 @@ import org.backmeup.index.dal.BaseDao;
  */
 public abstract class BaseDaoImpl<T> implements BaseDao<T> {
 	protected EntityManager em;
-	protected Class<T> entityClass;
+	private Class<T> entityClass;
 
 	@SuppressWarnings("unchecked")
 	public BaseDaoImpl(EntityManager em) {

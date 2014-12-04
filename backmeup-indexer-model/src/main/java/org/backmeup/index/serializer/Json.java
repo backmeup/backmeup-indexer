@@ -4,7 +4,9 @@ import java.lang.reflect.Type;
 import java.util.Date;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
+import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.IndexDocument;
 
 import com.google.gson.Gson;
@@ -18,8 +20,14 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.reflect.TypeToken;
 
-public class JsonSerializer {
+/**
+ * Custom JSON serializers based on GSON.
+ * 
+ * @author <a href="http://www.code-cop.org/">Peter Kofler</a>
+ */
+public class Json {
 
+    @SuppressWarnings("unused")
     private static class DateSerializer implements com.google.gson.JsonSerializer<Date>, JsonDeserializer<Date> {
 
         @Override
@@ -36,7 +44,8 @@ public class JsonSerializer {
     private static class IndexDocumentSerializer implements JsonDeserializer<IndexDocument> {
 
         @Override
-        public IndexDocument deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        public IndexDocument deserialize(JsonElement json, @SuppressWarnings("unused") Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
             JsonObject self = json.getAsJsonObject();
 
             IndexDocument document = new IndexDocument();
@@ -87,5 +96,10 @@ public class JsonSerializer {
     public static <T> T deserialize(String entry, Type type) {
         Gson gson = builder.create();
         return gson.fromJson(entry, type);
+    }
+
+    public static Set<FileItem> deserializeSetOfFileItems(String body) {
+        return deserialize(body, new TypeToken<Set<FileItem>>() {
+        }.getType());
     }
 }

@@ -11,10 +11,10 @@ import java.util.Properties;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 
-import org.backmeup.index.dal.jpa.DataAccessLayerImpl;
-import org.backmeup.index.db.RunningIndexUserConfig;
+import org.backmeup.index.core.model.RunningIndexUserConfig;
+import org.backmeup.index.dal.jpa.JPADataAccessLayer;
+import org.backmeup.index.dal.jpa.JPAEntityManagerFactoryProducer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,7 +23,7 @@ import org.junit.Test;
  * Tests the jpa hibernate storage and retrieval layer for index user
  * configurations via derby DB with hibernate.hbm2ddl.auto=create
  */
-public class DataAccessLayerTest {
+public class IndexManagerDaoTest {
 
     private EntityManagerFactory entityManagerFactory;
     private EntityManager entityManager;
@@ -31,11 +31,10 @@ public class DataAccessLayerTest {
 
     @Before
     public void createEntityManager() {
-        this.entityManagerFactory = Persistence.createEntityManagerFactory("org.backmeup.index.jpa", overwrittenJPAProps());
-
+        this.entityManagerFactory = new JPAEntityManagerFactoryProducer(overwrittenJPAProps()).create();
         this.entityManager = this.entityManagerFactory.createEntityManager();
 
-        DataAccessLayerImpl dal = new DataAccessLayerImpl();
+        JPADataAccessLayer dal = new JPADataAccessLayer();
         dal.setEntityManager(this.entityManager);
 
         indexManagerDao = dal.createIndexManagerDao();
@@ -56,7 +55,7 @@ public class DataAccessLayerTest {
     @After
     public void closeEntityManager() {
         this.entityManager.close();
-        this.entityManagerFactory.close();
+        new JPAEntityManagerFactoryProducer().destroy(this.entityManagerFactory);
     }
 
     @Test

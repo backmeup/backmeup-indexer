@@ -5,6 +5,11 @@ import java.net.URISyntaxException;
 
 import org.apache.http.client.utils.URIBuilder;
 
+/**
+ * Create the RESTful URLs to contact the index component.
+ * 
+ * @author <a href="http://www.code-cop.org/">Peter Kofler</a>
+ */
 public class RestUrls {
 
     private final String host;
@@ -17,8 +22,8 @@ public class RestUrls {
         this.basePath = config.basepath + "/index";
     }
 
-    public URI forQuery(Long userId, String query, String filterBySource, String filterByType, String filterByJob,
-            String username) throws URISyntaxException {
+    public URI forQuery(Long userId, String query, String filterBySource, String filterByType, String filterByJob, String username)
+            throws URISyntaxException {
         URIBuilder urlBuilder = startWithBaseUrl(userId, "");
         addMandatoryParameter(urlBuilder, "query", query);
         addOptionalParameter(urlBuilder, "source", filterBySource);

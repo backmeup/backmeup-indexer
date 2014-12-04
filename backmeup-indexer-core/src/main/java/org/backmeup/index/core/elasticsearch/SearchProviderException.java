@@ -1,4 +1,6 @@
-package org.backmeup.index.error;
+package org.backmeup.index.core.elasticsearch;
+
+import org.backmeup.index.error.IndexManagerCoreException;
 
 public class SearchProviderException extends IndexManagerCoreException {
 
@@ -8,10 +10,6 @@ public class SearchProviderException extends IndexManagerCoreException {
 
     public SearchProviderException(String message) {
         super(message);
-    }
-
-    public SearchProviderException(Throwable cause) {
-        super(cause);
     }
 
 }

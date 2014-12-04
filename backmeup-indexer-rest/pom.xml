@@ -21,6 +21,7 @@
                 <configuration>
                     <!-- 3.5 runs in Kepler (Eclipse 4.3) -->
                     <wtpversion>3.5</wtpversion>
+                    <jeeversion>6</jeeversion>
                 </configuration>
             </plugin>
         </plugins>
@@ -93,18 +94,6 @@
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-jackson-provider</artifactId>
             <version>${version.org.jboss.resteasy}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.sf.dozer</groupId>
-            <artifactId>dozer</artifactId>
-            <version>${version.net.sf.dozer}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>slf4j-log4j12</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <!-- Test -->

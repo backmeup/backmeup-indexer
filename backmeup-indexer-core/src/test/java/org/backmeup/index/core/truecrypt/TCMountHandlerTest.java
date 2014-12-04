@@ -1,4 +1,4 @@
-package org.backmeup.index;
+package org.backmeup.index.core.truecrypt;
 
 import java.io.File;
 import java.io.IOException;
