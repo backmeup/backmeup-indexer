@@ -88,8 +88,8 @@ create a database called 'bmuindexcore' and assign the dbu_indexcore user as own
 Info:
 Make sure this information is reflected within src>main>resources>META-INF/persistance.xml
 
-4) Deployment
-=============
+4.1) Deployment to Tomcat
+=======================
 To deploy backmeup-indexer call
 * mvn clean install -DintegrationTests
 
@@ -97,6 +97,12 @@ Note:
 The Maven integration test profile is automatically executed for this component when Truecrypt is detected in
 C:/Program Files/TrueCrypt/TrueCrypt.exe or /usr/bin/truecrypt
 To manually execute the backmeup-indexer integration tests call maven with '-P IntegrationTestsLinux' or '-P IntegrationTestsWindows'
+
+4.2) Deployment of osgi bundles
+=============================
+* within backmeup-index/autodeploy directory you'll find the created osgi bundles + their dependencies which are required to run within the plugin-framework. 
+Copy all bundle jars into data/backmeup-service/autodeploy [according to the configuration of backmeup-service manual section B] 
+
 
 Hints
 =====
