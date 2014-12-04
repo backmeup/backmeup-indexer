@@ -83,7 +83,11 @@
                         <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.name}</Bundle-Name>
                         <Bundle-Version>${project.version}</Bundle-Version>
-                        <Import-Package>*</Import-Package>
+                        <Import-Package>net.sf.ehcache.*;resolution:=optional,
+										net.spy.*;resolution:=optional,
+										javax.microedition.io.*;resolution:=optional,
+										*
+						</Import-Package>
                         <Embed-Dependency>!slf4j-api,!gson,!backmeup-indexer-*,*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                         <Embed-Directory>lib</Embed-Directory>
