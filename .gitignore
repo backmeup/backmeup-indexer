@@ -20,3 +20,4 @@ RemoteSystemsTempFiles/
 derby.log
 hs_err_pid*.log
 catalina.home_IS_UNDEFINED/
+/autodeploy
