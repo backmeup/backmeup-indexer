@@ -17,7 +17,9 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-eclipse-plugin</artifactId>
+                <version>${version.org.apache.maven.plugins.maven-eclipse-plugin}</version>
                 <configuration>
                     <!-- 3.5 runs in Kepler (Eclipse 4.3) -->
                     <wtpversion>3.5</wtpversion>
