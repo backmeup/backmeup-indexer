@@ -21,11 +21,6 @@
             <version>${project.version}</version>
             <type>bundle</type>
         </dependency>
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>${version.com.google.code.gson}</version>
-        </dependency>
 
         <!-- MINIMAL dependencies because many plugins depend on this -->
         <dependency>
