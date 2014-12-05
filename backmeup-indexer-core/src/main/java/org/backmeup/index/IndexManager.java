@@ -16,8 +16,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import javax.persistence.EntityManager;
 
 import org.backmeup.data.dummy.ThemisDataSink;
@@ -84,17 +84,16 @@ public class IndexManager {
     private final Map<URL, AvailableESInstanceState> availableESInstances = new HashMap<>();
     private URL defaultHost;
 
-    @Inject
+    @Resource
     private EntityManager entityManager;
 
-    @Inject
+    @Resource
     private IndexManagerDao dao;
-    @Inject
+    @Resource
     private IndexKeepAliveTimer indexKeepAliveTimer;
 
-    @SuppressWarnings("unused")
     // need to instantiate in order for the timer to start running
-    @Inject
+    @Resource
     private IndexCoreGarbageCollector cleanupTask;
 
     @PostConstruct

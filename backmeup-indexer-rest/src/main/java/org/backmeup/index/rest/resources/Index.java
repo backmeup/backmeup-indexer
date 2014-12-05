@@ -3,7 +3,7 @@ package org.backmeup.index.rest.resources;
 import java.io.IOException;
 import java.util.Set;
 
-import javax.inject.Inject;
+import javax.annotation.Resource;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -29,7 +29,7 @@ import org.backmeup.index.model.SearchResultAccumulator;
 @Produces(MediaType.APPLICATION_JSON)
 public class Index implements IndexServer {
 
-    @Inject
+    @Resource
     private IndexManager indexManager;
 
     protected IndexClient getIndexClient(Long userId) {
