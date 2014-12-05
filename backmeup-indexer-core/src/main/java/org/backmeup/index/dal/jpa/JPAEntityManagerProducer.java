@@ -1,15 +1,15 @@
 package org.backmeup.index.dal.jpa;
 
-import javax.annotation.Resource;
 import javax.enterprise.context.RequestScoped;
 import javax.enterprise.inject.Disposes;
 import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 public class JPAEntityManagerProducer {
 
-    @Resource
+    @Inject
     private EntityManagerFactory entityManagerFactory;
 
     @Produces

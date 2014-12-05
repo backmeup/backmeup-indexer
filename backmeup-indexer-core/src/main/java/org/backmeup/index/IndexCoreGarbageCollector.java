@@ -10,8 +10,8 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,9 +26,9 @@ public class IndexCoreGarbageCollector {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    @Resource
+    @Inject
     private IndexManager indexManager;
-    @Resource
+    @Inject
     private IndexKeepAliveTimer indexKeepAliveTimer;
 
     @PostConstruct

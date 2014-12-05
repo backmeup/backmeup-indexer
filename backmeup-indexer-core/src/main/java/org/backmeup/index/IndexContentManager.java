@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Resource;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 import org.backmeup.data.dummy.ElasticContentBuilder;
 import org.backmeup.data.dummy.ThemisDataSink;
@@ -29,7 +29,7 @@ public class IndexContentManager {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-    @Resource
+    @Inject
     private static IndexManager indexManager;
 
     /**

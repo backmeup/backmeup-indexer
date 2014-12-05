@@ -53,13 +53,6 @@
             <groupId>javax.enterprise</groupId>
             <artifactId>cdi-api</artifactId>
             <version>${version.javax.enterprise.cdi-api}</version>
-            <exclusions>
-                <exclusion>
-                    <!-- included in Java 7 -->
-                    <artifactId>jsr250-api</artifactId>
-                    <groupId>javax.annotation</groupId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>
