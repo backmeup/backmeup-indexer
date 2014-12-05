@@ -1,3 +1,6 @@
+autodeploy/
+*/osgiTmp/
+
 # Maven
 target/
 
