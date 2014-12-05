@@ -89,6 +89,7 @@
             <version>${version.commons-io}</version>
         </dependency>
 
+        <!-- Test -->
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>

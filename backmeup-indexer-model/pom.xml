@@ -15,6 +15,7 @@
     <name>Backmeup Index Model</name>
 
     <dependencies>
+        <!-- MINIMAL dependencies because many plugins depend on this -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
