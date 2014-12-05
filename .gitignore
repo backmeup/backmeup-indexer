@@ -1,9 +1,3 @@
-autodeploy/
-*/autodeploy/
-*/osgiTmp/
-.metadata
-RemoteSystemsTempFiles
-
 # Maven
 target/
 
@@ -12,14 +6,17 @@ target/
 *.iml
 
 # Eclipse
+.metadata
 .classpath
 .project
 .pydevproject
 .settings/
+RemoteSystemsTempFiles/
 
 # Mac OS X
 .DS_Store
 
+# Logs
 derby.log
 hs_err_pid*.log
-catalina.home_IS_UNDEFINED
+catalina.home_IS_UNDEFINED/

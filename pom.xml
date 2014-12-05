@@ -30,7 +30,7 @@
 		<project.build.java.target>1.7</project.build.java.target>
 
         <!-- Configuration -->
-        <config.localBuildArtefactDirectory>../autodeploy</config.localBuildArtefactDirectory>
+        <config.localBuildArtefactDirectory>../../backmeup-service/autodeploy</config.localBuildArtefactDirectory>
 
 		<config.tomcat.manager.url>http://127.0.0.1:8080/manager/text</config.tomcat.manager.url>
 		<config.tomcat.authentication.id>backmeup.indexer.tomcat</config.tomcat.authentication.id>
