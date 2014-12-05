@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>backmeup-indexer-model</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <name>Backmeup Index Model</name>
 
     <dependencies>
@@ -30,7 +30,21 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <version>${version.org.apache.felix.maven-bundle-plugin}</version>
                 <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>bundle-creation</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>bundle</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
+                    <packaging>bundle</packaging>
+                    <classifier>bundle</classifier>
+                    <supportedProjectTypes>
+                        <supportedProjectType>jar</supportedProjectType>
+                    </supportedProjectTypes>
                     <instructions>
                         <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
@@ -42,7 +56,6 @@
                     </instructions>
                 </configuration>
             </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -60,13 +73,14 @@
                                     <groupId>${project.groupId}</groupId>
                                     <artifactId>${project.artifactId}</artifactId>
                                     <version>${project.version}</version>
-                                    <type>${project.packaging}</type>
+                                    <classifier>bundle</classifier>
+                                    <type>bundle</type>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>com.google.code.gson</groupId>
                                     <artifactId>gson</artifactId>
                                     <version>${version.com.google.code.gson}</version>
-                                    <type>${project.packaging}</type>
+                                    <type>bundle</type>
                                 </artifactItem>
                             </artifactItems>
                             <outputDirectory>${config.localBuildArtefactDirectory}</outputDirectory>

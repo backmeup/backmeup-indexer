@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>backmeup-indexer-client</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <name>Backmeup Index (Rest) Client</name>
 
     <dependencies>
@@ -19,7 +19,6 @@
             <groupId>org.backmeup</groupId>
             <artifactId>backmeup-indexer-model</artifactId>
             <version>${project.version}</version>
-            <type>bundle</type>
         </dependency>
 
         <!-- MINIMAL dependencies because many plugins depend on this -->
@@ -57,7 +56,7 @@
             <artifactId>commons-io</artifactId>
             <version>${version.commons-io}</version>
         </dependency>
-        
+
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
@@ -73,16 +72,30 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <version>${version.org.apache.felix.maven-bundle-plugin}</version>
                 <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>bundle-creation</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>bundle</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
+                    <packaging>bundle</packaging>
+                    <classifier>bundle</classifier>
+                    <supportedProjectTypes>
+                        <supportedProjectType>jar</supportedProjectType>
+                    </supportedProjectTypes>
                     <instructions>
                         <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.name}</Bundle-Name>
                         <Bundle-Version>${project.version}</Bundle-Version>
                         <Import-Package>net.sf.ehcache.*;resolution:=optional,
-										net.spy.*;resolution:=optional,
-										javax.microedition.io.*;resolution:=optional,
-										*
-						</Import-Package>
+                            net.spy.*;resolution:=optional,
+                            javax.microedition.io.*;resolution:=optional,
+                            *
+                        </Import-Package>
                         <Embed-Dependency>!slf4j-api,!gson,!backmeup-indexer-*,*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                         <Embed-Directory>lib</Embed-Directory>
@@ -108,7 +121,8 @@
                                     <groupId>${project.groupId}</groupId>
                                     <artifactId>${project.artifactId}</artifactId>
                                     <version>${project.version}</version>
-                                    <type>${project.packaging}</type>
+                                    <classifier>bundle</classifier>
+                                    <type>bundle</type>
                                 </artifactItem>
                             </artifactItems>
                             <outputDirectory>${config.localBuildArtefactDirectory}</outputDirectory>
