@@ -89,6 +89,18 @@
              see http://docs.jboss.org/resteasy/docs/3.0.7.Final/userguide/html_single/ -->
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-jaxrs</artifactId>
+            <version>${version.org.jboss.resteasy}</version>
+            <exclusions>
+                <exclusion>
+                    <!-- included in Java 6 -->
+                    <artifactId>activation</artifactId>
+                    <groupId>javax.activation</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-servlet-initializer</artifactId>
             <version>${version.org.jboss.resteasy}</version>
         </dependency>
