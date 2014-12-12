@@ -83,7 +83,7 @@ public class IndexManager {
     }
 
     // TODO @see ESConfigurationHandler.checkPortRangeAccepted - these values
-    // are currently hardcoded there
+    // are currently hard coded there
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final Map<URL, AvailableESInstanceState> availableESInstances = new HashMap<>();
@@ -96,20 +96,20 @@ public class IndexManager {
     private IndexManagerDao dao;
     @Inject
     private IndexKeepAliveTimer indexKeepAliveTimer;
-
-    //@SuppressWarnings("unused")
-    // need to instantiate in order for the timer to start running
-    @Inject
+    @Inject // need to instantiate in order for the timer to start running
     private IndexCoreGarbageCollector cleanupTask;
 
     @PostConstruct
     public void startupIndexManager() {
         try {
-            //add .toString() for eagerly initializing ApplicationScoped Beans
-            this.cleanupTask.toString();
-            this.indexKeepAliveTimer.toString();
+            if (cleanupTask!=null) {
+                // not in tests, so start it
+             
+                // add .toString() for eagerly initialising ApplicationScoped Beans
+                this.cleanupTask.toString();
+            }
 
-            //initialization of IndexManager managed ElasticSearch instances
+            // Initialisation of IndexManager managed ElasticSearch instances
             initAvailableInstances();
         } catch (MalformedURLException | URISyntaxException | UnknownHostException e) {
             this.log.error("IndexManager initialization failed ", e);
@@ -429,7 +429,7 @@ public class IndexManager {
 
     /**
      * Cleanup - stops all running ES instances, removes all mounted TC container and drops database records of running
-     * isntances
+     * instances
      */
     private void cleanupRude() {
 

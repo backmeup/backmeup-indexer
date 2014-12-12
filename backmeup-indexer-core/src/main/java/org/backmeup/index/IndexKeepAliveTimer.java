@@ -18,7 +18,7 @@ public class IndexKeepAliveTimer {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final Map<Long, Date> lastAccessLog = new HashMap<>();
-    private int minutes = 20;
+    private final int minutes = 20;
 
     /**
      * Extends the time to life for a index instance with +20 minutes from now
@@ -33,8 +33,6 @@ public class IndexKeepAliveTimer {
 
     /**
      * Returns a list of instances that can be shutdown as no request was made within a specific period of time
-     * 
-     * @return userID
      */
     public synchronized List<Long> getUsersToShutdown() {
         List<Long> ret = new ArrayList<>();
@@ -64,9 +62,7 @@ public class IndexKeepAliveTimer {
     }
 
     /**
-     * Returns the number of currently initialized instances, managed by this class
-     * 
-     * @return
+     * Returns the number of currently initialised instances, managed by this class
      */
     public synchronized int countOpenInstances() {
         return this.lastAccessLog.size();
