@@ -38,10 +38,9 @@ public class IndexManagerSetup {
         Properties overwrittenJPAProps = new Properties();
 
         overwrittenJPAProps.setProperty("javax.persistence.jdbc.driver", "org.apache.derby.jdbc.EmbeddedDriver");
-        overwrittenJPAProps.setProperty("hibernate.connection.driver_class", "org.apache.derby.jdbc.EmbeddedDriver");
         overwrittenJPAProps.setProperty("javax.persistence.jdbc.url", "jdbc:derby:target/junit;create=true");
-        overwrittenJPAProps.setProperty("hibernate.connection.url", "jdbc:derby:target/junit;create=true");
-        overwrittenJPAProps.setProperty("hibernate.dialect", "org.hibernate.dialect.DerbyDialect");
+
+        overwrittenJPAProps.setProperty("hibernate.dialect", "org.hibernate.dialect.DerbyTenSevenDialect");
         overwrittenJPAProps.setProperty("hibernate.hbm2ddl.auto", "create");
 
         return overwrittenJPAProps;

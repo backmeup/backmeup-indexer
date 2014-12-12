@@ -21,7 +21,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Tests the jpa hibernate storage and retrieval layer for index user
+ * Tests the JPA hibernate storage and retrieval layer for index user
  * configurations via derby DB with hibernate.hbm2ddl.auto=create
  */
 public class IndexManagerDaoTest {
@@ -41,13 +41,14 @@ public class IndexManagerDaoTest {
         indexManagerDao = dal.createIndexManagerDao();
     }
 
+    // TODO PK duplicated with IndexManagerSetup, extract to test db helper
     private Properties overwrittenJPAProps() {
         Properties overwrittenJPAProps = new Properties();
 
         overwrittenJPAProps.setProperty("javax.persistence.jdbc.driver", "org.apache.derby.jdbc.EmbeddedDriver");
         overwrittenJPAProps.setProperty("javax.persistence.jdbc.url", "jdbc:derby:target/junit;create=true");
 
-        overwrittenJPAProps.setProperty("hibernate.dialect", "org.hibernate.dialect.DerbyDialect");
+        overwrittenJPAProps.setProperty("hibernate.dialect", "org.hibernate.dialect.DerbyTenSevenDialect");
         overwrittenJPAProps.setProperty("hibernate.hbm2ddl.auto", "create");
 
         return overwrittenJPAProps;
