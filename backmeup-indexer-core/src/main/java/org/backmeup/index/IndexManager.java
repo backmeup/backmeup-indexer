@@ -118,6 +118,7 @@ public class IndexManager {
         }
     }
 
+    // TODO PK needs db and transaction in another thread
     @PreDestroy
     public void shutdownIndexManager() {
         this.log.debug("shutdown IndexManager (ApplicationScoped) started");
@@ -506,6 +507,7 @@ public class IndexManager {
      */
     public Client getESTransportClient(User userID) throws SearchProviderException {
         //TODO Keep Clients and last accessed timestamp? 
+        //check if we've got a DB record
         RunningIndexUserConfig conf = getRunningIndexUserConfig(userID);
         if (conf != null) {
             Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", conf.getClusterName()).build();
@@ -529,11 +531,6 @@ public class IndexManager {
      *             if now instance is available
      */
     public ClusterState getESClusterState(User userId) throws SearchProviderException {
-        //check if we've got a DB record
-        RunningIndexUserConfig config = getRunningIndexUserConfig(userId);
-        if (config == null) {
-            throw new SearchProviderException("No RunningIndexUserConfig found for userId: " + userId);
-        }
         try (Client client = this.getESTransportClient(userId)) {
             //request clusterstate and cluster health
             ClusterState clusterState = client.admin().cluster().state(new ClusterStateRequest())
