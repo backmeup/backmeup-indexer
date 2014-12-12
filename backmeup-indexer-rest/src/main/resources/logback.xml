@@ -29,6 +29,7 @@
     <logger name="org.jboss.resteasy.plugins.server" level="debug" />
     <logger name="org.hibernate" level="info" />
     <logger name="org.elasticsearch" level="info" />
+    <logger name="org.elasticsearch.common.netty.channel" level="error" />
 
     <root level="info">
         <appender-ref ref="STDOUT" />
