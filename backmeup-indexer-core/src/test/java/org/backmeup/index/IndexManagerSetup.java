@@ -6,6 +6,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
+import org.backmeup.index.model.User;
 import org.junit.After;
 import org.junit.Before;
 
@@ -17,8 +18,8 @@ public class IndexManagerSetup {
 
     @After
     public void after() {
-        indexManager.shutdownInstance(999991L);
-        indexManager.shutdownInstance(999992L);
+        indexManager.shutdownInstance(new User(999991L));
+        indexManager.shutdownInstance(new User(999992L));
         closeEntityManager();
     }
 

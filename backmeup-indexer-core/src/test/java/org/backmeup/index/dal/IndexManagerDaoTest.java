@@ -15,6 +15,7 @@ import javax.persistence.EntityManagerFactory;
 import org.backmeup.index.core.model.RunningIndexUserConfig;
 import org.backmeup.index.dal.jpa.JPADataAccessLayer;
 import org.backmeup.index.dal.jpa.JPAEntityManagerFactoryProducer;
+import org.backmeup.index.model.User;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -73,7 +74,7 @@ public class IndexManagerDaoTest {
         RunningIndexUserConfig config = createConfig();
         persistInTransaction(config);
 
-        RunningIndexUserConfig found = indexManagerDao.findConfigByUserId(77L);
+        RunningIndexUserConfig found = indexManagerDao.findConfigByUser(new User(77L));
         assertNotNull(found);
         assertEquals(config.getUserID(), found.getUserID());
     }

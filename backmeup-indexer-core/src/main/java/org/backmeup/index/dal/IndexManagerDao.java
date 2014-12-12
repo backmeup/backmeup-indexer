@@ -4,6 +4,7 @@ import java.net.URL;
 import java.util.List;
 
 import org.backmeup.index.core.model.RunningIndexUserConfig;
+import org.backmeup.index.model.User;
 
 /**
  * The IndexManagerDao contains all database relevant operations for the model
@@ -14,7 +15,7 @@ import org.backmeup.index.core.model.RunningIndexUserConfig;
  */
 public interface IndexManagerDao extends BaseDao<RunningIndexUserConfig> {
 
-	RunningIndexUserConfig findConfigByUserId(Long userID);
+	RunningIndexUserConfig findConfigByUser(User userID);
 
 	List<RunningIndexUserConfig> getAllESInstanceConfigs();
 

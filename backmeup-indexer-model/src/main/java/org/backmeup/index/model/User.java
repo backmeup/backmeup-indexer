@@ -10,6 +10,9 @@ public class User {
     private final Long id;
 
     public User(Long id) {
+        if (id <= -1) {
+            throw new IllegalArgumentException("userID missing");
+        }
         this.id = id;
     }
 

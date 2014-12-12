@@ -13,6 +13,7 @@ import org.apache.commons.io.FileUtils;
 import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.config.Configuration;
 import org.backmeup.index.model.IndexDocument;
+import org.backmeup.index.model.User;
 import org.backmeup.index.serializer.Json;
 
 /**
@@ -41,7 +42,7 @@ public class ThemisDataSink {
     /**
      * Fetches the user specific TrueCrypt container file which is stored within the user space
      */
-    public static File getIndexTrueCryptContainer(Long userID) throws IOException {
+    public static File getIndexTrueCryptContainer(User userID) throws IOException {
         String s = getDataSinkHome(userID) + "/user" + userID + "/index/elasticsearch_userdata_TC_150MB.tc";
         File f = new File(s);
         if (f.exists() && f.canRead()) {
@@ -58,12 +59,12 @@ public class ThemisDataSink {
      *            the user specific yml ES startup file
      */
     @SuppressWarnings("resource") // new FileInputStream(f) is closed inside FileUtils.copyInputStreamToFile
-    public static void saveIndexTrueCryptContainer(File f, Long userID) throws IOException {
+    public static void saveIndexTrueCryptContainer(File f, User userID) throws IOException {
         if (f == null) {
             throw new IOException("file f is null");
         }
 
-        if (userID > -1 && (f.exists() && f.canRead())) {
+        if (userID.id() > -1 && (f.exists() && f.canRead())) {
             saveIndexTrueCryptContainer(new FileInputStream(f), userID);
         } else {
             throw new IOException("Error storing Index TrueCrypt Container file " + f.getAbsolutePath() + ": userID: "
@@ -71,7 +72,7 @@ public class ThemisDataSink {
         }
     }
 
-    public static void saveIndexTrueCryptContainer(InputStream in, Long userID) throws IOException {
+    public static void saveIndexTrueCryptContainer(InputStream in, User userID) throws IOException {
         if (in == null) {
             throw new IOException("file is null");
         }
@@ -83,7 +84,7 @@ public class ThemisDataSink {
     /**
      * Removes the user specific TrueCrypt volume from the users file space
      */
-    public static void deleteIndexTrueCryptContainer(Long userID) throws IOException {
+    public static void deleteIndexTrueCryptContainer(User userID) throws IOException {
         File f = getIndexTrueCryptContainer(userID);
         f.delete();
     }
@@ -100,12 +101,9 @@ public class ThemisDataSink {
      * Persists an IndexDocument within the user's index-fragments space in the DataSink. Distinguishes between
      * imported, shared or already indexed IndexDocuments
      */
-    public static UUID saveIndexFragment(IndexDocument indexFragment, Long userID, IndexFragmentType type)
+    public static UUID saveIndexFragment(IndexDocument indexFragment, User userID, IndexFragmentType type)
             throws IOException {
 
-        if (userID <= -1) {
-            throw new IOException("userID missing");
-        }
         if (indexFragment == null) {
             throw new IOException("IndexDocument may not be null");
         }
@@ -143,10 +141,10 @@ public class ThemisDataSink {
 
     }
 
-    public static IndexDocument getIndexFragment(UUID objectID, Long userID, IndexFragmentType type) throws IOException {
+    public static IndexDocument getIndexFragment(UUID objectID, User userID, IndexFragmentType type) throws IOException {
         File f = getIndexFragmentFile(objectID, userID, type);
 
-        if (userID > -1 && (f.exists() && f.canRead())) {
+        if (userID.id()> -1 && (f.exists() && f.canRead())) {
             List<String> lines = FileUtils.readLines(f, "UTF-8");
 
             String serObject = "";
@@ -164,7 +162,7 @@ public class ThemisDataSink {
                 + f.exists() + ", file is readable? " + f.canRead());
     }
 
-    private static File getIndexFragmentFile(UUID objectID, Long userID, IndexFragmentType type) {
+    private static File getIndexFragmentFile(UUID objectID, User userID, IndexFragmentType type) {
         return new File(getDataSinkHome(userID) + "/user" + userID + "/index-fragments/" + type.getStorageLocation()
                 + objectID + ".serindexdocument");
     }
@@ -172,7 +170,7 @@ public class ThemisDataSink {
     /**
      * Returns a list of all index-fragment UUIDs the user currently has stored within his data source repository
      */
-    public static List<UUID> getAllIndexFragmentUUIDs(Long userID, IndexFragmentType type) {
+    public static List<UUID> getAllIndexFragmentUUIDs(User userID, IndexFragmentType type) {
         List<UUID> ret = new ArrayList<>();
         File f = new File(getDataSinkHome(userID) + "/user" + userID + "/index-fragments/" + type.getStorageLocation());
 
@@ -198,10 +196,10 @@ public class ThemisDataSink {
         return ret;
     }
 
-    public static void deleteIndexFragment(UUID objectID, Long userID, IndexFragmentType type) throws IOException {
+    public static void deleteIndexFragment(UUID objectID, User userID, IndexFragmentType type) throws IOException {
         File f = getIndexFragmentFile(objectID, userID, type);
 
-        if (userID > -1 && (f.exists() && f.canRead())) {
+        if (userID.id() > -1 && (f.exists() && f.canRead())) {
             f.delete();
         } else {
             throw new IOException("error deleting fragment: " + getDataSinkHome(userID) + "/user" + userID
@@ -210,7 +208,7 @@ public class ThemisDataSink {
         }
     }
 
-    public static void deleteAllIndexFragments(Long userID, IndexFragmentType type) throws IOException {
+    public static void deleteAllIndexFragments(User userID, IndexFragmentType type) throws IOException {
         for (UUID uuid : getAllIndexFragmentUUIDs(userID, type)) {
             deleteIndexFragment(uuid, userID, type);
         }
@@ -219,7 +217,7 @@ public class ThemisDataSink {
     /**
      * Returns the root directory for the Themis Datensenke dummy implementation
      */
-    private static String getDataSinkHome(Long userID) {
+    private static String getDataSinkHome(User userID) {
         String s = Configuration.getProperty("themis-datasink.home.dir");
         if (s != null && s.length() > 0 && !s.contains("\"")) {
             File f = new File(s);

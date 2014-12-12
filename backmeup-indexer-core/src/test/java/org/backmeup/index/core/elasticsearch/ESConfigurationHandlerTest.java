@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.backmeup.index.model.User;
 import org.backmeup.index.utils.file.FileUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -14,10 +15,11 @@ import org.junit.Test;
 
 public class ESConfigurationHandlerTest {
 
-	URL host;
+	private static final User USER_ID = new User(100L);
+    private URL host;
 
 	@Before
-	public void before() {
+	public void creareHostUrl() {
 		try {
 			this.host = new URL("http://localhost");
 		} catch (MalformedURLException e) {
@@ -36,7 +38,7 @@ public class ESConfigurationHandlerTest {
 	@Test
 	public void testNonSupportedPortRange() {
 		try {
-			ESConfigurationHandler.createUserYMLStartupFile(100L, this.host,
+			ESConfigurationHandler.createUserYMLStartupFile(USER_ID, this.host,
 					9810, 9910, null);
 			Assert.fail("This code block should not be reached");
 		} catch (NumberFormatException e) {
@@ -50,7 +52,7 @@ public class ESConfigurationHandlerTest {
 
 	@Test
 	public void testReplaceTokens() throws IOException {
-		File f = ESConfigurationHandler.createUserYMLStartupFile(100L,
+		File f = ESConfigurationHandler.createUserYMLStartupFile(USER_ID,
 				this.host, 9310, 9210, null);
 
 		boolean bClusterName = false;

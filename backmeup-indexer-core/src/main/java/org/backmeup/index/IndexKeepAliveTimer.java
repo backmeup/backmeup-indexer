@@ -9,6 +9,7 @@ import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 
+import org.backmeup.index.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,13 +18,13 @@ public class IndexKeepAliveTimer {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final Map<Long, Date> lastAccessLog = new HashMap<>();
+    private final Map<User, Date> lastAccessLog = new HashMap<>();
     private final int minutes = 20;
 
     /**
      * Extends the time to life for a index instance with +20 minutes from now
      */
-    public synchronized void extendTTL20(Long userID) {
+    public synchronized void extendTTL20(User userID) {
         Date d = new Date(System.currentTimeMillis() + this.minutes * 60 * 1000);
         this.log.debug("IndexKeepAliveTimer extended ES Instance TTL for userID: " + userID + " until: "
                 + getFormatedDate(d));
@@ -34,10 +35,10 @@ public class IndexKeepAliveTimer {
     /**
      * Returns a list of instances that can be shutdown as no request was made within a specific period of time
      */
-    public synchronized List<Long> getUsersToShutdown() {
-        List<Long> ret = new ArrayList<>();
+    public synchronized List<User> getUsersToShutdown() {
+        List<User> ret = new ArrayList<>();
         this.log.debug("IndexKeepALiveTimer checking users to shutdown...");
-        for (Map.Entry<Long, Date> entry : this.lastAccessLog.entrySet()) {
+        for (Map.Entry<User, Date> entry : this.lastAccessLog.entrySet()) {
             Date timestamp = entry.getValue();
             this.log.debug("checking entries for userID: " + entry.getKey() + " and timestamp "
                     + getFormatedDate(timestamp));
@@ -53,7 +54,7 @@ public class IndexKeepAliveTimer {
     /**
      * Mark a running index instance as shutdown. No cleanup required for these instances anymore
      */
-    public synchronized void flagAsShutdown(Long userID) {
+    public synchronized void flagAsShutdown(User userID) {
         if (this.lastAccessLog.containsKey(userID)) {
             this.lastAccessLog.remove(userID);
             this.log.debug("IndexKeepAliveTimer flag ES instances for userID: " + userID

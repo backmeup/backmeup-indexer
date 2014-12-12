@@ -23,6 +23,7 @@ import org.backmeup.index.config.Configuration;
 import org.backmeup.index.core.elasticsearch.tokenreader.MapTokenResolver;
 import org.backmeup.index.core.elasticsearch.tokenreader.TokenReplaceReader;
 import org.backmeup.index.core.model.RunningIndexUserConfig;
+import org.backmeup.index.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +49,7 @@ public class ESConfigurationHandler {
      *            accepted port range from 9200 to 9299
      * @returns file pointer to the created configuration file
      */
-    public static File createUserYMLStartupFile(Long userID, URL host, int tcpport, int httpport, String mountedTCVolume)
+    public static File createUserYMLStartupFile(User userID, URL host, int tcpport, int httpport, String mountedTCVolume)
             throws IOException, ExceptionInInitializerError, NumberFormatException {
 
         checkPortRangeAccepted(tcpport, httpport);
@@ -101,7 +102,7 @@ public class ESConfigurationHandler {
     /**
      * Starts an elastic search instance for an existing configuration
      */
-    public static void startElasticSearch(Long userID) throws IOException, InterruptedException {
+    public static void startElasticSearch(User userID) throws IOException, InterruptedException {
 
         // TODO add -server to the command line to not use the client vm (better
         // performance)
@@ -130,7 +131,7 @@ public class ESConfigurationHandler {
         }
     }
 
-    public static void stopElasticSearch(Long userID, IndexManager indexManager) throws ClientProtocolException, IOException {
+    public static void stopElasticSearch(User userID, IndexManager indexManager) throws ClientProtocolException, IOException {
         RunningIndexUserConfig config = indexManager.getRunningIndexUserConfig(userID);
         if (config != null) {
             HttpPost shutdownRequest = new HttpPost(config.getHostAddress() + ":" + config.getHttpPort() + "/_shutdown");

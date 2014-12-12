@@ -10,6 +10,8 @@ import javax.persistence.Id;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.backmeup.index.model.User;
+
 @Entity
 public class RunningIndexUserConfig {
 
@@ -37,10 +39,10 @@ public class RunningIndexUserConfig {
 		this.timestamp = new Date();
 	}
 
-	public RunningIndexUserConfig(Long userId, URL hostaddress,
+	public RunningIndexUserConfig(User userId, URL hostaddress,
 			Integer tcpPort, Integer httpPort, String clusterName,
 			String mountedDrive, String mountedContainerLocation) {
-		this.setUserID(userId);
+		this.setUserID(userId.id());
 		this.setTcpPort(tcpPort);
 		this.setHttpPort(httpPort);
 		this.setClusterName(clusterName);
@@ -103,7 +105,6 @@ public class RunningIndexUserConfig {
 			this.httpPort = host.getPort();
 			this.timestamp = new Date();
 		}
-
 	}
 
 	public String getClusterName() {
@@ -123,5 +124,9 @@ public class RunningIndexUserConfig {
 		this.userId = userID;
 		this.timestamp = new Date();
 	}
+
+    public User getUser() {
+        return new User(getUserID());
+    }
 
 }

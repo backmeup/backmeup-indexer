@@ -39,7 +39,7 @@ public class ElasticSearchIndexClient implements IndexClient {
     private final Client client;
 
     public ElasticSearchIndexClient(User userId, IndexManager indexManager) {
-        this(userId, indexManager.initAndCreateAndDoEverthing(userId.id()));
+        this(userId, indexManager.initAndCreateAndDoEverthing(userId));
     }
 
     public ElasticSearchIndexClient(User userId, Client client) {

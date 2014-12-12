@@ -10,6 +10,7 @@ import javax.persistence.Query;
 
 import org.backmeup.index.core.model.RunningIndexUserConfig;
 import org.backmeup.index.dal.IndexManagerDao;
+import org.backmeup.index.model.User;
 
 @RequestScoped
 public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
@@ -23,10 +24,10 @@ public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
 	}
 
 	@Override
-	public RunningIndexUserConfig findConfigByUserId(Long userID) {
+	public RunningIndexUserConfig findConfigByUser(User userID) {
 		Query q = this.em.createQuery("SELECT u FROM " + TABLENAME
 				+ " u WHERE u.userId = :userId");
-		q.setParameter("userId", userID);
+		q.setParameter("userId", userID.id());
 		return executeQuerySelectFirst(q);
 	}
 
