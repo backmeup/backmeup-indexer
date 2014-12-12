@@ -1,4 +1,4 @@
-package org.backmeup.data.dummy;
+package org.backmeup.index.query;
 
 import java.util.ArrayList;
 import java.util.Date;

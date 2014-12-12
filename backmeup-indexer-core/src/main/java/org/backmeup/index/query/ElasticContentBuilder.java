@@ -1,4 +1,4 @@
-package org.backmeup.data.dummy;
+package org.backmeup.index.query;
 
 import java.io.IOException;
 import java.util.Map;
@@ -8,7 +8,7 @@ import org.elasticsearch.common.text.StringText;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 
-public class ElasticContentBuilder {
+class ElasticContentBuilder {
 
 	private final IndexDocument document;
 	private final XContentBuilder contentBuilder;

@@ -7,16 +7,15 @@ import java.util.UUID;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import org.backmeup.data.dummy.ElasticContentBuilder;
 import org.backmeup.data.dummy.ThemisDataSink;
 import org.backmeup.data.dummy.ThemisDataSink.IndexFragmentType;
+import org.backmeup.index.api.IndexClient;
 import org.backmeup.index.core.elasticsearch.SearchProviderException;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
+import org.backmeup.index.query.ElasticSearchIndexClient;
 import org.backmeup.index.serializer.Json;
-import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,7 +97,9 @@ public class IndexContentManager {
     private void importIndexFragmentInES(IndexDocument doc, User userID) {
         try {
             Client client = indexManager.getESTransportClient(userID);
-            index(client, doc);
+            try (IndexClient indexClient = new ElasticSearchIndexClient(userID, client)) {
+                indexClient.index(doc);
+            }
 
         } catch (SearchProviderException e) {
             log.error("failed to add IndexDocument " + Json.serialize(doc) + " for userID: " + userID + " " + e);
@@ -107,20 +108,6 @@ public class IndexContentManager {
             log.error("failed to add IndexDocument " + Json.serialize(doc) + " for userID: " + userID + " " + e);
             throw new SearchProviderException("failed to add IndexDocument for userID: " + userID, e);
         }
-    }
-
-    private IndexResponse index(Client client, IndexDocument document) throws IOException {
-        log.debug("Sending IndexDocument to ES index...");
-        XContentBuilder elasticBuilder = new ElasticContentBuilder(document).asElastic();
-        IndexResponse response = client
-                .prepareIndex(ElasticContentBuilder.INDEX_NAME, ElasticContentBuilder.DOCUMENT_TYPE_BACKUP)
-                .setSource(elasticBuilder).setRefresh(true).execute().actionGet();
-
-        log.debug("ingested in index: " + response.getIndex() + " type: " + response.getType() + " id: "
-                + response.getId());
-        log.debug("Done sending IndexDocument to ES");
-
-        return response;
     }
 
     public void removeOwnedIndexFragmentInES(UUID objectID, Long userID) {

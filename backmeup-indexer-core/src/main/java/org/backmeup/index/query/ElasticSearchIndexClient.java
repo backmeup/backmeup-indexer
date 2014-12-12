@@ -1,4 +1,4 @@
-package org.backmeup.data.dummy;
+package org.backmeup.index.query;
 
 import java.io.IOException;
 import java.util.Date;
@@ -20,6 +20,7 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -225,9 +226,11 @@ public class ElasticSearchIndexClient implements IndexClient {
     public void index(IndexDocument document) throws IOException {
         this.logger.debug("Pushing to ES index...");
         XContentBuilder elasticBuilder = new ElasticContentBuilder(document).asElastic();
-        this.client.prepareIndex(INDEX_NAME, DOCUMENT_TYPE_BACKUP).setSource(elasticBuilder).setRefresh(true).execute()
-                .actionGet();
-        this.logger.debug(" done.");
+        IndexResponse response = this.client.prepareIndex(INDEX_NAME, DOCUMENT_TYPE_BACKUP).setSource(elasticBuilder).setRefresh(true)
+                .execute().actionGet();
+        this.logger.debug("ingested in index: " + response.getIndex() + " type: " + response.getType() + " id: "
+                + response.getId());
+        this.logger.debug("Done sending IndexDocument to ES");
     }
 
     //TODO UPDATE TTL SERVICE

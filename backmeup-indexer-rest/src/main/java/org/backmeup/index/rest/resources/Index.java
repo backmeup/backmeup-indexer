@@ -17,7 +17,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.backmeup.data.dummy.ElasticSearchIndexClient;
 import org.backmeup.index.IndexManager;
 import org.backmeup.index.api.IndexClient;
 import org.backmeup.index.api.IndexServer;
@@ -26,6 +25,7 @@ import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.SearchResultAccumulator;
 import org.backmeup.index.model.User;
+import org.backmeup.index.query.ElasticSearchIndexClient;
 
 @Path("index")
 @Produces(MediaType.APPLICATION_JSON)
