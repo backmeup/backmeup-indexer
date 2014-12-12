@@ -18,7 +18,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 @Ignore("only integration with running and deployed Indexer WAR")
-public class IntegrationTest {
+public class IndexUsageIntegrationTest {
 
     private static final long USER = 16384;
 
@@ -26,19 +26,19 @@ public class IntegrationTest {
 
     @Before
     public void connectToIndex() {
-        client = new IndexClientFactory().getIndexClient(USER);
+        this.client = new IndexClientFactory().getIndexClient(USER);
     }
 
     @After
     public void closeIndex() {
-        client.close();
+        this.client.close();
     }
 
     @Test
     public void shouldIndexAndQueryAndDelete() throws IOException {
         IndexDocument document = deserializeStoredDocument();
         assertEquals(USER, document.getFields().get(IndexFields.FIELD_OWNER_ID));
-        client.index(document);
+        this.client.index(document);
 
         assertHasDocuments();
 
@@ -55,7 +55,7 @@ public class IntegrationTest {
     }
 
     private void assertHasDocuments() {
-        SearchResultAccumulator result = client.queryBackup("*", null, null, null, "username");
+        SearchResultAccumulator result = this.client.queryBackup("*", null, null, null, "username");
         //TODO PK,AL not the proper asserts here
         assertTrue(result.getFiles().size() > 0);
     }
@@ -63,11 +63,11 @@ public class IntegrationTest {
     private void deleteDocument(IndexDocument document) {
         Long timestamp = (Long) document.getFields().get(IndexFields.FIELD_BACKUP_AT);
         Long jobid = Long.valueOf((String) document.getFields().get(IndexFields.FIELD_JOB_ID));
-        client.deleteRecordsForJobAndTimestamp(jobid, timestamp);
+        this.client.deleteRecordsForJobAndTimestamp(jobid, timestamp);
     }
 
     private void assertHasNoDocuments() {
-        SearchResultAccumulator result = client.queryBackup("*", null, null, null, "username");
+        SearchResultAccumulator result = this.client.queryBackup("*", null, null, null, "username");
         //TODO PK,AL not the proper asserts here
         assertTrue(result.getFiles().isEmpty());
     }
