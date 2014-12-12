@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import org.backmeup.index.model.SearchResultAccumulator;
+import org.backmeup.index.model.User;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -17,7 +18,7 @@ public class RestApiServerStubTest {
         server.setStatusCode(200);
         server.setResourceFileName("query.json");
 
-        SearchResultAccumulator searchResult = new RestApiServerStub(testConfig()).query(1L, "find_me", null, null, "", "peter");
+        SearchResultAccumulator searchResult = new RestApiServerStub(testConfig()).query(new User(1L), "find_me", null, null, "", "peter");
         assertNotNull(searchResult);
         assertEquals(2, searchResult.getBySource().size());
     }

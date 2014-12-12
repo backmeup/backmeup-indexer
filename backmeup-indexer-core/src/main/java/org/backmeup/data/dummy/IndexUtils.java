@@ -14,6 +14,7 @@ import org.backmeup.index.model.CountedEntry;
 import org.backmeup.index.model.FileInfo;
 import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.SearchEntry;
+import org.backmeup.index.model.User;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -367,7 +368,7 @@ class IndexUtils {
 		return filterstr.toString();
 	}
 	
-	public static QueryBuilder buildQuery(Long userid, String queryString,
+	public static QueryBuilder buildQuery(User userid, String queryString,
 			Map<String, List<String>> filters) {
 		BoolQueryBuilder qBuilder = new BoolQueryBuilder();
 		qBuilder.must(QueryBuilders.matchQuery(IndexFields.FIELD_OWNER_ID,

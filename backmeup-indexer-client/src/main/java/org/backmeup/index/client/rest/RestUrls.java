@@ -4,6 +4,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.apache.http.client.utils.URIBuilder;
+import org.backmeup.index.model.User;
 
 /**
  * Create the RESTful URLs to contact the index component.
@@ -22,7 +23,7 @@ public class RestUrls {
         this.basePath = config.basepath + "/index";
     }
 
-    public URI forQuery(Long userId, String query, String filterBySource, String filterByType, String filterByJob, String username)
+    public URI forQuery(User userId, String query, String filterBySource, String filterByType, String filterByJob, String username)
             throws URISyntaxException {
         URIBuilder urlBuilder = startWithBaseUrl(userId, "");
         addMandatoryParameter(urlBuilder, "query", query);
@@ -33,34 +34,34 @@ public class RestUrls {
         return urlBuilder.build();
     }
 
-    public URI forFilesOfJob(Long userId, Long jobId) throws URISyntaxException {
+    public URI forFilesOfJob(User userId, Long jobId) throws URISyntaxException {
         URIBuilder urlBuilder = startWithBaseUrl(userId, "files");
         addMandatoryParameter(urlBuilder, "job", jobId);
         return urlBuilder.build();
     }
 
-    public URI forFileInfo(Long userId, String fileId) throws URISyntaxException {
+    public URI forFileInfo(User userId, String fileId) throws URISyntaxException {
         return startWithBaseUrl(userId, "/files/" + fileId + "/info").build();
     }
 
-    public URI forThumbnail(Long userId, String fileId) throws URISyntaxException {
+    public URI forThumbnail(User userId, String fileId) throws URISyntaxException {
         return startWithBaseUrl(userId, "/files/" + fileId + "/thumbnail").build();
     }
 
-    public URI forDelete(Long userId, Long jobId, Long timestamp) throws URISyntaxException {
+    public URI forDelete(User userId, Long jobId, Long timestamp) throws URISyntaxException {
         URIBuilder urlBuilder = startWithBaseUrl(userId, "");
         addOptionalParameter(urlBuilder, "job", jobId);
         addOptionalParameter(urlBuilder, "time", timestamp);
         return urlBuilder.build();
     }
 
-    public URI forNewDocument(Long userId) throws URISyntaxException {
+    public URI forNewDocument(User userId) throws URISyntaxException {
         return startWithBaseUrl(userId, "").build();
     }
 
     // private
 
-    private URIBuilder startWithBaseUrl(Long userId, String path) throws URISyntaxException {
+    private URIBuilder startWithBaseUrl(User userId, String path) throws URISyntaxException {
         return new URIBuilder("http://" + this.host + ":" + this.port + this.basePath + "/" + userId + "/" + path);
     }
 

@@ -14,6 +14,7 @@ import org.backmeup.index.model.FileInfo;
 import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.SearchResultAccumulator;
+import org.backmeup.index.model.User;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
@@ -34,14 +35,14 @@ public class ElasticSearchIndexClient implements IndexClient {
     private static final String INDEX_NAME = "backmeup";
     private static final String DOCUMENT_TYPE_BACKUP = "backup";
 
-    private final Long userId;
+    private final User userId;
     private final Client client;
 
-    public ElasticSearchIndexClient(Long userId, IndexManager indexManager) {
-        this(userId, indexManager.initAndCreateAndDoEverthing(userId));
+    public ElasticSearchIndexClient(User userId, IndexManager indexManager) {
+        this(userId, indexManager.initAndCreateAndDoEverthing(userId.id()));
     }
 
-    public ElasticSearchIndexClient(Long userId, Client client) {
+    public ElasticSearchIndexClient(User userId, Client client) {
         this.userId = userId;
         this.client = client;
         createIndexIfNeeded();

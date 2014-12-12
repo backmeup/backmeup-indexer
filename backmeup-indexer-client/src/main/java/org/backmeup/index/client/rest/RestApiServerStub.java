@@ -11,6 +11,7 @@ import org.backmeup.index.model.FileInfo;
 import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.SearchResultAccumulator;
+import org.backmeup.index.model.User;
 import org.backmeup.index.serializer.Json;
 
 /**
@@ -28,7 +29,7 @@ public class RestApiServerStub implements IndexServer {
     }
 
     @Override
-    public SearchResultAccumulator query(Long userId, String query, String filterBySource, String filterByType, String filterByJob,
+    public SearchResultAccumulator query(User userId, String query, String filterBySource, String filterByType, String filterByJob,
             String username) {
         try {
 
@@ -42,7 +43,7 @@ public class RestApiServerStub implements IndexServer {
     }
 
     @Override
-    public Set<FileItem> filesForJob(Long userId, Long jobId) {
+    public Set<FileItem> filesForJob(User userId, Long jobId) {
         try {
 
             URI url = urls.forFilesOfJob(userId, jobId);
@@ -55,7 +56,7 @@ public class RestApiServerStub implements IndexServer {
     }
 
     @Override
-    public FileInfo fileInfoForFile(Long userId, String fileId) {
+    public FileInfo fileInfoForFile(User userId, String fileId) {
         try {
 
             URI url = urls.forFileInfo(userId, fileId);
@@ -68,7 +69,7 @@ public class RestApiServerStub implements IndexServer {
     }
 
     @Override
-    public String thumbnailPathForFile(Long userId, String fileId) {
+    public String thumbnailPathForFile(User userId, String fileId) {
         try {
 
             URI url = urls.forThumbnail(userId, fileId);
@@ -81,7 +82,7 @@ public class RestApiServerStub implements IndexServer {
     }
 
     @Override
-    public String delete(Long userId, Long jobId, Long timestamp) {
+    public String delete(User userId, Long jobId, Long timestamp) {
         try {
 
             URI url = urls.forDelete(userId, jobId, timestamp);
@@ -94,7 +95,7 @@ public class RestApiServerStub implements IndexServer {
     }
 
     @Override
-    public String index(Long userId, IndexDocument document) throws IOException {
+    public String index(User userId, IndexDocument document) throws IOException {
         try {
 
             URI url = urls.forNewDocument(userId);

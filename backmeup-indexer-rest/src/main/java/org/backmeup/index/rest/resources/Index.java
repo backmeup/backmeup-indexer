@@ -24,6 +24,7 @@ import org.backmeup.index.model.FileInfo;
 import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.SearchResultAccumulator;
+import org.backmeup.index.model.User;
 
 @Path("index")
 @Produces(MediaType.APPLICATION_JSON)
@@ -32,7 +33,7 @@ public class Index implements IndexServer {
     @Inject
     private IndexManager indexManager;
 
-    protected IndexClient getIndexClient(Long userId) {
+    protected IndexClient getIndexClient(User userId) {
         return new ElasticSearchIndexClient(userId, indexManager);
     }
 
@@ -40,7 +41,7 @@ public class Index implements IndexServer {
     @GET
     @Path("/{userId}")
     public SearchResultAccumulator query( //
-            @PathParam("userId") Long userId, // 
+            @PathParam("userId") User userId, // 
             @QueryParam("query") String query, //
             @QueryParam("source") String filterBySource, //
             @QueryParam("type") String filterByType, //
@@ -60,7 +61,7 @@ public class Index implements IndexServer {
     @GET
     @Path("/{userId}/files")
     public Set<FileItem> filesForJob( //
-            @PathParam("userId") Long userId, // 
+            @PathParam("userId") User userId, // 
             @QueryParam("job") Long jobId) {
         mandatory("job", jobId);
 
@@ -75,7 +76,7 @@ public class Index implements IndexServer {
     @GET
     @Path("/{userId}/files/{fileId}/info")
     public FileInfo fileInfoForFile( //
-            @PathParam("userId") Long userId, // 
+            @PathParam("userId") User userId, // 
             @PathParam("fileId") String fileId) {
         mandatory("fileId", fileId);
 
@@ -90,7 +91,7 @@ public class Index implements IndexServer {
     @GET
     @Path("/{userId}/files/{fileId}/thumbnail")
     public String thumbnailPathForFile( //
-            @PathParam("userId") Long userId, // 
+            @PathParam("userId") User userId, // 
             @PathParam("fileId") String fileId) {
         mandatory("fileId", fileId);
 
@@ -103,7 +104,7 @@ public class Index implements IndexServer {
 
     @Override
     public String delete( //
-            Long userId, //
+            User userId, //
             Long jobId, //  
             Long timestamp) { // optional
 
@@ -123,7 +124,7 @@ public class Index implements IndexServer {
     @DELETE
     @Path("/{userId}")
     public Response deleteRS( //
-            @PathParam("userId") Long userId, //
+            @PathParam("userId") User userId, //
             @QueryParam("job") Long jobId, // optional for user and timestamp 
             @QueryParam("time") Long timestamp) { // optional
 
@@ -132,7 +133,7 @@ public class Index implements IndexServer {
 
     @Override
     public String index( //
-            Long userId, //
+            User userId, //
             IndexDocument document) throws IOException {
 
         try (IndexClient indexClient = getIndexClient(userId)) {
@@ -147,7 +148,7 @@ public class Index implements IndexServer {
     @Path("/{userId}")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response indexRS( //
-            @PathParam("userId") Long userId, //
+            @PathParam("userId") User userId, //
             IndexDocument document) throws IOException {
 
         return status(Response.Status.CREATED, index(userId, document));

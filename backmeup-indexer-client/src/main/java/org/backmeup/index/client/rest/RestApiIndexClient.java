@@ -9,6 +9,7 @@ import org.backmeup.index.model.FileInfo;
 import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.SearchResultAccumulator;
+import org.backmeup.index.model.User;
 
 /**
  * Adapts the local index client to the remote index server.
@@ -18,9 +19,9 @@ import org.backmeup.index.model.SearchResultAccumulator;
 public class RestApiIndexClient implements IndexClient {
 
     private final IndexServer server = new RestApiServerStub(RestApiConfig.DEFAULT);
-    private final Long userId;
+    private final User userId;
 
-    public RestApiIndexClient(Long userId) {
+    public RestApiIndexClient(User userId) {
         this.userId = userId;
     }
 
@@ -51,7 +52,7 @@ public class RestApiIndexClient implements IndexClient {
 
     @Override
     public void deleteRecordsForJobAndTimestamp(Long jobId, Long timestamp) {
-        server.delete(timestamp, jobId, timestamp);
+        server.delete(userId, jobId, timestamp);
     }
 
     @Override

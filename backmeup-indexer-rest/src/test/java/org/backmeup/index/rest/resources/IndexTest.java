@@ -24,6 +24,7 @@ import org.backmeup.index.model.CountedEntry;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.SearchEntry;
 import org.backmeup.index.model.SearchResultAccumulator;
+import org.backmeup.index.model.User;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -42,8 +43,8 @@ public class IndexTest {
 
     public static class IndexWithMockedFactory extends Index {
         @Override
-        protected IndexClient getIndexClient(Long userId) {
-            assertEquals(USER, userId);
+        protected IndexClient getIndexClient(User userId) {
+            assertEquals(USER, userId.id());
 
             indexClient = mock(IndexClient.class);
             SearchResultAccumulator sr = oneFile();
