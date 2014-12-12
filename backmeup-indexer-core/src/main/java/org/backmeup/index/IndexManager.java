@@ -73,7 +73,7 @@ public class IndexManager {
 
             } catch (IndexManagerCoreException e1) {
                 // rollback the startup steps that were already performed
-                this.shutdownInstance(userId.intValue());
+                this.shutdownInstance(userId);
                 this.log.error("failed to startup/connect with running instance and return a client object for user "
                         + userId + ". Returning null", e1);
 
