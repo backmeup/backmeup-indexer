@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 
 import org.apache.commons.io.IOUtils;
 import org.backmeup.index.api.IndexClient;
@@ -63,7 +64,7 @@ public class IndexUsageIntegrationTest {
     private void deleteDocument(IndexDocument document) {
         Long timestamp = (Long) document.getFields().get(IndexFields.FIELD_BACKUP_AT);
         Long jobid = Long.valueOf((String) document.getFields().get(IndexFields.FIELD_JOB_ID));
-        this.client.deleteRecordsForJobAndTimestamp(jobid, timestamp);
+        this.client.deleteRecordsForJobAndTimestamp(jobid, new Date(timestamp));
     }
 
     private void assertHasNoDocuments() {

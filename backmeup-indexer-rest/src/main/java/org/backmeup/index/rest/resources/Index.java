@@ -1,6 +1,7 @@
 package org.backmeup.index.rest.resources;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -106,7 +107,7 @@ public class Index implements IndexServer {
     public String delete( //
             User userId, //
             Long jobId, //  
-            Long timestamp) { // optional
+            Date timestamp) { // optional
 
         try (IndexClient indexClient = getIndexClient(userId)) {
 
@@ -128,7 +129,7 @@ public class Index implements IndexServer {
             @QueryParam("job") Long jobId, // optional for user and timestamp 
             @QueryParam("time") Long timestamp) { // optional
 
-        return status(Response.Status.ACCEPTED, delete(userId, jobId, timestamp));
+        return status(Response.Status.ACCEPTED, delete(userId, jobId, new Date(timestamp)));
     }
 
     @Override

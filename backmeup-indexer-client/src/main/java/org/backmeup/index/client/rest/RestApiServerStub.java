@@ -3,6 +3,7 @@ package org.backmeup.index.client.rest;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Date;
 import java.util.Set;
 
 import org.backmeup.index.api.IndexServer;
@@ -82,7 +83,7 @@ public class RestApiServerStub implements IndexServer {
     }
 
     @Override
-    public String delete(User userId, Long jobId, Long timestamp) {
+    public String delete(User userId, Long jobId, Date timestamp) {
         try {
 
             URI url = urls.forDelete(userId, jobId, timestamp);

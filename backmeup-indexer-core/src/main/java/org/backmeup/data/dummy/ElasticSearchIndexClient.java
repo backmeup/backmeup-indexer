@@ -1,6 +1,7 @@
 package org.backmeup.data.dummy;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -205,10 +206,10 @@ public class ElasticSearchIndexClient implements IndexClient {
     }
 
     @Override
-    public void deleteRecordsForJobAndTimestamp(Long jobId, Long timestamp) {
+    public void deleteRecordsForJobAndTimestamp(Long jobId, Date timestamp) {
         QueryBuilder qBuilder = QueryBuilders.boolQuery()
                 .must(QueryBuilders.matchQuery(IndexFields.FIELD_JOB_ID, jobId))
-                .must(QueryBuilders.matchQuery(IndexFields.FIELD_BACKUP_AT, timestamp));
+                .must(QueryBuilders.matchQuery(IndexFields.FIELD_BACKUP_AT, timestamp.getTime()));
 
         this.client.prepareDeleteByQuery(INDEX_NAME).setQuery(qBuilder).execute().actionGet();
     }

@@ -2,6 +2,7 @@ package org.backmeup.index.api;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Date;
 import java.util.Set;
 
 import org.backmeup.index.model.FileInfo;
@@ -27,7 +28,7 @@ public interface IndexClient extends Closeable {
 
     void deleteRecordsForUser();
 
-    void deleteRecordsForJobAndTimestamp(Long jobId, Long timestamp);
+    void deleteRecordsForJobAndTimestamp(Long jobId, Date timestamp);
 
     void index(IndexDocument document) throws IOException;
 

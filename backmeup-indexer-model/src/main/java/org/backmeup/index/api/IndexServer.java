@@ -1,6 +1,7 @@
 package org.backmeup.index.api;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.Set;
 
 import org.backmeup.index.model.FileInfo;
@@ -24,7 +25,7 @@ public interface IndexServer {
 
     String thumbnailPathForFile(User userId, String fileId);
 
-    String delete(User userId, Long jobId, Long timestamp);
+    String delete(User userId, Long jobId, Date timestamp);
 
     String index(User userId, IndexDocument document) throws IOException;
 

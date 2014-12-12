@@ -1,6 +1,7 @@
 package org.backmeup.index.client.rest;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.Set;
 
 import org.backmeup.index.api.IndexClient;
@@ -51,7 +52,7 @@ public class RestApiIndexClient implements IndexClient {
     }
 
     @Override
-    public void deleteRecordsForJobAndTimestamp(Long jobId, Long timestamp) {
+    public void deleteRecordsForJobAndTimestamp(Long jobId, Date timestamp) {
         server.delete(userId, jobId, timestamp);
     }
 

@@ -2,6 +2,7 @@ package org.backmeup.index.client.rest;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Date;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.backmeup.index.model.User;
@@ -48,10 +49,10 @@ public class RestUrls {
         return startWithBaseUrl(userId, "/files/" + fileId + "/thumbnail").build();
     }
 
-    public URI forDelete(User userId, Long jobId, Long timestamp) throws URISyntaxException {
+    public URI forDelete(User userId, Long jobId, Date timestamp) throws URISyntaxException {
         URIBuilder urlBuilder = startWithBaseUrl(userId, "");
         addOptionalParameter(urlBuilder, "job", jobId);
-        addOptionalParameter(urlBuilder, "time", timestamp);
+        addOptionalParameter(urlBuilder, "time", timestamp.getTime());
         return urlBuilder.build();
     }
 
