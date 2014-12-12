@@ -91,13 +91,10 @@ public class IndexManager {
     private URL defaultHost;
 
     @Inject
-    private EntityManager entityManager; // TODO PK remove from here, wrong layer!
-
-    @Inject
     private IndexManagerDao dao;
     @Inject
     private IndexKeepAliveTimer indexKeepAliveTimer;
-    @Inject // need to instantiate in order for the timer to start running
+    @Inject 
     private IndexCoreGarbageCollector cleanupTask;
 
     @PostConstruct
@@ -107,16 +104,18 @@ public class IndexManager {
                 // not in tests, so start it
              
                 // add .toString() for eagerly initialising ApplicationScoped Beans
+                // need to instantiate in order for the timer to start running
                 this.cleanupTask.toString();
             }
 
             // Initialisation of IndexManager managed ElasticSearch instances
             initAvailableInstances();
+
+            this.log.debug("startup() IndexManager (ApplicationScoped) completed");
+
         } catch (MalformedURLException | URISyntaxException | UnknownHostException e) {
             this.log.error("IndexManager initialization failed ", e);
-
         }
-        this.log.debug("startup() IndexManager (ApplicationScoped) completed");
     }
 
     @PreDestroy
@@ -298,9 +297,7 @@ public class IndexManager {
                     tcpPort, httpPort, "user" + userID, tcMountedDriveLetter, fTCContainer.getAbsolutePath());
 
             // persist the configuration
-            this.entityManager.getTransaction().begin();
-            this.dao.save(runningConfig);
-            this.entityManager.getTransaction().commit();
+            runningConfig = this.dao.save(runningConfig);
             this.log.debug("startupInstance for userID: " + userID + " step5 - ok");
 
         } catch (URISyntaxException | UnknownHostException | MalformedURLException e1) {
@@ -402,12 +399,8 @@ public class IndexManager {
         }
 
         //5. remove the userconfiguration from db and release the ports
-        try {
-            releaseRunningInstanceMapping(userID);
-            this.log.debug("shutdownInstance for userID: " + userID + " step4 - ok");
-        } catch (IOException e) {
-            this.log.debug("shutdownInstance for userID: " + userID + " step5 - failed", e);
-        }
+        releaseRunningInstanceMapping(userID);
+        this.log.debug("shutdownInstance for userID: " + userID + " step4 - ok");
 
         //6. wipe the temp working directory
         deleteLocalWorkingDir(userID);
@@ -451,9 +444,7 @@ public class IndexManager {
         //remove the userconfiguration from db and release the ports
         this.log.debug("cleanupRude: started removing all DB records: executing " + "DELETE FROM +"
                 + RunningIndexUserConfig.class.getSimpleName());
-        this.entityManager.getTransaction().begin();
-        this.entityManager.createQuery("DELETE FROM +" + RunningIndexUserConfig.class.getSimpleName()).executeUpdate();
-        this.entityManager.getTransaction().commit();
+        this.dao.deleteAll();
         this.log.debug("cleanupRude: removing all DB records: completed");
 
         try {
@@ -485,20 +476,12 @@ public class IndexManager {
      * Cleans up the available and used port mapping and updates the database This method does not stop running ES and
      * TC instances
      */
-    private void releaseRunningInstanceMapping(User userID) throws IOException {
-        try {
-            this.entityManager.getTransaction().begin();
-            RunningIndexUserConfig config = this.dao.findById(userID.id());
-            this.availableESInstances.get(this.defaultHost).addAvailableHTTPPort(config.getHttpPort());
-            this.availableESInstances.get(this.defaultHost).addAvailableTCPPort(config.getTcpPort());
+    private void releaseRunningInstanceMapping(User userID) {
+        RunningIndexUserConfig config = this.dao.findById(userID.id());
+        this.availableESInstances.get(this.defaultHost).addAvailableHTTPPort(config.getHttpPort());
+        this.availableESInstances.get(this.defaultHost).addAvailableTCPPort(config.getTcpPort());
 
-            this.dao.delete(config);
-            this.entityManager.getTransaction().commit();
-        } catch (Exception e) {
-            this.entityManager.getTransaction().rollback();
-            throw new IOException("Rolling back transaction for userID: " + userID
-                    + " availableHTTP and availableTCP port declaration out of sync");
-        }
+        this.dao.delete(config);
     }
 
     /**
@@ -618,9 +601,8 @@ public class IndexManager {
      * required for testing purposes to inject a different db configuration
      */
     public void injectForTests(EntityManager em) {
-        this.entityManager = em;
         JPADataAccessLayer dal = new JPADataAccessLayer();
-        dal.setEntityManager(this.entityManager);
+        dal.setEntityManager(em);
         this.dao = dal.createIndexManagerDao();
         this.indexKeepAliveTimer = new IndexKeepAliveTimer();
     }

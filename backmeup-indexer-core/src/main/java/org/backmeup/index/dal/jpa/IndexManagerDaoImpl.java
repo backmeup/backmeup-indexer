@@ -25,7 +25,7 @@ public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
 
 	@Override
 	public RunningIndexUserConfig findConfigByUser(User userID) {
-		Query q = this.em.createQuery("SELECT u FROM " + TABLENAME
+		Query q = this.entityManager.createQuery("SELECT u FROM " + TABLENAME
 				+ " u WHERE u.userId = :userId");
 		q.setParameter("userId", userID.id());
 		return executeQuerySelectFirst(q);
@@ -39,7 +39,7 @@ public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
 			String url = host.getProtocol() + "://" + host.getHost();
 			Integer httpPort = host.getPort();
 
-			Query q = this.em
+			Query q = this.entityManager
 					.createQuery("SELECT u FROM "
 							+ TABLENAME
 							+ " u WHERE u.httpPort = :httpport and u.hostaddress =:hostaddr");
@@ -81,14 +81,14 @@ public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
 
 	@Override
 	public List<RunningIndexUserConfig> getAllESInstanceConfigs() {
-		Query q = this.em.createQuery("SELECT u FROM " + TABLENAME + " u");
+		Query q = this.entityManager.createQuery("SELECT u FROM " + TABLENAME + " u");
         return executeQuery(q);
 	}
 
 	@Override
 	public List<RunningIndexUserConfig> getAllESInstanceConfigs(URL url) {
 		if (url != null) {
-			Query q = this.em.createQuery("SELECT u FROM " + TABLENAME
+			Query q = this.entityManager.createQuery("SELECT u FROM " + TABLENAME
 					+ " u WHERE u.hostaddress = :instance");
 			q.setParameter("instance", url.toExternalForm());
 			return executeQuery(q);
@@ -96,5 +96,10 @@ public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
 
 		return new ArrayList<>();
 	}
+
+    @Override
+    public void deleteAll() {
+        this.entityManager.createQuery("DELETE FROM +" + TABLENAME).executeUpdate();
+    }
 
 }

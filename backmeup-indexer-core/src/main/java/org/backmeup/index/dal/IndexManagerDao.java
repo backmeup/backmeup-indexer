@@ -39,4 +39,6 @@ public interface IndexManagerDao extends BaseDao<RunningIndexUserConfig> {
 
 	RunningIndexUserConfig findConfigByDriveLetter(String driveLetter);
 
+    void deleteAll();
+
 }

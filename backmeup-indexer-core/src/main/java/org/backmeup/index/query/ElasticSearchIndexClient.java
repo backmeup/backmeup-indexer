@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.backmeup.index.IndexManager;
 import org.backmeup.index.api.IndexClient;
 import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.model.FileInfo;
@@ -39,10 +38,6 @@ public class ElasticSearchIndexClient implements IndexClient {
 
     private final User userId;
     private final Client client;
-
-    public ElasticSearchIndexClient(User userId, IndexManager indexManager) {
-        this(userId, indexManager.initAndCreateAndDoEverthing(userId));
-    }
 
     public ElasticSearchIndexClient(User userId, Client client) {
         this.userId = userId;
