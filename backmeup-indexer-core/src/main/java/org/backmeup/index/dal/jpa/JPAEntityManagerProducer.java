@@ -16,11 +16,13 @@ public class JPAEntityManagerProducer {
     @RequestScoped
     public EntityManager create() {
         return this.entityManagerFactory.createEntityManager();
+        // TODO PK log/debug if this is called for each request
     }
 
     public void destroy(@Disposes EntityManager manager) {
         if (manager.isOpen())
             manager.close();
+        // TODO PK log/debug if this is called for each request
     }
 
 }
