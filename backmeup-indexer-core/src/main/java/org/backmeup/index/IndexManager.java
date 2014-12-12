@@ -71,6 +71,8 @@ public class IndexManager {
                 return this.getESTransportClient(userId.intValue());
 
             } catch (IndexManagerCoreException e1) {
+                // rollback the startup steps that were already performed
+                this.shutdownInstance(userId.intValue());
                 this.log.error("failed to startup/connect with running instance and return a client object for user "
                         + userId + ". Returning null", e1);
 
@@ -321,12 +323,35 @@ public class IndexManager {
         }
 
         // 7) check instance up and running
-        try {
-            getESClusterState(Long.valueOf(userID));
-        } catch (SearchProviderException e1) {
-            String s = "startupInstance for userID: " + userID + " step7 - failed";
-            this.log.debug(s, e1);
-            throw e1;
+        int sleepSeconds = 2;
+        int maxAttempts = 3;
+        boolean loop = true;
+        int count = 1;
+        while (loop) {
+            try {
+
+                //try to receive a clusterstate reply
+                getESClusterState(Long.valueOf(userID));
+                loop = false;
+                this.log.debug("startupInstance for userID: " + userID + " step7 - ok");
+
+            } catch (SearchProviderException e1) {
+                String s = "startupInstance for userID: " + userID
+                        + " step7 - waiting for cluster reply. number of attempts: " + count;
+                this.log.debug(s, e1);
+
+                if (count == maxAttempts) {
+                    s = "startupInstance for userID: " + userID + " step7 - failed";
+                    this.log.debug(s, e1);
+                    throw e1;
+                }
+                try {
+                    //give cluster a change to startup and wait - max x times
+                    Thread.sleep(sleepSeconds * 1000);
+                } catch (InterruptedException e) {
+                }
+            }
+            count++;
         }
 
         // 8) register a timeout for this instance
