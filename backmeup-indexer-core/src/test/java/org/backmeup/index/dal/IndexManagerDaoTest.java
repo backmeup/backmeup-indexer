@@ -110,7 +110,7 @@ public class IndexManagerDaoTest {
         config.setTcpPort(8888);
         config.setClusterName("testname");
         config.setMountedDriveLetter("/etc/home");
-        config.setUserID(Long.valueOf(77));
+        config.setUserID(77L);
         return config;
     }
 

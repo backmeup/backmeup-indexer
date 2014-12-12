@@ -62,13 +62,13 @@ public class IndexManager {
             //keep instance running for another 20 minutes
             this.indexKeepAliveTimer.extendTTL20(userId);
             //return the client handle
-            return this.getESTransportClient(userId.intValue());
+            return this.getESTransportClient(userId);
 
         } catch (SearchProviderException e) {
             //in this case we need to fire up an ES instance for this user
             try {
-                this.startupInstance(userId.intValue());
-                return this.getESTransportClient(userId.intValue());
+                this.startupInstance(userId);
+                return this.getESTransportClient(userId);
 
             } catch (IndexManagerCoreException e1) {
                 // rollback the startup steps that were already performed
@@ -90,7 +90,7 @@ public class IndexManager {
     private URL defaultHost;
 
     @Inject
-    private EntityManager entityManager;
+    private EntityManager entityManager; // TODO PK remove from here, wrong layer!
 
     @Inject
     private IndexManagerDao dao;
@@ -195,7 +195,7 @@ public class IndexManager {
                         this.log.debug("skipping recovery - instance not responding for " + config.getHostAddress()
                                 + " and userID: " + config.getUserID() + " and httpPort: " + config.getHttpPort());
                         //not reachable - try to clean up the mess
-                        this.shutdownInstance(config.getUserID().intValue());
+                        this.shutdownInstance(config.getUserID());
                     }
                 } else {
                     this.log.debug("skipping recovery - " + config.getHostAddress()
@@ -223,7 +223,7 @@ public class IndexManager {
      * @throws IllegalArgumentException
      *             when the TrueCrypt instance was not configured properly
      */
-    public synchronized void startupInstance(int userID) throws IndexManagerCoreException {
+    public synchronized void startupInstance(Long userID) throws IndexManagerCoreException {
 
         this.log.debug("startupInstance for userID: " + userID + " started");
 
@@ -293,7 +293,7 @@ public class IndexManager {
             URI uri = new URI("http", InetAddress.getLocalHost().getHostAddress() + "", "", "");
 
             // keep a database record of this configuration
-            RunningIndexUserConfig runningConfig = new RunningIndexUserConfig(Long.valueOf(userID), uri.toURL(),
+            RunningIndexUserConfig runningConfig = new RunningIndexUserConfig(userID, uri.toURL(),
                     tcpPort, httpPort, "user" + userID, tcMountedDriveLetter, fTCContainer.getAbsolutePath());
 
             // persist the configuration
@@ -331,7 +331,7 @@ public class IndexManager {
             try {
 
                 //try to receive a clusterstate reply
-                getESClusterState(Long.valueOf(userID));
+                getESClusterState(userID);
                 loop = false;
                 this.log.debug("startupInstance for userID: " + userID + " step7 - ok");
 
@@ -355,13 +355,13 @@ public class IndexManager {
         }
 
         // 8) register a timeout for this instance
-        this.indexKeepAliveTimer.extendTTL20(Long.valueOf(userID));
+        this.indexKeepAliveTimer.extendTTL20(userID);
     }
 
     /**
      * Handles the shutdown (rollback) of TC, ES, Sharing, DB-persistency, etc. for a given instance
      */
-    public synchronized void shutdownInstance(int userID) {
+    public synchronized void shutdownInstance(Long userID) {
         this.log.debug("shutdownInstance for userID: " + userID + " started");
 
         //1. get the perstisted records from DB
@@ -413,7 +413,7 @@ public class IndexManager {
         this.log.debug("shutdownInstance for userID: " + userID + " completed ok");
 
         //7. remove entries in the garbage collector
-        this.indexKeepAliveTimer.flagAsShutdown(Long.valueOf(userID));
+        this.indexKeepAliveTimer.flagAsShutdown(userID);
     }
 
     /**
@@ -423,7 +423,7 @@ public class IndexManager {
         // get all running instances according to the DB entries
         List<RunningIndexUserConfig> runningConfigs = this.dao.getAllESInstanceConfigs(host);
         for (RunningIndexUserConfig con : runningConfigs) {
-            shutdownInstance(con.getUserID().intValue());
+            shutdownInstance(con.getUserID());
         }
     }
 
@@ -466,8 +466,8 @@ public class IndexManager {
         // TODO delete all working directories?
     }
 
-    public RunningIndexUserConfig getRunningIndexUserConfig(int userID) {
-        return this.dao.findConfigByUserId(Long.valueOf(userID));
+    public RunningIndexUserConfig getRunningIndexUserConfig(Long userID) {
+        return this.dao.findConfigByUserId(userID);
     }
 
     private int getFreeESHttpPort() {
@@ -484,11 +484,10 @@ public class IndexManager {
      * Cleans up the available and used port mapping and updates the database This method does not stop running ES and
      * TC instances
      */
-    private void releaseRunningInstanceMapping(int userID) throws IOException {
-
+    private void releaseRunningInstanceMapping(Long userID) throws IOException {
         try {
             this.entityManager.getTransaction().begin();
-            RunningIndexUserConfig config = this.dao.findById(Long.valueOf(userID));
+            RunningIndexUserConfig config = this.dao.findById(userID);
             this.availableESInstances.get(this.defaultHost).addAvailableHTTPPort(config.getHttpPort());
             this.availableESInstances.get(this.defaultHost).addAvailableTCPPort(config.getTcpPort());
 
@@ -505,7 +504,7 @@ public class IndexManager {
      * Inits a user specific elasticsearch instance i.e. copies the container file and registers it within the
      * themis-datasink
      */
-    private void init(int userID) {
+    private void init(Long userID) {
         // TODO fix weakness currently all copied TC container files have the
         // same default password as this cannot be changed via TC command line
         // interface. idea: keep default password but encrypt the container file
@@ -521,7 +520,7 @@ public class IndexManager {
     /**
      * Configures and returns a Client to ElasticSearch to interact with for a specific user
      */
-    public Client getESTransportClient(int userID) throws SearchProviderException {
+    public Client getESTransportClient(Long userID) throws SearchProviderException {
         //TODO Keep Clients and last accessed timestamp? 
         RunningIndexUserConfig conf = getRunningIndexUserConfig(userID);
         if (conf != null) {
@@ -546,12 +545,12 @@ public class IndexManager {
      */
     public ClusterState getESClusterState(Long userId) throws SearchProviderException {
         //check if we've got a DB record
-        RunningIndexUserConfig config = getRunningIndexUserConfig(userId.intValue());
+        RunningIndexUserConfig config = getRunningIndexUserConfig(userId);
         if (config == null) {
             throw new SearchProviderException("No RunningIndexUserConfig found for userId: " + userId);
         }
         try {
-            Client client = this.getESTransportClient(userId.intValue());
+            Client client = this.getESTransportClient(userId);
             //request clusterstate and cluster health
             ClusterState clusterState = client.admin().cluster().state(new ClusterStateRequest())
                     .actionGet(10, TimeUnit.SECONDS).getState();
@@ -595,11 +594,11 @@ public class IndexManager {
     /**
      * Gets the user's working directory on the temporary file share to operate the index upon
      */
-    public static String getUserDataWorkingDir(int userID) {
+    public static String getUserDataWorkingDir(Long userID) {
         return getUserDataWorkingDirRoot() + "/user" + userID;
     }
 
-    private File copyTCContainerFileToLocalWorkingDir(File f, int userID) throws IOException {
+    private File copyTCContainerFileToLocalWorkingDir(File f, Long userID) throws IOException {
         return FileUtils.copyFileUsingChannel(f, new File(getUserDataWorkingDir(userID)
                 + "/index/elasticsearch_userdata_TC_150MB.tc"));
     }
@@ -607,7 +606,7 @@ public class IndexManager {
     /**
      * Deletes the working directory for a given user including all files within it
      */
-    private void deleteLocalWorkingDir(int userID) {
+    private void deleteLocalWorkingDir(Long userID) {
         File f = new File(getUserDataWorkingDir(userID));
         if (f.exists()) {
             FileUtils.deleteDirectory(f);

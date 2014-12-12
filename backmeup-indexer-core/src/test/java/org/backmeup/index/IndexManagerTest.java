@@ -43,9 +43,9 @@ public class IndexManagerTest extends IndexManagerSetup {
 
     @Test
     public void testESandTCLaunchTest() throws IndexManagerCoreException, IOException {
-        this.indexManager.startupInstance(999992);
+        this.indexManager.startupInstance(999992L);
 
-        RunningIndexUserConfig conf = this.indexManager.getRunningIndexUserConfig(999992);
+        RunningIndexUserConfig conf = this.indexManager.getRunningIndexUserConfig(999992L);
         int httpPort = conf.getHttpPort();
         String drive = conf.getMountedTCDriveLetter();
         Assert.assertNotNull("mounting TC data drive for user should not fail", drive);
@@ -59,11 +59,11 @@ public class IndexManagerTest extends IndexManagerSetup {
 
     @Test
     public void testUserStartupArtefakts() throws IndexManagerCoreException {
-        this.indexManager.startupInstance(999991);
-        File fTC = new File(IndexManager.getUserDataWorkingDir(999991) + "/index/elasticsearch_userdata_TC_150MB.tc");
+        this.indexManager.startupInstance(999991L);
+        File fTC = new File(IndexManager.getUserDataWorkingDir(999991L) + "/index/elasticsearch_userdata_TC_150MB.tc");
         Assert.assertTrue("Local copy of the TC data container should exist", fTC.exists());
 
-        File fYML = new File(IndexManager.getUserDataWorkingDir(999991) + "/index/elasticsearch.config.user" + 999991
+        File fYML = new File(IndexManager.getUserDataWorkingDir(999991L) + "/index/elasticsearch.config.user" + 999991
                 + ".yml");
         Assert.assertTrue("User specific ES YML file should exist", fYML.exists());
     }
@@ -71,7 +71,7 @@ public class IndexManagerTest extends IndexManagerSetup {
     @Test
     public void testFailForMissingConfig() throws IndexManagerCoreException {
         this.exception.expect(IndexManagerCoreException.class);
-        this.indexManager.getESTransportClient(999992);
+        this.indexManager.getESTransportClient(999992L);
     }
 
     @Test
@@ -88,10 +88,10 @@ public class IndexManagerTest extends IndexManagerSetup {
     @Test
     public void testConnectViaTransportClient() throws IndexManagerCoreException, IOException {
 
-        this.indexManager.startupInstance(999992);
+        this.indexManager.startupInstance(999992L);
 
         // check instance up and running
-        RunningIndexUserConfig conf = this.indexManager.getRunningIndexUserConfig(999992);
+        RunningIndexUserConfig conf = this.indexManager.getRunningIndexUserConfig(999992L);
         int httpPort = conf.getHttpPort();
         String drive = conf.getMountedTCDriveLetter();
         Assert.assertNotNull("mounting TC data drive for user should not fail", drive);
@@ -123,16 +123,15 @@ public class IndexManagerTest extends IndexManagerSetup {
         System.out.println("Deleted Index: " + delresponse.getIndex());
         Assert.assertTrue(delresponse.getIndex().equals("twitter"));
         client.close();
-
     }
 
     @Test
     public void testCreateIndexElementViaHttpClient() throws IndexManagerCoreException, IOException {
 
-        this.indexManager.startupInstance(999991);
+        this.indexManager.startupInstance(999991L);
         System.out.println("startup done");
 
-        RunningIndexUserConfig conf = this.indexManager.getRunningIndexUserConfig(999991);
+        RunningIndexUserConfig conf = this.indexManager.getRunningIndexUserConfig(999991L);
 
         int httpPort = conf.getHttpPort();
         URL host = conf.getHostAddress();

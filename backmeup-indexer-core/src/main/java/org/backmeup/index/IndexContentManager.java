@@ -39,24 +39,24 @@ public class IndexContentManager {
      * 
      * @return the UUID of the object for userB
      */
-    public static UUID shareIndexFragment(int fromUserID, int withUserID, UUID objectID) throws IOException {
+    public static UUID shareIndexFragment(Long fromUserID, Long withUserID, UUID objectID) throws IOException {
         // TODO
         return null;
     }
 
-    public static void revokeIndexFragmentSharing(int fromUserID, int withUserID, UUID objectID) throws IOException {
+    public static void revokeIndexFragmentSharing(Long fromUserID, Long withUserID, UUID objectID) throws IOException {
         // TODO
     }
 
-    public void importSharedIndexFragmentInES(UUID objectID, int userID) {
+    public void importSharedIndexFragmentInES(UUID objectID, Long userID) {
         // TODO
     }
 
-    public void removeSharedIndexFragmentFromES(UUID objectID, int userID) {
+    public void removeSharedIndexFragmentFromES(UUID objectID, Long userID) {
         // TODO
     }
 
-    public void importAllSharedIndexFragmentsInES(int userID) {
+    public void importAllSharedIndexFragmentsInES(Long userID) {
 
     }
 
@@ -64,14 +64,14 @@ public class IndexContentManager {
      * The ES index gets dropped. The IndexDocuments within the user's fragment directory + the shared fragments from
      * other users are taken to rebuild the index from scratch
      */
-    public static void rebuildESIndexFromFileBasis(int userID) {
+    public static void rebuildESIndexFromFileBasis(Long userID) {
         // TODO drop ES index, take all fragments on disk an rebuild it
     }
 
     /**
      * Imports all user owned index fragments into ES which have not yet been imported into the index
      */
-    public void importOwnedIndexFragmentInES(int userID) {
+    public void importOwnedIndexFragmentInES(Long userID) {
 
         List<UUID> uuids = ThemisDataSink.getAllIndexFragmentUUIDs(userID, IndexFragmentType.TO_IMPORT_USER_OWNED);
         for (UUID uuid : uuids) {
@@ -94,7 +94,7 @@ public class IndexContentManager {
         }
     }
 
-    private void importIndexFragmentInES(IndexDocument doc, int userID) {
+    private void importIndexFragmentInES(IndexDocument doc, Long userID) {
         try {
             Client client = indexManager.getESTransportClient(userID);
             index(client, doc);
@@ -122,7 +122,7 @@ public class IndexContentManager {
         return response;
     }
 
-    public void removeOwnedIndexFragmentInES(UUID objectID, int userID) {
+    public void removeOwnedIndexFragmentInES(UUID objectID, Long userID) {
 
     }
 }

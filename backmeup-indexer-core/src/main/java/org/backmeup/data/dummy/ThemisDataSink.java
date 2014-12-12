@@ -41,7 +41,7 @@ public class ThemisDataSink {
     /**
      * Fetches the user specific TrueCrypt container file which is stored within the user space
      */
-    public static File getIndexTrueCryptContainer(int userID) throws IOException {
+    public static File getIndexTrueCryptContainer(Long userID) throws IOException {
         String s = getDataSinkHome(userID) + "/user" + userID + "/index/elasticsearch_userdata_TC_150MB.tc";
         File f = new File(s);
         if (f.exists() && f.canRead()) {
@@ -58,7 +58,7 @@ public class ThemisDataSink {
      *            the user specific yml ES startup file
      */
     @SuppressWarnings("resource") // new FileInputStream(f) is closed inside FileUtils.copyInputStreamToFile
-    public static void saveIndexTrueCryptContainer(File f, int userID) throws IOException {
+    public static void saveIndexTrueCryptContainer(File f, Long userID) throws IOException {
         if (f == null) {
             throw new IOException("file f is null");
         }
@@ -71,7 +71,7 @@ public class ThemisDataSink {
         }
     }
 
-    public static void saveIndexTrueCryptContainer(InputStream in, int userID) throws IOException {
+    public static void saveIndexTrueCryptContainer(InputStream in, Long userID) throws IOException {
         if (in == null) {
             throw new IOException("file is null");
         }
@@ -83,8 +83,7 @@ public class ThemisDataSink {
     /**
      * Removes the user specific TrueCrypt volume from the users file space
      */
-    public static void deleteIndexTrueCryptContainer(int userID) throws IOException {
-
+    public static void deleteIndexTrueCryptContainer(Long userID) throws IOException {
         File f = getIndexTrueCryptContainer(userID);
         f.delete();
     }
@@ -92,7 +91,7 @@ public class ThemisDataSink {
     /**
      * Persists a shared IndexDocument from userA with userB
      */
-    public static void saveSharedIndexFragment(int userIDShares, int userIDToShareWith, UUID indexFragmentRef)
+    public static void saveSharedIndexFragment(Long userIDShares, Long userIDToShareWith, UUID indexFragmentRef)
             throws IOException {
         // TODO OR REMOVE
     }
@@ -101,7 +100,7 @@ public class ThemisDataSink {
      * Persists an IndexDocument within the user's index-fragments space in the DataSink. Distinguishes between
      * imported, shared or already indexed IndexDocuments
      */
-    public static UUID saveIndexFragment(IndexDocument indexFragment, int userID, IndexFragmentType type)
+    public static UUID saveIndexFragment(IndexDocument indexFragment, Long userID, IndexFragmentType type)
             throws IOException {
 
         if (userID <= -1) {
@@ -144,7 +143,7 @@ public class ThemisDataSink {
 
     }
 
-    public static IndexDocument getIndexFragment(UUID objectID, int userID, IndexFragmentType type) throws IOException {
+    public static IndexDocument getIndexFragment(UUID objectID, Long userID, IndexFragmentType type) throws IOException {
         File f = getIndexFragmentFile(objectID, userID, type);
 
         if (userID > -1 && (f.exists() && f.canRead())) {
@@ -165,7 +164,7 @@ public class ThemisDataSink {
                 + f.exists() + ", file is readable? " + f.canRead());
     }
 
-    private static File getIndexFragmentFile(UUID objectID, int userID, IndexFragmentType type) {
+    private static File getIndexFragmentFile(UUID objectID, Long userID, IndexFragmentType type) {
         return new File(getDataSinkHome(userID) + "/user" + userID + "/index-fragments/" + type.getStorageLocation()
                 + objectID + ".serindexdocument");
     }
@@ -173,7 +172,7 @@ public class ThemisDataSink {
     /**
      * Returns a list of all index-fragment UUIDs the user currently has stored within his data source repository
      */
-    public static List<UUID> getAllIndexFragmentUUIDs(int userID, IndexFragmentType type) {
+    public static List<UUID> getAllIndexFragmentUUIDs(Long userID, IndexFragmentType type) {
         List<UUID> ret = new ArrayList<>();
         File f = new File(getDataSinkHome(userID) + "/user" + userID + "/index-fragments/" + type.getStorageLocation());
 
@@ -199,7 +198,7 @@ public class ThemisDataSink {
         return ret;
     }
 
-    public static void deleteIndexFragment(UUID objectID, int userID, IndexFragmentType type) throws IOException {
+    public static void deleteIndexFragment(UUID objectID, Long userID, IndexFragmentType type) throws IOException {
         File f = getIndexFragmentFile(objectID, userID, type);
 
         if (userID > -1 && (f.exists() && f.canRead())) {
@@ -211,7 +210,7 @@ public class ThemisDataSink {
         }
     }
 
-    public static void deleteAllIndexFragments(int userID, IndexFragmentType type) throws IOException {
+    public static void deleteAllIndexFragments(Long userID, IndexFragmentType type) throws IOException {
         for (UUID uuid : getAllIndexFragmentUUIDs(userID, type)) {
             deleteIndexFragment(uuid, userID, type);
         }
@@ -220,7 +219,7 @@ public class ThemisDataSink {
     /**
      * Returns the root directory for the Themis Datensenke dummy implementation
      */
-    private static String getDataSinkHome(int userID) {
+    private static String getDataSinkHome(Long userID) {
         String s = Configuration.getProperty("themis-datasink.home.dir");
         if (s != null && s.length() > 0 && !s.contains("\"")) {
             File f = new File(s);

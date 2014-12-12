@@ -17,8 +17,8 @@ public class IndexManagerSetup {
 
     @After
     public void after() {
-        indexManager.shutdownInstance(999991);
-        indexManager.shutdownInstance(999992);
+        indexManager.shutdownInstance(999991L);
+        indexManager.shutdownInstance(999992L);
         closeEntityManager();
     }
 

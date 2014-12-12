@@ -29,7 +29,7 @@ public class IndexGarbageCollectionTask implements Runnable {
         for (Long userId : userIDs) {
             log.info("IndexCoreGarbageCollector executing shutdown for userID: " + userId);
             //iterate over all instances to shutdown
-            indexManager.shutdownInstance(userId.intValue()); // TODO PK make it long and change all signatures
+            indexManager.shutdownInstance(userId); 
             //flag them as done within the timer
             indexKeepAliveTimer.flagAsShutdown(userId);
         }

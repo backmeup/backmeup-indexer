@@ -17,7 +17,7 @@ public class IndexFragmentSharingTest extends IndexManagerSetup {
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
-    /* private RunningIndexUserConfig startupInstance(int userID) throws IndexManagerCoreException, IOException {
+    /* private RunningIndexUserConfig startupInstance(Long userID) throws IndexManagerCoreException, IOException {
 
          this.indexManager.startupInstance(userID);
          RunningIndexUserConfig conf = this.indexManager.getRunningIndexUserConfig(userID);
