@@ -41,6 +41,7 @@ import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.transport.RemoteTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,7 +93,7 @@ public class IndexManager {
     @Inject
     private IndexKeepAliveTimer indexKeepAliveTimer;
 
-    @SuppressWarnings("unused")
+    //@SuppressWarnings("unused")
     // need to instantiate in order for the timer to start running
     @Inject
     private IndexCoreGarbageCollector cleanupTask;
@@ -100,6 +101,11 @@ public class IndexManager {
     @PostConstruct
     public void startupIndexManager() {
         try {
+            //add .toString() for eagerly initializing ApplicationScoped Beans
+            this.cleanupTask.toString();
+            this.indexKeepAliveTimer.toString();
+
+            //initialization of IndexManager managed ElasticSearch instances
             initAvailableInstances();
         } catch (MalformedURLException | URISyntaxException | UnknownHostException e) {
             this.log.error("IndexManager initialization failed ", e);
@@ -525,7 +531,7 @@ public class IndexManager {
 
             this.log.debug("get ES Cluster state for userID: " + userId + " " + clusterState.status().toString());
             return clusterState;
-        } catch (NoNodeAvailableException e) {
+        } catch (NoNodeAvailableException | RemoteTransportException e) {
             //TODO AL update to ElasticSearch 1.2.1 which fixes the NoNodeAvailableExeption which sometimes occurs
             //https://github.com/jprante/elasticsearch-knapsack/issues/49
             this.log.debug("Get ES cluster state for userID: " + userId + " threw exception: " + e.toString());
