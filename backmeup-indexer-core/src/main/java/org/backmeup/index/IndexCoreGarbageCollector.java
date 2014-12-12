@@ -30,6 +30,8 @@ public class IndexCoreGarbageCollector {
     @Inject
     private IndexKeepAliveTimer indexKeepAliveTimer;
 
+    private final int MINUTES_BETWEEN_GBCOLLECTION = 7;
+
     @PostConstruct
     public void init() {
         this.log.debug("startup garbage collector timer (ApplicationScoped) - started");
@@ -37,10 +39,12 @@ public class IndexCoreGarbageCollector {
             @Override
             public void run() {
                 IndexCoreGarbageCollector.this.log
-                        .debug("started running garbage collection for ElasticSearch Instances no longer in use at "
-                                + getFormatedDate(new Date(System.currentTimeMillis())));
+                        .debug("started running garbage collection for ElasticSearch Instances no longer in use. intervall= "
+                                + IndexCoreGarbageCollector.this.MINUTES_BETWEEN_GBCOLLECTION + " minutes");
                 List<Long> userIDs = IndexCoreGarbageCollector.this.indexKeepAliveTimer.getUsersToShutdown();
-                IndexCoreGarbageCollector.this.log.debug("found " + userIDs.size() + " instances to shutdown");
+                int openInstances = IndexCoreGarbageCollector.this.indexKeepAliveTimer.countOpenInstances();
+                IndexCoreGarbageCollector.this.log.debug("Open ES instances: " + openInstances
+                        + " marked instances for shutdown: " + userIDs.size());
 
                 for (Long userId : userIDs) {
                     IndexCoreGarbageCollector.this.log.info("IndexCoreGarbageCollector executing shutdown for userID: "
@@ -53,7 +57,8 @@ public class IndexCoreGarbageCollector {
             }
         };
 
-        this.scheduler.scheduleAtFixedRate(cleanup, 10, 10, MINUTES);
+        this.scheduler.scheduleAtFixedRate(cleanup, this.MINUTES_BETWEEN_GBCOLLECTION,
+                this.MINUTES_BETWEEN_GBCOLLECTION, MINUTES);
         this.log.debug("startup garbage collector timer (ApplicationScoped) - completed");
 
     }

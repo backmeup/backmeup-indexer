@@ -33,6 +33,8 @@ import org.backmeup.index.dal.jpa.JPADataAccessLayer;
 import org.backmeup.index.error.IndexManagerCoreException;
 import org.backmeup.index.error.UserDataStorageException;
 import org.backmeup.index.utils.file.FileUtils;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
@@ -525,11 +527,14 @@ public class IndexManager {
         }
         try {
             Client client = this.getESTransportClient(userId.intValue());
+            //request clusterstate and cluster health
             ClusterState clusterState = client.admin().cluster().state(new ClusterStateRequest())
                     .actionGet(10, TimeUnit.SECONDS).getState();
+            ClusterHealthResponse clusterHealthResponse = client.admin().cluster().health(new ClusterHealthRequest())
+                    .actionGet(10, TimeUnit.SECONDS);
             client.close();
 
-            this.log.debug("get ES Cluster state for userID: " + userId + " " + clusterState.status().toString());
+            this.log.debug("get ES Cluster health state for userID: " + userId + " " + clusterHealthResponse.toString());
             return clusterState;
         } catch (NoNodeAvailableException | RemoteTransportException e) {
             //TODO AL update to ElasticSearch 1.2.1 which fixes the NoNodeAvailableExeption which sometimes occurs

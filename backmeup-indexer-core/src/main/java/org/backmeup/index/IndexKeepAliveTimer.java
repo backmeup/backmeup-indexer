@@ -25,7 +25,7 @@ public class IndexKeepAliveTimer {
      */
     public synchronized void extendTTL20(Long userID) {
         Date d = new Date(System.currentTimeMillis() + this.minutes * 60 * 1000);
-        this.log.debug("IndexKeepAliveTimer extended ES Instance TTL for userID: " + userID + "until: "
+        this.log.debug("IndexKeepAliveTimer extended ES Instance TTL for userID: " + userID + " until: "
                 + getFormatedDate(d));
 
         this.lastAccessLog.put(userID, d);
@@ -61,6 +61,15 @@ public class IndexKeepAliveTimer {
             this.log.debug("IndexKeepAliveTimer flag ES instances for userID: " + userID
                     + "as shutdown, removed reocrds in timer");
         }
+    }
+
+    /**
+     * Returns the number of currently initialized instances, managed by this class
+     * 
+     * @return
+     */
+    public synchronized int countOpenInstances() {
+        return this.lastAccessLog.size();
     }
 
     private boolean isOverdue(Date testDate) {
