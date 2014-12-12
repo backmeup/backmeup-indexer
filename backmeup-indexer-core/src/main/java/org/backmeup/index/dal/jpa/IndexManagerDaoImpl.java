@@ -6,7 +6,7 @@ import java.util.List;
 
 import javax.enterprise.context.RequestScoped;
 import javax.persistence.EntityManager;
-import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 
 import org.backmeup.index.core.model.RunningIndexUserConfig;
 import org.backmeup.index.dal.IndexManagerDao;
@@ -25,7 +25,7 @@ public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
 
 	@Override
 	public RunningIndexUserConfig findConfigByUser(User userID) {
-		Query q = this.entityManager.createQuery("SELECT u FROM " + TABLENAME
+	    TypedQuery<RunningIndexUserConfig> q = createTypedQuery("SELECT u FROM " + TABLENAME
 				+ " u WHERE u.userId = :userId");
 		q.setParameter("userId", userID.id());
 		return executeQuerySelectFirst(q);
@@ -39,8 +39,7 @@ public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
 			String url = host.getProtocol() + "://" + host.getHost();
 			Integer httpPort = host.getPort();
 
-			Query q = this.entityManager
-					.createQuery("SELECT u FROM "
+			TypedQuery<RunningIndexUserConfig> q = createTypedQuery("SELECT u FROM "
 							+ TABLENAME
 							+ " u WHERE u.httpPort = :httpport and u.hostaddress =:hostaddr");
 			System.out.println("running findConfigByHttpPort query for: "
@@ -66,12 +65,12 @@ public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
 		return null;
 	}
 
-	private RunningIndexUserConfig executeQuerySelectFirst(Query q) {
+	private RunningIndexUserConfig executeQuerySelectFirst(TypedQuery<RunningIndexUserConfig> q) {
 		List<RunningIndexUserConfig> indexConfig = executeQuery(q);
         return indexConfig.size() > 0 ? indexConfig.get(0) : null;
 	}
 
-    private List<RunningIndexUserConfig> executeQuery(Query q) {
+    private List<RunningIndexUserConfig> executeQuery(TypedQuery<RunningIndexUserConfig> q) {
         List<RunningIndexUserConfig> indexConfig = q.getResultList();
         if (indexConfig != null && indexConfig.size() > 0) {
             return indexConfig;
@@ -81,21 +80,25 @@ public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
 
 	@Override
 	public List<RunningIndexUserConfig> getAllESInstanceConfigs() {
-		Query q = this.entityManager.createQuery("SELECT u FROM " + TABLENAME + " u");
+	    TypedQuery<RunningIndexUserConfig> q = createTypedQuery("SELECT u FROM " + TABLENAME + " u");
         return executeQuery(q);
 	}
 
 	@Override
 	public List<RunningIndexUserConfig> getAllESInstanceConfigs(URL url) {
 		if (url != null) {
-			Query q = this.entityManager.createQuery("SELECT u FROM " + TABLENAME
-					+ " u WHERE u.hostaddress = :instance");
+		    TypedQuery<RunningIndexUserConfig> q = createTypedQuery("SELECT u FROM " + TABLENAME
+                    		+ " u WHERE u.hostaddress = :instance");
 			q.setParameter("instance", url.toExternalForm());
 			return executeQuery(q);
 		} 
 
 		return new ArrayList<>();
 	}
+
+    private TypedQuery<RunningIndexUserConfig> createTypedQuery(String sql) {
+        return this.entityManager.createQuery(sql, RunningIndexUserConfig.class);
+    }
 
     @Override
     public void deleteAll() {

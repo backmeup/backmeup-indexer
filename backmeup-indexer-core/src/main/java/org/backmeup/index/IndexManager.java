@@ -512,6 +512,7 @@ public class IndexManager {
 
             // now try to connect with the TransportClient - requires the
             // transport.tcp.port for connection
+            @SuppressWarnings("resource") // this is a factory method
             Client client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(conf
                     .getHostAddress().getHost(), conf.getTcpPort()));
             return client;
@@ -533,14 +534,12 @@ public class IndexManager {
         if (config == null) {
             throw new SearchProviderException("No RunningIndexUserConfig found for userId: " + userId);
         }
-        try {
-            Client client = this.getESTransportClient(userId);
+        try (Client client = this.getESTransportClient(userId)) {
             //request clusterstate and cluster health
             ClusterState clusterState = client.admin().cluster().state(new ClusterStateRequest())
                     .actionGet(10, TimeUnit.SECONDS).getState();
             ClusterHealthResponse clusterHealthResponse = client.admin().cluster().health(new ClusterHealthRequest())
                     .actionGet(10, TimeUnit.SECONDS);
-            client.close();
 
             this.log.debug("get ES Cluster health state for userID: " + userId + " " + clusterHealthResponse.toString());
             return clusterState;

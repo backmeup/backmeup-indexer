@@ -2,6 +2,7 @@ package org.backmeup.index;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -78,12 +79,12 @@ public class IndexManagerTest extends IndexManagerSetup {
     @Test
     public void testRetrieveTransportClientAndClusterState() throws IndexManagerCoreException {
         //startup or get running instance
-        Client client = this.indexManager.initAndCreateAndDoEverthing(_999992L);
-        assertNotNull(client);
-        ClusterState state = this.indexManager.getESClusterState(_999992L);
-        assertNotNull(state);
-        assertEquals(new ClusterName("user999992"), state.getClusterName());
-        client.close();
+        try (Client client = this.indexManager.initAndCreateAndDoEverthing(_999992L)) {
+            assertNotNull(client);
+            ClusterState state = this.indexManager.getESClusterState(_999992L);
+            assertNotNull(state);
+            assertEquals(new ClusterName("user999992"), state.getClusterName());
+        }
     }
 
     @Test
@@ -95,35 +96,34 @@ public class IndexManagerTest extends IndexManagerSetup {
         RunningIndexUserConfig conf = this.indexManager.getRunningIndexUserConfig(_999992L);
         int httpPort = conf.getHttpPort();
         String drive = conf.getMountedTCDriveLetter();
-        Assert.assertNotNull("mounting TC data drive for user should not fail", drive);
-        Assert.assertTrue("ES http portnumber should have been assigned", httpPort > -1);
+        assertNotNull("mounting TC data drive for user should not fail", drive);
+        assertTrue("ES http portnumber should have been assigned", httpPort > -1);
         System.out.println("user 999992 on port: " + httpPort + " and TC volume: " + drive);
 
-        Assert.assertTrue("ES Instance is not running ",
+        assertTrue("ES Instance is not running ",
                 ESConfigurationHandler.isElasticSearchInstanceRunning(conf.getHostAddress(), httpPort));
 
         Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", "user" + 999992).build();
 
         // now try to connect with the TransportClient - requires the transport.tcp.port for connection
-        Client client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(conf
-                .getHostAddress().getHost(), conf.getTcpPort()));
-
-        IndexResponse response = null;
-
-        response = client
-                .prepareIndex("twitter", "tweet", "1")
-                .setSource(
-                        XContentFactory.jsonBuilder().startObject().field("user", "john").field("postDate", new Date())
-                                .field("message", "who dont it work").endObject()).execute().actionGet();
-
-        Assert.assertTrue("Contains Index", response.getIndex().equals("twitter"));
-
-        Assert.assertTrue("Contains Type", response.getType().equals("tweet"));
-
-        DeleteResponse delresponse = client.prepareDelete("twitter", "tweet", "1").execute().actionGet();
-        System.out.println("Deleted Index: " + delresponse.getIndex());
-        Assert.assertTrue(delresponse.getIndex().equals("twitter"));
-        client.close();
+        try (Client client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(conf
+                .getHostAddress().getHost(), conf.getTcpPort()))) {
+            IndexResponse response = null;
+            
+            response = client
+                    .prepareIndex("twitter", "tweet", "1")
+                    .setSource(
+                            XContentFactory.jsonBuilder().startObject().field("user", "john").field("postDate", new Date())
+                            .field("message", "who dont it work").endObject()).execute().actionGet();
+            
+            assertTrue("Contains Index", response.getIndex().equals("twitter"));
+            
+            assertTrue("Contains Type", response.getType().equals("tweet"));
+            
+            DeleteResponse delresponse = client.prepareDelete("twitter", "tweet", "1").execute().actionGet();
+            System.out.println("Deleted Index: " + delresponse.getIndex());
+            assertTrue(delresponse.getIndex().equals("twitter"));
+        }
     }
 
     @Test

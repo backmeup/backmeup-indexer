@@ -24,6 +24,7 @@ public class ElasticSearchSetUp {
     @Inject
     private Transaction transaction;
 
+    @SuppressWarnings("resource") // this is a factory method
     public IndexClient getIndexClient(User userId) {
         Client elasticClient = startInstance(userId);
         return createIndexClient(userId, elasticClient);

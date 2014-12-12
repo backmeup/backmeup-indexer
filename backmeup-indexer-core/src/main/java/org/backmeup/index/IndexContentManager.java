@@ -15,7 +15,6 @@ import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
 import org.backmeup.index.query.ElasticSearchIndexClient;
 import org.backmeup.index.serializer.Json;
-import org.elasticsearch.client.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,8 +95,7 @@ public class IndexContentManager {
 
     private void importIndexFragmentInES(IndexDocument doc, User userID) {
         try {
-            Client client = indexManager.getESTransportClient(userID);
-            try (IndexClient indexClient = new ElasticSearchIndexClient(userID, client)) {
+            try (IndexClient indexClient = new ElasticSearchIndexClient(userID, indexManager.getESTransportClient(userID))) {
                 indexClient.index(doc);
             }
 

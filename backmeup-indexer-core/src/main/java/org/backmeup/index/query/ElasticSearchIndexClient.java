@@ -220,11 +220,12 @@ public class ElasticSearchIndexClient implements IndexClient {
     @Override
     public void index(IndexDocument document) throws IOException {
         this.logger.debug("Pushing to ES index...");
-        XContentBuilder elasticBuilder = new ElasticContentBuilder(document).asElastic();
-        IndexResponse response = this.client.prepareIndex(INDEX_NAME, DOCUMENT_TYPE_BACKUP).setSource(elasticBuilder).setRefresh(true)
-                .execute().actionGet();
-        this.logger.debug("ingested in index: " + response.getIndex() + " type: " + response.getType() + " id: "
-                + response.getId());
+        try(XContentBuilder elasticBuilder = new ElasticContentBuilder(document).asElastic()) {
+            IndexResponse response = this.client.prepareIndex(INDEX_NAME, DOCUMENT_TYPE_BACKUP).setSource(elasticBuilder).setRefresh(true)
+                    .execute().actionGet();
+            this.logger.debug("ingested in index: " + response.getIndex() + " type: " + response.getType() + " id: "
+                    + response.getId());
+        }
         this.logger.debug("Done sending IndexDocument to ES");
     }
 
