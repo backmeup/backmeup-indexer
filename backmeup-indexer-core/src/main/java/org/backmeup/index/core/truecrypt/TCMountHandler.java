@@ -25,18 +25,20 @@ class TCMountHandler {
      *            the truecrypt volume
      * @param password
      *            the volumes password
-     * @param driveLetter
+     * @param proposedDriveLetter
      *            suggestion where to mount the volume, if already in use the volume will get mounted on a different
      *            drive
      * @return returns the drive where the partition has been mounted
      */
-    public static String mount(File tcVolume, String password, String driveLetter) throws IOException,
+    public static String mount(File tcVolume, String password, String proposedDriveLetter) throws IOException,
             InterruptedException, ExceptionInInitializerError, IllegalArgumentException {
-
+        
         // 1. check if a driveLetter is given and if it's allowed according to
         // config
-        boolean allowed = isAllowedDriveLetter(driveLetter);
-        if (!allowed) {
+        String driveLetter;
+        if (isAllowedDriveLetter(proposedDriveLetter)) {
+            driveLetter = proposedDriveLetter;
+        } else {
             // get an allowed drive letter
             driveLetter = getSupportedDriveLetters().get(0);
         }
@@ -127,8 +129,8 @@ class TCMountHandler {
             }
 
             log.debug("waiting for command t finish");
-            int errorCode = process.waitFor();
-            // TODO Andrew, use the exit code if maybe it is ok
+            process.waitFor();
+            // TODO Andrew, use the exit code if maybe it is ok - int errorCode = process.waitFor(); 
 
         } catch (IOException | InterruptedException e) {
             log.error("Error executing: " + command + " " + e.toString());
