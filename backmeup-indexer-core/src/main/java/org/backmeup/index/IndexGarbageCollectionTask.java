@@ -20,7 +20,7 @@ public class IndexGarbageCollectionTask implements Runnable {
     @Inject
     private IndexKeepAliveTimer indexKeepAliveTimer;
 
-    @RunRequestScoped
+    @RunRequestScoped(reason="Background timer task is called each n minutes outside of request handling")
     @Override
     public void run() {
         log.debug("started running garbage collection for ElasticSearch Instances no longer in use.");

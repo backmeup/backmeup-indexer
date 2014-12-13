@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="http://www.code-cop.org/">Peter Kofler</a>
  * @see "https://docs.jboss.org/weld/reference/latest/en-US/html/contexts.html"
  */
-@RunRequestScoped
+@RunRequestScoped(reason="Describes the reason why a method needs another scope.")
 @Interceptor
 public class CdiBackgroundAsRequestScopeInterceptor {
 

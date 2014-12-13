@@ -11,4 +11,5 @@ import javax.interceptor.InterceptorBinding;
 @Target({ ElementType.METHOD, ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RunRequestScoped {
+    String reason();
 }

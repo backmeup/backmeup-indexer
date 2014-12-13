@@ -7,8 +7,6 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
@@ -83,7 +81,7 @@ public class IndexManager {
     @Inject
     private IndexKeepAliveTimer indexKeepAliveTimer;
 
-    @RunRequestScoped
+    @RunRequestScoped(reason="Lifecycle method is called from context listener after application start")
     public void startupIndexManager() {
         // Initialisation of IndexManager managed ElasticSearch instances
         syncManagerAfterStartupFromDBRecords(searchInstance.getDefaultHost());
@@ -91,7 +89,7 @@ public class IndexManager {
         this.log.debug("startup() IndexManager (ApplicationScoped) completed");
     }
 
-    @RunRequestScoped
+    @RunRequestScoped(reason="Lifecycle method is called from context listener before application stop")
     public void shutdownIndexManager() {
         this.log.debug("shutdown IndexManager (ApplicationScoped) started");
 
