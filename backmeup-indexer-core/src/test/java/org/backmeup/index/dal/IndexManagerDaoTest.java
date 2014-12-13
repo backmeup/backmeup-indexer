@@ -7,19 +7,12 @@ import static org.junit.Assert.assertTrue;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
-import java.util.Properties;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 
 import org.backmeup.index.core.model.RunningIndexUserConfig;
-import org.backmeup.index.dal.jpa.IndexManagerDaoImpl;
-import org.backmeup.index.dal.jpa.JPAEntityManagerFactoryProducer;
 import org.backmeup.index.model.User;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.internal.util.reflection.Whitebox;
 
 /**
  * Tests the JPA Hibernate storage and retrieval layer for index user
@@ -27,36 +20,14 @@ import org.mockito.internal.util.reflection.Whitebox;
  */
 public class IndexManagerDaoTest {
 
-    private EntityManagerFactory entityManagerFactory;
-    private EntityManager entityManager;
-    private IndexManagerDao indexManagerDao;
+    @Rule
+    public final DerbyDatabase database = new DerbyDatabase();
+    
+    private IndexManagerDao indexManagerDao;  
 
     @Before
-    public void createEntityManager() {
-        this.entityManagerFactory = new JPAEntityManagerFactoryProducer(overwrittenJPAProps()).create();
-        this.entityManager = this.entityManagerFactory.createEntityManager();
-
-        indexManagerDao = new IndexManagerDaoImpl();
-        Whitebox.setInternalState(indexManagerDao, "entityManager", entityManager);
-    }
-
-    // TODO PK duplicated with IndexManagerSetup, extract to test db helper
-    private Properties overwrittenJPAProps() {
-        Properties overwrittenJPAProps = new Properties();
-
-        overwrittenJPAProps.setProperty("javax.persistence.jdbc.driver", "org.apache.derby.jdbc.EmbeddedDriver");
-        overwrittenJPAProps.setProperty("javax.persistence.jdbc.url", "jdbc:derby:target/junit;create=true");
-
-        overwrittenJPAProps.setProperty("hibernate.dialect", "org.hibernate.dialect.DerbyTenSevenDialect");
-        overwrittenJPAProps.setProperty("hibernate.hbm2ddl.auto", "create");
-
-        return overwrittenJPAProps;
-    }
-
-    @After
-    public void closeEntityManager() {
-        this.entityManager.close();
-        new JPAEntityManagerFactoryProducer().destroy(this.entityManagerFactory);
+    public void getDaoFromDb() {
+        indexManagerDao = database.indexManagerDao;
     }
 
     @Test
@@ -116,9 +87,9 @@ public class IndexManagerDaoTest {
     }
 
     private void persistInTransaction(RunningIndexUserConfig config) {
-        this.entityManager.getTransaction().begin(); // TODO PK this needs to go away
+        database.entityManager.getTransaction().begin(); // TODO PK this needs to go away
         indexManagerDao.save(config);
-        this.entityManager.getTransaction().commit();
+        database.entityManager.getTransaction().commit();
     }
 
 }
