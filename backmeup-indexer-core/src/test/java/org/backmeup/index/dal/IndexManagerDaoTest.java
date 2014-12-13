@@ -13,15 +13,16 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 import org.backmeup.index.core.model.RunningIndexUserConfig;
-import org.backmeup.index.dal.jpa.JPADataAccessLayer;
+import org.backmeup.index.dal.jpa.IndexManagerDaoImpl;
 import org.backmeup.index.dal.jpa.JPAEntityManagerFactoryProducer;
 import org.backmeup.index.model.User;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.internal.util.reflection.Whitebox;
 
 /**
- * Tests the JPA hibernate storage and retrieval layer for index user
+ * Tests the JPA Hibernate storage and retrieval layer for index user
  * configurations via derby DB with hibernate.hbm2ddl.auto=create
  */
 public class IndexManagerDaoTest {
@@ -35,10 +36,8 @@ public class IndexManagerDaoTest {
         this.entityManagerFactory = new JPAEntityManagerFactoryProducer(overwrittenJPAProps()).create();
         this.entityManager = this.entityManagerFactory.createEntityManager();
 
-        JPADataAccessLayer dal = new JPADataAccessLayer();
-        dal.setEntityManager(this.entityManager);
-
-        indexManagerDao = dal.createIndexManagerDao();
+        indexManagerDao = new IndexManagerDaoImpl();
+        Whitebox.setInternalState(indexManagerDao, "entityManager", entityManager);
     }
 
     // TODO PK duplicated with IndexManagerSetup, extract to test db helper
@@ -117,7 +116,7 @@ public class IndexManagerDaoTest {
     }
 
     private void persistInTransaction(RunningIndexUserConfig config) {
-        this.entityManager.getTransaction().begin();
+        this.entityManager.getTransaction().begin(); // TODO PK this needs to go away
         indexManagerDao.save(config);
         this.entityManager.getTransaction().commit();
     }

@@ -2,6 +2,7 @@ package org.backmeup.index.dal.jpa;
 
 import java.lang.reflect.ParameterizedType;
 
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
@@ -14,12 +15,13 @@ import org.backmeup.index.dal.BaseDao;
  * @param <T> The model class to use
  */
 public abstract class BaseDaoImpl<T> implements BaseDao<T> {
+    @Inject
     protected EntityManager entityManager;
-    private Class<T> entityClass;
+
+    private final Class<T> entityClass;
 
     @SuppressWarnings("unchecked")
-    public BaseDaoImpl(EntityManager em) {
-        this.entityManager = em;
+    public BaseDaoImpl() {
         ParameterizedType superType = (ParameterizedType) this.getClass().getGenericSuperclass();
         entityClass = (Class<T>) superType.getActualTypeArguments()[0];
     }

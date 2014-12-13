@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.enterprise.context.RequestScoped;
-import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import org.backmeup.index.core.model.RunningIndexUserConfig;
@@ -18,10 +17,6 @@ public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
 
 	private static final String TABLENAME = RunningIndexUserConfig.class
 			.getSimpleName();
-
-	public IndexManagerDaoImpl(EntityManager em) {
-		super(em);
-	}
 
 	@Override
 	public RunningIndexUserConfig findConfigByUser(User userID) {
