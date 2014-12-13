@@ -1,4 +1,4 @@
-package org.backmeup.index.dal;
+package org.backmeup.index.dal.jpa;
 
 import javax.inject.Inject;
 import javax.interceptor.AroundInvoke;
@@ -18,10 +18,10 @@ import org.slf4j.LoggerFactory;
  */
 @Transactional
 @Interceptor
-public class TransactionInterceptor {
+public class JPATransactionInterceptor {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     @Inject
     private EntityManager entityManager;
 

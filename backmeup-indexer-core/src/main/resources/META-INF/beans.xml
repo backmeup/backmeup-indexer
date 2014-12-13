@@ -11,6 +11,6 @@
       http://java.sun.com/xml/ns/javaee/beans_1_0.xsd">
 
     <interceptors>
-        <class>org.backmeup.index.dal.TransactionInterceptor</class>
+        <class>org.backmeup.index.dal.jpa.JPATransactionInterceptor</class>
     </interceptors>
 </beans>

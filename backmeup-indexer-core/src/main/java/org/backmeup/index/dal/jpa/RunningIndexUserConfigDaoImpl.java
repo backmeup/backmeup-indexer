@@ -9,7 +9,6 @@ import javax.persistence.TypedQuery;
 
 import org.backmeup.index.core.model.RunningIndexUserConfig;
 import org.backmeup.index.dal.RunningIndexUserConfigDao;
-import org.backmeup.index.dal.Transactional;
 import org.backmeup.index.model.User;
 
 @RequestScoped

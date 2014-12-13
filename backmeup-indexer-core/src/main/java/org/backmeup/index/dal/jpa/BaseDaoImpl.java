@@ -7,7 +7,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import org.backmeup.index.dal.BaseDao;
-import org.backmeup.index.dal.Transactional;
 
 /**
  * Realizes the CRUD operations for a model class <T> based on the JPA
