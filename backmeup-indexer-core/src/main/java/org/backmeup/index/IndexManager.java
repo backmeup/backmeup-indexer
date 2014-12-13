@@ -4,6 +4,8 @@ import java.io.File;
 import java.net.URL;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
@@ -78,7 +80,7 @@ public class IndexManager {
     @Inject
     private IndexKeepAliveTimer indexKeepAliveTimer;
 
-    @RunRequestScoped(reason="Lifecycle method is called from context listener after application start")
+    @RunRequestScoped
     public void startupIndexManager() {
         // Initialisation of IndexManager managed ElasticSearch instances
         syncManagerAfterStartupFromDBRecords(searchInstance.getDefaultHost());
@@ -86,7 +88,7 @@ public class IndexManager {
         this.log.debug("startup() IndexManager (ApplicationScoped) completed");
     }
 
-    @RunRequestScoped(reason="Lifecycle method is called from context listener before application stop")
+    @RunRequestScoped
     public void shutdownIndexManager() {
         this.log.debug("shutdown IndexManager (ApplicationScoped) started");
 
