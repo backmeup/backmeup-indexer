@@ -13,6 +13,7 @@ import org.backmeup.index.api.IndexClient;
 import org.backmeup.index.core.elasticsearch.SearchInstanceException;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
+import org.backmeup.index.query.ES;
 import org.backmeup.index.query.ElasticSearchIndexClient;
 import org.backmeup.index.serializer.Json;
 import org.slf4j.Logger;
@@ -29,7 +30,7 @@ public class IndexContentManager {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     @Inject
-    private static IndexManager indexManager;
+    private static ES es;
 
     /**
      * User A grants permission to user B on a specific indexDocument This is copied into user B's public drop off area
@@ -95,7 +96,7 @@ public class IndexContentManager {
 
     private void importIndexFragmentInES(IndexDocument doc, User userID) {
         try {
-            try (IndexClient indexClient = new ElasticSearchIndexClient(userID, indexManager.getESTransportClient(userID))) {
+            try (IndexClient indexClient = new ElasticSearchIndexClient(userID, es.getESTransportClient(userID))) {
                 indexClient.index(doc);
             }
 

@@ -45,9 +45,9 @@ public class IndexManagerTest extends IndexManagerSetup {
 
     @Test
     public void testESandTCLaunchTest() throws IndexManagerCoreException, IOException {
-        this.indexManager.startupInstance(_999992L);
+        this.startup.startupNewInstance(_999992L);
 
-        RunningIndexUserConfig conf = this.indexManager.getRunningIndexUserConfig(_999992L);
+        RunningIndexUserConfig conf = dao.findConfigByUser(_999992L);
         int httpPort = conf.getHttpPort();
         String drive = conf.getMountedTCDriveLetter();
         Assert.assertNotNull("mounting TC data drive for user should not fail", drive);
@@ -61,7 +61,7 @@ public class IndexManagerTest extends IndexManagerSetup {
 
     @Test
     public void testUserStartupArtefakts() throws IndexManagerCoreException {
-        this.indexManager.startupInstance(_999991L);
+        this.startup.startupNewInstance(_999991L);
         File fTC = new File(UserDataWorkingDir.getDir(_999991L) + "/index/elasticsearch_userdata_TC_150MB.tc");
         Assert.assertTrue("Local copy of the TC data container should exist", fTC.exists());
 
@@ -73,7 +73,7 @@ public class IndexManagerTest extends IndexManagerSetup {
     @Test
     public void testFailForMissingConfig() throws IndexManagerCoreException {
         this.exception.expect(IndexManagerCoreException.class);
-        this.indexManager.getESTransportClient(_999992L);
+        this.es.getESTransportClient(_999992L);
     }
 
     @Test
@@ -81,7 +81,7 @@ public class IndexManagerTest extends IndexManagerSetup {
         //startup or get running instance
         try (Client client = this.indexManager.initAndCreateAndDoEverthing(_999992L)) {
             assertNotNull(client);
-            ClusterState state = this.indexManager.getESClusterState(_999992L);
+            ClusterState state = es.getESClusterState(_999992L);
             assertNotNull(state);
             assertEquals(new ClusterName("user999992"), state.getClusterName());
         }
@@ -90,10 +90,10 @@ public class IndexManagerTest extends IndexManagerSetup {
     @Test
     public void testConnectViaTransportClient() throws IndexManagerCoreException, IOException {
 
-        this.indexManager.startupInstance(_999992L);
+        this.startup.startupNewInstance(_999992L);
 
         // check instance up and running
-        RunningIndexUserConfig conf = this.indexManager.getRunningIndexUserConfig(_999992L);
+        RunningIndexUserConfig conf = dao.findConfigByUser(_999992L);
         int httpPort = conf.getHttpPort();
         String drive = conf.getMountedTCDriveLetter();
         assertNotNull("mounting TC data drive for user should not fail", drive);
@@ -129,10 +129,10 @@ public class IndexManagerTest extends IndexManagerSetup {
     @Test
     public void testCreateIndexElementViaHttpClient() throws IndexManagerCoreException, IOException {
 
-        this.indexManager.startupInstance(_999991L);
+        this.startup.startupNewInstance(_999991L);
         System.out.println("startup done");
 
-        RunningIndexUserConfig conf = this.indexManager.getRunningIndexUserConfig(_999991L);
+        RunningIndexUserConfig conf = dao.findConfigByUser(_999991L);
 
         int httpPort = conf.getHttpPort();
         URL host = conf.getHostAddress();
