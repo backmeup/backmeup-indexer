@@ -8,6 +8,7 @@ import java.util.Set;
 
 import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.IndexDocument;
+import org.backmeup.index.model.User;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -38,6 +39,20 @@ public class Json {
         @Override
         public JsonElement serialize(Date src, Type typeOfSrc, JsonSerializationContext context) {
             return new JsonPrimitive(src.getTime());
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private static class UserSerializer implements com.google.gson.JsonSerializer<User>, JsonDeserializer<User> {
+        
+        @Override
+        public User deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+            return new User(json.getAsLong());
+        }
+        
+        @Override
+        public JsonElement serialize(User src, Type typeOfSrc, JsonSerializationContext context) {
+            return new JsonPrimitive(src.id());
         }
     }
 
@@ -80,6 +95,7 @@ public class Json {
 
     static {
         builder.registerTypeAdapter(Date.class, new DateSerializer());
+        builder.registerTypeAdapter(User.class, new UserSerializer());
         builder.registerTypeAdapter(IndexDocument.class, new IndexDocumentSerializer());
     }
 
