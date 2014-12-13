@@ -8,17 +8,22 @@ import javax.enterprise.context.RequestScoped;
 import javax.persistence.TypedQuery;
 
 import org.backmeup.index.core.model.RunningIndexUserConfig;
-import org.backmeup.index.dal.IndexManagerDao;
+import org.backmeup.index.dal.RunningIndexUserConfigDao;
+import org.backmeup.index.dal.Transactional;
 import org.backmeup.index.model.User;
 
 @RequestScoped
-public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
-		implements IndexManagerDao {
+public class RunningIndexUserConfigDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
+		implements RunningIndexUserConfigDao {
 
 	private static final String TABLENAME = RunningIndexUserConfig.class
 			.getSimpleName();
 
-	@Override
+	public RunningIndexUserConfigDaoImpl() {
+        super(RunningIndexUserConfig.class);
+    }
+
+    @Override
 	public RunningIndexUserConfig findConfigByUser(User userID) {
 	    TypedQuery<RunningIndexUserConfig> q = createTypedQuery("SELECT u FROM " + TABLENAME
 				+ " u WHERE u.userId = :userId");
@@ -95,6 +100,7 @@ public class IndexManagerDaoImpl extends BaseDaoImpl<RunningIndexUserConfig>
         return this.entityManager.createQuery(sql, RunningIndexUserConfig.class);
     }
 
+    @Transactional
     @Override
     public void deleteAll() {
         this.entityManager.createQuery("DELETE FROM +" + TABLENAME).executeUpdate();

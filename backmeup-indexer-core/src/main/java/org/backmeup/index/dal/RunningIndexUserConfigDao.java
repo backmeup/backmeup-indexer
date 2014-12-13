@@ -13,7 +13,7 @@ import org.backmeup.index.model.User;
  * from DB this contains ES (Elastic Search) and TC (True Crypt) port and drive
  * to user ID mappings
  */
-public interface IndexManagerDao extends BaseDao<RunningIndexUserConfig> {
+public interface RunningIndexUserConfigDao extends BaseDao<RunningIndexUserConfig> {
 
 	RunningIndexUserConfig findConfigByUser(User userID);
 

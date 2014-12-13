@@ -17,7 +17,7 @@ import org.backmeup.index.core.elasticsearch.SearchInstanceException;
 import org.backmeup.index.core.elasticsearch.SearchInstances;
 import org.backmeup.index.core.model.RunningIndexUserConfig;
 import org.backmeup.index.core.truecrypt.EncryptionProvider;
-import org.backmeup.index.dal.IndexManagerDao;
+import org.backmeup.index.dal.RunningIndexUserConfigDao;
 import org.backmeup.index.model.User;
 import org.backmeup.index.query.ES;
 import org.elasticsearch.client.Client;
@@ -78,7 +78,7 @@ public class IndexManager {
     @Inject 
     private SearchInstances searchInstance;
     @Inject
-    private IndexManagerDao dao;
+    private RunningIndexUserConfigDao dao;
     @Inject
     private IndexKeepAliveTimer indexKeepAliveTimer;
     @Inject 

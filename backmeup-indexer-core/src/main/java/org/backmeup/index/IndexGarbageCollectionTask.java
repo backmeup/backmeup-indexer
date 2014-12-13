@@ -5,7 +5,6 @@ import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import org.backmeup.index.dal.Transaction;
 import org.backmeup.index.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,21 +19,10 @@ public class IndexGarbageCollectionTask implements Runnable {
     @Inject
     private IndexKeepAliveTimer indexKeepAliveTimer;
 
-    // needs its own transaction because this is a background thread
-    @Inject
-    private Transaction transaction;
+    // TODO PK needs its own transaction because this is a background thread
 
     @Override
     public void run() {
-        transaction.inside(new Runnable() {
-            @Override
-            public void run() {
-                runWithTransaction();
-            }
-        });
-    }
-
-    private void runWithTransaction() {
         log.debug("started running garbage collection for ElasticSearch Instances no longer in use.");
         List<User> userIDs = indexKeepAliveTimer.getUsersToShutdown();
 

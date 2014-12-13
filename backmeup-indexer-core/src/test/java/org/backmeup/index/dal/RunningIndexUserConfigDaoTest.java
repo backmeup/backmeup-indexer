@@ -18,12 +18,12 @@ import org.junit.Test;
  * Tests the JPA Hibernate storage and retrieval layer for index user
  * configurations via derby DB with hibernate.hbm2ddl.auto=create
  */
-public class IndexManagerDaoTest {
+public class RunningIndexUserConfigDaoTest {
 
     @Rule
     public final DerbyDatabase database = new DerbyDatabase();
     
-    private IndexManagerDao indexManagerDao;  
+    private RunningIndexUserConfigDao indexManagerDao;  
 
     @Before
     public void getDaoFromDb() {

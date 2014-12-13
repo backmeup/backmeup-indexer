@@ -4,7 +4,7 @@ import org.backmeup.index.core.datacontainer.UserDataStorage;
 import org.backmeup.index.core.elasticsearch.SearchInstances;
 import org.backmeup.index.core.truecrypt.EncryptionProvider;
 import org.backmeup.index.dal.DerbyDatabase;
-import org.backmeup.index.dal.IndexManagerDao;
+import org.backmeup.index.dal.RunningIndexUserConfigDao;
 import org.backmeup.index.model.User;
 import org.backmeup.index.query.ES;
 import org.junit.After;
@@ -18,7 +18,7 @@ public class IndexManagerSetup {
     public final DerbyDatabase database = new DerbyDatabase();
     
     protected IndexManager indexManager; 
-    protected IndexManagerDao dao; 
+    protected RunningIndexUserConfigDao dao; 
 
     @After
     public void after() {

@@ -7,6 +7,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import org.backmeup.index.dal.BaseDao;
+import org.backmeup.index.dal.Transactional;
 
 /**
  * Realizes the CRUD operations for a model class <T> based on the JPA
@@ -20,10 +21,8 @@ public abstract class BaseDaoImpl<T> implements BaseDao<T> {
 
     private final Class<T> entityClass;
 
-    @SuppressWarnings("unchecked")
-    public BaseDaoImpl() {
-        ParameterizedType superType = (ParameterizedType) this.getClass().getGenericSuperclass();
-        entityClass = (Class<T>) superType.getActualTypeArguments()[0];
+    public BaseDaoImpl(Class<T> entityClass) {
+        this.entityClass = entityClass;
     }
 
     @Override
@@ -37,6 +36,7 @@ public abstract class BaseDaoImpl<T> implements BaseDao<T> {
         return item;
     }
 
+    @Transactional
     @Override
     public boolean delete(T entity) {
         T deletedEntity = entityManager.merge(entity);
@@ -44,6 +44,7 @@ public abstract class BaseDaoImpl<T> implements BaseDao<T> {
         return true;
     }
 
+    @Transactional
     @Override
     public T save(T entity) {
         T savedEntity = entityManager.merge(entity);

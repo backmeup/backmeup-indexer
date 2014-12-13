@@ -5,7 +5,7 @@ import java.util.Properties;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
-import org.backmeup.index.dal.jpa.IndexManagerDaoImpl;
+import org.backmeup.index.dal.jpa.RunningIndexUserConfigDaoImpl;
 import org.backmeup.index.dal.jpa.JPAEntityManagerFactoryProducer;
 import org.junit.rules.ExternalResource;
 import org.mockito.internal.util.reflection.Whitebox;
@@ -14,14 +14,14 @@ public class DerbyDatabase extends ExternalResource {
 
     private EntityManagerFactory entityManagerFactory;
     public EntityManager entityManager;
-    public IndexManagerDao indexManagerDao;
+    public RunningIndexUserConfigDao indexManagerDao;
 
     @Override
     protected void before() {
         this.entityManagerFactory = new JPAEntityManagerFactoryProducer(overwrittenJPAProps()).create();
         this.entityManager = this.entityManagerFactory.createEntityManager();
 
-        indexManagerDao = new IndexManagerDaoImpl();
+        indexManagerDao = new RunningIndexUserConfigDaoImpl();
         Whitebox.setInternalState(indexManagerDao, "entityManager", entityManager);
     }
 
