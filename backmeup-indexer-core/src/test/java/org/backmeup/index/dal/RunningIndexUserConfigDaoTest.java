@@ -87,7 +87,8 @@ public class RunningIndexUserConfigDaoTest {
     }
 
     private void persistInTransaction(RunningIndexUserConfig config) {
-        database.entityManager.getTransaction().begin(); // TODO PK this needs to go away
+        // need manual transaction in test because transactional interceptor is not installed in tests
+        database.entityManager.getTransaction().begin(); 
         indexManagerDao.save(config);
         database.entityManager.getTransaction().commit();
     }
