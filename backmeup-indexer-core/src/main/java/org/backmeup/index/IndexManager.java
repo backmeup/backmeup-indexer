@@ -21,6 +21,9 @@ import org.backmeup.index.dal.IndexManagerDao;
 import org.backmeup.index.model.User;
 import org.backmeup.index.query.ES;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.transport.NoNodeAvailableException;
+import org.elasticsearch.cluster.ClusterState;
+import org.elasticsearch.transport.RemoteTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -129,7 +132,7 @@ public class IndexManager {
                     //check the instance's state
                     try {
                         //check if the instance is still up and running
-                        es.getESClusterState(config.getUser());
+                        getESClusterState(config.getUser());
                         // remove host + port from available ones
                         searchInstance.takeHostPorts(config);
                         //register this instance for GarbageCollection
@@ -302,4 +305,32 @@ public class IndexManager {
         return this.dao.findConfigByUser(userID);
     }
 
+    /**
+     * Configures and returns a Client to ElasticSearch to interact with for a specific user
+     */
+    public Client getESTransportClient(User userID) throws SearchInstanceException {
+        //TODO Keep Clients and last accessed timestamp? 
+        RunningIndexUserConfig conf = getRunningIndexUserConfig(userID);
+        return es.getESTransportClient(conf);
+    }
+
+    /**
+     * Retrieves the ClusterState of a mounted ES cluster for a given userID
+     * 
+     * @throws SearchInstanceException
+     *             if now instance is available
+     */
+    public ClusterState getESClusterState(User userId) throws SearchInstanceException {
+        RunningIndexUserConfig conf = getRunningIndexUserConfig(userId);
+        
+        try (Client client = es.getESTransportClient(conf)) {
+            return es.getESClusterState(userId, client);
+        } catch (NoNodeAvailableException | RemoteTransportException e) {
+            //TODO AL update to ElasticSearch 1.2.1 which fixes the NoNodeAvailableExeption which sometimes occurs
+            //https://github.com/jprante/elasticsearch-knapsack/issues/49
+            this.log.debug("Get ES cluster state for userID: " + userId + " threw exception: " + e.toString());
+            throw new SearchInstanceException("Clusterstate for userID: " + userId + " " + "Cluster not responding");
+        }
+    }
+    
 }

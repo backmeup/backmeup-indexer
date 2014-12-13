@@ -30,7 +30,7 @@ public class IndexContentManager {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     @Inject
-    private ES es;
+    private IndexManager indexManager;
 
     /**
      * User A grants permission to user B on a specific indexDocument This is copied into user B's public drop off area
@@ -96,7 +96,7 @@ public class IndexContentManager {
 
     private void importIndexFragmentInES(IndexDocument doc, User userID) {
         try {
-            try (IndexClient indexClient = new ElasticSearchIndexClient(userID, es.getESTransportClient(userID))) {
+            try (IndexClient indexClient = new ElasticSearchIndexClient(userID, indexManager.getESTransportClient(userID))) {
                 indexClient.index(doc);
             }
 

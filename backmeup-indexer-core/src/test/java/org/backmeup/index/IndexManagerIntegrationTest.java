@@ -69,7 +69,7 @@ public class IndexManagerIntegrationTest extends IndexManagerSetup {
         //startup or get running instance
         try (Client client = this.indexManager.initAndCreateAndDoEverthing(_999992L)) {
             assertNotNull(client);
-            ClusterState state = this.es.getESClusterState(_999992L);
+            ClusterState state = this.indexManager.getESClusterState(_999992L);
             assertNotNull(state);
             assertEquals(new ClusterName("user999992"), state.getClusterName());
         }
