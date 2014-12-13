@@ -39,7 +39,7 @@ public class SearchInstances {
     private URL defaultHost;
 
     public URL getDefaultHost() {
-        return getDefaultHost();
+        return defaultHost;
     }
 
     /**
