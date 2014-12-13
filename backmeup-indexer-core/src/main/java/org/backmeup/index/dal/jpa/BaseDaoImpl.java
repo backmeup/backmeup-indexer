@@ -1,7 +1,5 @@
 package org.backmeup.index.dal.jpa;
 
-import java.lang.reflect.ParameterizedType;
-
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
