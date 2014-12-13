@@ -6,6 +6,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.backmeup.index.model.User;
+import org.backmeup.index.utils.cdi.RunRequestScoped;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,8 +20,7 @@ public class IndexGarbageCollectionTask implements Runnable {
     @Inject
     private IndexKeepAliveTimer indexKeepAliveTimer;
 
-    // TODO PK needs its own transaction because this is a background thread
-
+    @RunRequestScoped
     @Override
     public void run() {
         log.debug("started running garbage collection for ElasticSearch Instances no longer in use.");

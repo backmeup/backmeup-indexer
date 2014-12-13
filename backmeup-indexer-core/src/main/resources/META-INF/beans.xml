@@ -12,5 +12,6 @@
 
     <interceptors>
         <class>org.backmeup.index.dal.jpa.JPATransactionInterceptor</class>
+        <class>org.backmeup.index.rest.cdi.CdiBackgroundAsRequestScopeInterceptor</class>
     </interceptors>
 </beans>
