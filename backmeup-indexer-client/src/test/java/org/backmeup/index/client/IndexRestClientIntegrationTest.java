@@ -15,11 +15,9 @@ import org.backmeup.index.model.SearchResultAccumulator;
 import org.backmeup.index.serializer.Json;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore("only integration with running and deployed Indexer WAR")
-public class IndexUsageIntegrationTest {
+public class IndexRestClientIntegrationTest {
 
     private static final long USER = 16384;
 
