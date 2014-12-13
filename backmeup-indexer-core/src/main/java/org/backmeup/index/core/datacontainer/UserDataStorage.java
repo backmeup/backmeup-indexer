@@ -113,10 +113,12 @@ public class UserDataStorage {
     	}
     }
 
-    public void persistIndexDataBackToContainer(User userID, RunningIndexUserConfig runningInstanceConfig) {
+    public void copyCryptContainerDataBackIntoUserStorage(RunningIndexUserConfig runningInstanceConfig) {
+        User userID = runningInstanceConfig.getUser();
         try {
             
-            ThemisDataSink.saveIndexTrueCryptContainer(new File(runningInstanceConfig.getMountedContainerLocation()), userID);
+            ThemisDataSink.saveIndexTrueCryptContainer(new File(runningInstanceConfig.getMountedContainerLocation()),
+                    userID);
             this.log.debug("shutdownInstance for userID: " + userID + " step4 - ok");
             
         } catch (IOException e) {

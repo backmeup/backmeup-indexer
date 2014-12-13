@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 //TODO solve issue windows restricted to 24 drive letters
 //TODO add linux support 
 
-public class TCMountHandler {
+class TCMountHandler {
 
     private static final Logger log = LoggerFactory.getLogger(TCMountHandler.class);
 

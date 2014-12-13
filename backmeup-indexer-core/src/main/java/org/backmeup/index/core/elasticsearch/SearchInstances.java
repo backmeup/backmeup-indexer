@@ -50,28 +50,31 @@ public class SearchInstances {
      */
     @PostConstruct
     public void initAvailableInstances() throws MalformedURLException, URISyntaxException, UnknownHostException {
-
         this.defaultHost = new URI("http", InetAddress.getLocalHost().getHostAddress() + "", null, null).toURL();
 
+        availableESInstances.clear();
+        this.availableESInstances.put(this.defaultHost, portsForDefaultIndexNode());
+    }
+
+    private AvailableESInstanceState portsForDefaultIndexNode() {
         List<Integer> supportedTcpPorts = new ArrayList<>();
-        List<Integer> supportedHttpPorts = new ArrayList<>();
+        for (int i = 9360; i <= 9399; i++) {
+            supportedTcpPorts.add(i);
+        }
 
         // init the available port range on elasticsearch
         // Note: @see ESConfigurationHandler.checkPortRangeAccepted - these
         // values are currently also hardcoded there
         // TODO reset the port range to 9300 and 9200
-        for (int i = 9360; i <= 9399; i++) {
-            supportedTcpPorts.add(i);
-        }
+        List<Integer> supportedHttpPorts = new ArrayList<>();
         for (int i = 9260; i <= 9299; i++) {
             supportedHttpPorts.add(i);
         }
         AvailableESInstanceState esInstance1 = new AvailableESInstanceState(supportedTcpPorts, supportedHttpPorts);
-        availableESInstances.clear();
-        this.availableESInstances.put(this.defaultHost, esInstance1);
+        return esInstance1;
     }
 
-    public RunningIndexUserConfig createIndexConfig(User userID, File fTCContainer, String tcMountedDriveLetter) {
+    public RunningIndexUserConfig createIndexUserConfig(User userID, File fTCContainer, String tcMountedDriveLetter) {
         try {
             // TODO currently when all available ports are in use the system will throw a NumberFormatException
             int tcpPort = getFreeESTCPPort();
@@ -102,21 +105,13 @@ public class SearchInstances {
         return this.availableESInstances.get(hostAddress) != null;
     }
 
-    public void takeHostPort(RunningIndexUserConfig config) {
+    public void takeHostPorts(RunningIndexUserConfig config) {
         this.availableESInstances.get(config.getHostAddress()).removeAvailableHTTPPort(config.getHttpPort());
         this.availableESInstances.get(config.getHostAddress()).removeAvailableTCPPort(config.getTcpPort());
     }
 
-    /**
-     * Cleans up the available and used port mapping. This method does not stop running ES and
-     * TC instances
-     */
-    public void releaseRunningInstanceMapping(RunningIndexUserConfig config) {
-        this.availableESInstances.get(this.defaultHost).addAvailableHTTPPort(config.getHttpPort());
-        this.availableESInstances.get(this.defaultHost).addAvailableTCPPort(config.getTcpPort());
-    }
-
-    public void createIndexStartFile(User userID, RunningIndexUserConfig runningConfig) {
+    public void createIndexStartFile(RunningIndexUserConfig runningConfig) {
+        User userID = runningConfig.getUser();
         try {
             ESConfigurationHandler.createUserYMLStartupFile(userID, this.defaultHost, runningConfig.getTcpPort(), runningConfig.getHttpPort(),
                     runningConfig.getMountedTCDriveLetter());
@@ -126,7 +121,8 @@ public class SearchInstances {
         }
     }
 
-    public void startIndexNode(User userID, RunningIndexUserConfig runningConfig) {
+    public void startIndexNode(RunningIndexUserConfig runningConfig) {
+        User userID = runningConfig.getUser();
         try {
             ESConfigurationHandler.startElasticSearch(userID);
             this.log.debug("startupInstance for userID: " + userID + " step6 - ok");
@@ -139,7 +135,8 @@ public class SearchInstances {
         }
     }
 
-    public void shutdownNode(User userID, RunningIndexUserConfig config) {
+    public void shutdownIndexNode(RunningIndexUserConfig config) {
+        User userID = config.getUser();
         try {
             ESConfigurationHandler.stopElasticSearch(userID, config);
             this.log.debug("shutdownInstance for userID: " + userID + " step2 - ok");
@@ -148,7 +145,16 @@ public class SearchInstances {
         }
     }
 
-    public void stopAllNodes() {
+    /**
+     * Cleans up the available and used port mapping. This method does not stop running ES and
+     * TC instances
+     */
+    public void releaseHostPorts(RunningIndexUserConfig config) {
+        this.availableESInstances.get(this.defaultHost).addAvailableHTTPPort(config.getHttpPort());
+        this.availableESInstances.get(this.defaultHost).addAvailableTCPPort(config.getTcpPort());
+    }
+    
+    public void shutdownAllIndexNodes() {
         this.log.debug("cleanupRude: started stopping all ES instances");
         // shutdown all elastic search instances
         ESConfigurationHandler.stopAllRude();

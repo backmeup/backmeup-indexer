@@ -2,7 +2,7 @@ package org.backmeup.index.core.elasticsearch;
 
 import java.util.List;
 
-public class AvailableESInstanceState {
+class AvailableESInstanceState {
 
     private final PortList availableTCPPorts;
     private final PortList availableHttpPorts;

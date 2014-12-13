@@ -21,7 +21,7 @@ public class EncryptionProvider {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public String getNextFreeMountPoint(User userID, File fTCContainer) {
+    public String mountNextFreeMountPoint(User userID, File fTCContainer) {
         // TODO currently when all available drives are in use the system will throw an IOException
         String password = "12345";
 
@@ -34,7 +34,8 @@ public class EncryptionProvider {
         }
     }
 
-    public void unmount(User userID, RunningIndexUserConfig runningInstanceConfig) {
+    public void unmount(RunningIndexUserConfig runningInstanceConfig) {
+        User userID = runningInstanceConfig.getUser();
         try {
             String driveLetter = runningInstanceConfig.getMountedTCDriveLetter();
             TCMountHandler.unmount(driveLetter);

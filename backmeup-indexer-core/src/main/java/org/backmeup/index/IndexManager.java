@@ -49,7 +49,7 @@ public class IndexManager {
         if (conf != null) {
             //checks if an ES instance is responding and returns a new client instance if so
 
-            Client client = this.getESTransportClient(userId, conf);
+            Client client = this.getESTransportClient(conf);
             
             // sanity check cluster state
             this.getESClusterState(userId, client);
@@ -142,7 +142,7 @@ public class IndexManager {
                         //check if the instance is still up and running
                         this.getESClusterState(config.getUser());
                         // remove host + port from available ones
-                        searchInstance.takeHostPort(config);
+                        searchInstance.takeHostPorts(config);
                         //register this instance for GarbageCollection
                         this.indexKeepAliveTimer.extendTTL20(config.getUser());
 
@@ -195,24 +195,24 @@ public class IndexManager {
         this.log.debug("startupInstance for userID: " + userID + " step2 - ok");
 
         // 3) Now mount the ES data volume
-        String tcMountedDriveLetter = encryptionProvider.getNextFreeMountPoint(userID, fTCContainer);
+        String tcMountedDriveLetter = encryptionProvider.mountNextFreeMountPoint(userID, fTCContainer);
         this.log.debug("startupInstance for userID: " + userID + " step3 - ok");
 
         // 4) crate a user specific ElasticSearch startup configuration file
-        RunningIndexUserConfig runningConfig = searchInstance.createIndexConfig(userID, fTCContainer, tcMountedDriveLetter);
+        RunningIndexUserConfig runningConfig = searchInstance.createIndexUserConfig(userID, fTCContainer, tcMountedDriveLetter);
 
         // this file contains the user specific ES startup config (data, ports, etc.)
-        searchInstance.createIndexStartFile(userID, runningConfig);
+        searchInstance.createIndexStartFile(runningConfig);
 
         // 5) persist the configuration within the database
         runningConfig = this.dao.save(runningConfig);
         this.log.debug("startupInstance for userID: " + userID + " step5 - ok");
 
         // 6) now power on elasticsearch
-        searchInstance.startIndexNode(userID, runningConfig);
+        searchInstance.startIndexNode(runningConfig);
 
         // 7) check instance up and running
-        Client client = this.getESTransportClient(userID, runningConfig);
+        Client client = this.getESTransportClient(runningConfig);
         
         int maxAttempts = 3;
         int sleepSeconds = 2;
@@ -268,23 +268,25 @@ public class IndexManager {
                     + " step1 - failed, no configuration persisted in db");
             return;
         }
-        shutdownInstance(userID, runningInstanceConfig);
+        shutdownInstance(runningInstanceConfig);
     }
 
-    private synchronized void shutdownInstance(User userID, RunningIndexUserConfig config) {
+    private synchronized void shutdownInstance(RunningIndexUserConfig config) {
+        User userID = config.getUser();
+
         this.log.debug("shutdownInstance for userID: " + userID + " step1 - ok");
 
         //2. shutdown the ElasticSearch Instance
-        searchInstance.shutdownNode(userID, config);
+        searchInstance.shutdownIndexNode(config);
 
         //3. unmount the truecrypt volume
-        encryptionProvider.unmount(userID, config);
+        encryptionProvider.unmount(config);
 
         //4. persist the index data files within the container back to the Themis data sink
-        dataContainer.persistIndexDataBackToContainer(userID, config);
+        dataContainer.copyCryptContainerDataBackIntoUserStorage(config);
 
         //5. remove the userconfiguration from db and release the ports
-        searchInstance.releaseRunningInstanceMapping(config);
+        searchInstance.releaseHostPorts(config);
         
         this.dao.delete(config);
         this.log.debug("shutdownInstance for userID: " + userID + " step4 - ok");
@@ -304,7 +306,7 @@ public class IndexManager {
         // get all running instances according to the DB entries
         List<RunningIndexUserConfig> runningConfigs = this.dao.getAllESInstanceConfigs(host);
         for (RunningIndexUserConfig con : runningConfigs) {
-            shutdownInstance(con.getUser(), con);
+            shutdownInstance(con);
         }
         this.log.debug("shutdown all running ElasticSearch instances on " + host + " completed");
     }
@@ -314,7 +316,7 @@ public class IndexManager {
      * instances
      */
     private void cleanupRude() {
-        searchInstance.stopAllNodes();
+        searchInstance.shutdownAllIndexNodes();
 
         // unmount all open TrueCrypt volumes
         encryptionProvider.unmountAll();
@@ -347,16 +349,16 @@ public class IndexManager {
     public Client getESTransportClient(User userID) throws SearchInstanceException {
         //TODO Keep Clients and last accessed timestamp? 
         RunningIndexUserConfig conf = getRunningIndexUserConfig(userID);
-        return getESTransportClient(userID, conf);
+        return getESTransportClient(conf);
     }
 
-    private Client getESTransportClient(User userID, RunningIndexUserConfig conf) {
+    private Client getESTransportClient(RunningIndexUserConfig conf) {
         //check if we've got a DB record
         if (conf == null) {
-            throw new SearchInstanceException("Failed to create ES TransportClient for userID: " + userID
+            throw new SearchInstanceException("Failed to create ES TransportClient " 
                     + " due to missing RunningIndexUserConfig");
         }
-        
+
         Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", conf.getClusterName()).build();
 
         // now try to connect with the TransportClient - requires the
@@ -375,11 +377,13 @@ public class IndexManager {
      */
     public ClusterState getESClusterState(User userId) throws SearchInstanceException {
         RunningIndexUserConfig conf = getRunningIndexUserConfig(userId);
-        return getESClusterState(userId, conf);
+        return getESClusterState(conf);
     }
 
-    private ClusterState getESClusterState(User userId, RunningIndexUserConfig conf) {
-        try (Client client = this.getESTransportClient(userId, conf)) {
+    private ClusterState getESClusterState(RunningIndexUserConfig conf) {
+        User userId = conf.getUser();
+
+        try (Client client = this.getESTransportClient(conf)) {
             return getESClusterState(userId, client);
         } catch (NoNodeAvailableException | RemoteTransportException e) {
             //TODO AL update to ElasticSearch 1.2.1 which fixes the NoNodeAvailableExeption which sometimes occurs
