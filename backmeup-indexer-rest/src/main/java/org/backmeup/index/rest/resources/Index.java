@@ -24,16 +24,17 @@ import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.SearchResultAccumulator;
 import org.backmeup.index.model.User;
-import org.backmeup.index.query.ElasticSearchSetUp;
+import org.backmeup.index.query.ElasticSearchSetup;
 
 @Path("index")
 @Produces(MediaType.APPLICATION_JSON)
 public class Index implements IndexServer {
 
-    @Inject ElasticSearchSetUp clientFactory;
+    @Inject 
+    private ElasticSearchSetup clientFactory; 
     
-    protected IndexClient getIndexClient(User userId) {
-        return clientFactory.getIndexClient(userId);
+    private IndexClient getIndexClient(User userId) {
+        return clientFactory.createIndexClient(userId);
     }
 
     @Override

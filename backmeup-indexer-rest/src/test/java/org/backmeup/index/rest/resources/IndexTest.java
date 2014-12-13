@@ -25,9 +25,11 @@ import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.SearchEntry;
 import org.backmeup.index.model.SearchResultAccumulator;
 import org.backmeup.index.model.User;
+import org.backmeup.index.query.ElasticSearchSetup;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.internal.util.reflection.Whitebox;
 
 public class IndexTest {
 
@@ -42,14 +44,15 @@ public class IndexTest {
     private static IndexClient indexClient;
 
     public static class IndexWithMockedFactory extends Index {
-        @Override
-        protected IndexClient getIndexClient(User userId) {
-            assertEquals(USER, userId.id());
-
+        public IndexWithMockedFactory() {
             indexClient = mock(IndexClient.class);
-            SearchResultAccumulator sr = oneFile();
-            when(indexClient.queryBackup("find_me", null, null, null, "peter")).thenReturn(sr);
-            return indexClient;
+            when(indexClient.queryBackup("find_me", null, null, null, "peter")).thenReturn(oneFile());
+
+            ElasticSearchSetup clientFactory = mock(ElasticSearchSetup.class);
+            when(clientFactory.createIndexClient(new User(USER))).thenReturn(indexClient);
+            
+            // Note: this depends on private field clientFactory in Index class.
+            Whitebox.setInternalState(this, "clientFactory", clientFactory);
         }
     }
 

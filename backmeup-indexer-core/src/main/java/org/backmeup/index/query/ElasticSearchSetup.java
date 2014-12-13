@@ -17,7 +17,7 @@ import org.elasticsearch.client.Client;
  * @author <a href="http://www.code-cop.org/">Peter Kofler</a>
  */
 @ApplicationScoped
-public class ElasticSearchSetUp {
+public class ElasticSearchSetup {
 
     @Inject
     private IndexManager indexManager;
@@ -25,7 +25,7 @@ public class ElasticSearchSetUp {
     private Transaction transaction;
 
     @SuppressWarnings("resource") // this is a factory method
-    public IndexClient getIndexClient(User userId) {
+    public IndexClient createIndexClient(User userId) {
         Client elasticClient = startInstance(userId);
         return createIndexClient(userId, elasticClient);
     }
