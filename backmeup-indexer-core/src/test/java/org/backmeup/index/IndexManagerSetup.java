@@ -4,20 +4,24 @@ import java.util.Properties;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 
+import org.backmeup.index.core.datacontainer.UserDataStorage;
+import org.backmeup.index.core.elasticsearch.SearchInstances;
+import org.backmeup.index.core.truecrypt.EncryptionProvider;
 import org.backmeup.index.dal.IndexManagerDao;
+import org.backmeup.index.dal.jpa.IndexManagerDaoImpl;
+import org.backmeup.index.dal.jpa.JPAEntityManagerFactoryProducer;
 import org.backmeup.index.model.User;
 import org.backmeup.index.query.ES;
 import org.junit.After;
 import org.junit.Before;
+import org.mockito.internal.util.reflection.Whitebox;
 
 public class IndexManagerSetup {
     protected EntityManagerFactory entityManagerFactory;
     protected EntityManager entityManager;
-    protected IndexManager indexManager; // TODO PK need to inject and all
-    protected ES es; // TODO PK need to inject and all
-    protected IndexManagerDao dao; // TODO PK need to inject and all
+    protected IndexManager indexManager; 
+    protected IndexManagerDao dao; 
 
     @After
     public void after() {
@@ -25,16 +29,19 @@ public class IndexManagerSetup {
         indexManager.shutdownInstance(new User(999992L));
         closeEntityManager();
     }
-
+    
     @Before
     public void before() {
-        createEntityManager();
+        createTestEntityManager();
         createIndexManager();
     }
 
-    public void createEntityManager() {
-        this.entityManagerFactory = Persistence.createEntityManagerFactory("org.backmeup.index.jpa", overwrittenJPAProps());
+    public void createTestEntityManager() {
+        this.entityManagerFactory = new JPAEntityManagerFactoryProducer(overwrittenJPAProps()).create();
         this.entityManager = this.entityManagerFactory.createEntityManager();
+        
+        this.dao = new IndexManagerDaoImpl();
+        Whitebox.setInternalState(dao, "entityManager", entityManager);
     }
 
     public Properties overwrittenJPAProps() {
@@ -51,23 +58,17 @@ public class IndexManagerSetup {
 
     private void createIndexManager() {
         this.indexManager = new IndexManager();
-//        this.indexManager.injectForTests(this.entityManager);
-//        /**
-//         * required for testing purposes to inject a different db configuration
-//         */
-//        void injectForTests(EntityManager em) {
-//            JPADataAccessLayer dal = new JPADataAccessLayer();
-//            dal.setEntityManager(em);
-//            this.dao = dal.createIndexManagerDao();
-//            this.indexKeepAliveTimer = new IndexKeepAliveTimer();
-//        }
-//
-        this.indexManager.startupIndexManager();
+        Whitebox.setInternalState(indexManager, "dao", dao);
+        Whitebox.setInternalState(indexManager, "es", new ES());
+        Whitebox.setInternalState(indexManager, "dataContainer", new UserDataStorage());
+        Whitebox.setInternalState(indexManager, "encryptionProvider", new EncryptionProvider());
+        Whitebox.setInternalState(indexManager, "searchInstance", new SearchInstances());
+        Whitebox.setInternalState(indexManager, "indexKeepAliveTimer", new IndexKeepAliveTimer());
     }
 
     private void closeEntityManager() {
         this.entityManager.close();
-        this.entityManagerFactory.close();
+        new JPAEntityManagerFactoryProducer().destroy(this.entityManagerFactory);
     }
 
 }
