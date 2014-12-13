@@ -119,7 +119,7 @@ public class ESConfigurationHandler {
         try {
             // TODO use ProcessBuilder instead and assign a dedicated amount of
             // memory
-            Process p = Runtime.getRuntime().exec(command);
+            Runtime.getRuntime().exec(command);
             // give ES a chance to startup before returning - wait 10 seconds
             Thread.sleep(10000);
             // p.waitFor();
