@@ -8,7 +8,7 @@ import org.junit.rules.ExpectedException;
  * IndexDocuments, etc) - Importing and deleting fragments from Elastic search itself - rebuilding an ES index from
  * scratch (file basis)
  */
-public class IndexFragmentSharingTest extends IndexManagerSetup {
+public class IndexFragmentSharingIntegrationTest extends IndexManagerSetup {
 
     // TODO Add Startup Class for all Integration Tests
     // TODO @Before -> Put IndexFragment to-import

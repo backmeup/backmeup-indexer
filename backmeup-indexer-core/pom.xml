@@ -123,7 +123,7 @@
                                 <!-- tests need Elastic Search installation, skip by default -->
                                 <exclude>org/backmeup/index/core/elasticsearch/ESConfigurationHandlerTest.java</exclude>
                                 <exclude>org/backmeup/index/core/truecrypt/TCMountHandlerTest.java</exclude>
-                                <exclude>org/backmeup/index/Index*.java</exclude>
+                                <exclude>**/*IntegrationTest.java</exclude>
                             </excludes>
                         </configuration>
                     </plugin>

@@ -35,7 +35,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class IndexManagerTest extends IndexManagerSetup {
+public class IndexManagerIntegrationTest extends IndexManagerSetup {
 
     private static final User _999991L = new User(999991L); // TODO what is special about the user? better name!
     private static final User _999992L = new User(999992L); // TODO what is special about the user? better name!

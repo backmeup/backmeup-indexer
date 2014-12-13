@@ -3,7 +3,7 @@ package org.backmeup.index;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class IndexFragmentImportTest extends IndexManagerSetup {
+public class IndexFragmentImportIntegrationTest extends IndexManagerSetup {
 
     //TODO Datei händisch im Workspace anlegen oder mit UnitTest hin kopieren 
 
