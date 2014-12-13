@@ -6,15 +6,18 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
+import org.backmeup.index.dal.IndexManagerDao;
 import org.backmeup.index.model.User;
+import org.backmeup.index.query.ES;
 import org.junit.After;
 import org.junit.Before;
 
 public class IndexManagerSetup {
-
-    public EntityManagerFactory entityManagerFactory;
-    public EntityManager entityManager;
-    public IndexManager indexManager;
+    protected EntityManagerFactory entityManagerFactory;
+    protected EntityManager entityManager;
+    protected IndexManager indexManager; // TODO PK need to inject and all
+    protected ES es; // TODO PK need to inject and all
+    protected IndexManagerDao dao; // TODO PK need to inject and all
 
     @After
     public void after() {
@@ -48,7 +51,17 @@ public class IndexManagerSetup {
 
     private void createIndexManager() {
         this.indexManager = new IndexManager();
-        this.indexManager.injectForTests(this.entityManager);
+//        this.indexManager.injectForTests(this.entityManager);
+//        /**
+//         * required for testing purposes to inject a different db configuration
+//         */
+//        void injectForTests(EntityManager em) {
+//            JPADataAccessLayer dal = new JPADataAccessLayer();
+//            dal.setEntityManager(em);
+//            this.dao = dal.createIndexManagerDao();
+//            this.indexKeepAliveTimer = new IndexKeepAliveTimer();
+//        }
+//
         this.indexManager.startupIndexManager();
     }
 
