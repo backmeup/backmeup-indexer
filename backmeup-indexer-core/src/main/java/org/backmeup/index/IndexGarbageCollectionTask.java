@@ -46,9 +46,6 @@ public class IndexGarbageCollectionTask implements Runnable {
 
             //iterate over all instances to shutdown
             indexManager.shutdownInstance(userId);
-
-            //flag them as done within the timer
-            indexKeepAliveTimer.flagAsShutdown(userId);
         }
     }
 }
