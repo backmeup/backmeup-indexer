@@ -1,17 +1,11 @@
 package org.backmeup.index;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.InetAddress;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
@@ -20,20 +14,15 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 
-import org.backmeup.data.dummy.ThemisDataSink;
-import org.backmeup.index.config.Configuration;
-import org.backmeup.index.core.elasticsearch.AvailableESInstanceState;
-import org.backmeup.index.core.elasticsearch.ESConfigurationHandler;
-import org.backmeup.index.core.elasticsearch.SearchProviderException;
+import org.backmeup.index.core.datacontainer.UserDataStorage;
+import org.backmeup.index.core.elasticsearch.SearchInstanceException;
+import org.backmeup.index.core.elasticsearch.SearchInstances;
 import org.backmeup.index.core.model.RunningIndexUserConfig;
-import org.backmeup.index.core.truecrypt.EncryptionProviderException;
-import org.backmeup.index.core.truecrypt.TCMountHandler;
+import org.backmeup.index.core.truecrypt.EncryptionProvider;
 import org.backmeup.index.dal.IndexManagerDao;
 import org.backmeup.index.dal.jpa.JPADataAccessLayer;
 import org.backmeup.index.error.IndexManagerCoreException;
-import org.backmeup.index.error.UserDataStorageException;
 import org.backmeup.index.model.User;
-import org.backmeup.index.utils.file.FileUtils;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
@@ -56,40 +45,46 @@ public class IndexManager {
      * communication
      */
     public synchronized Client initAndCreateAndDoEverthing(User userId) {
-        try {
+        RunningIndexUserConfig conf = getRunningIndexUserConfig(userId);
+        if (conf != null) {
             //checks if an ES instance is responding and returns a new client instance if so
-            this.getESClusterState(userId);
+
+            Client client = this.getESTransportClient(userId, conf);
+            
+            // sanity check cluster state
+            this.getESClusterState(userId, client);
+            // TODO this can cause exception, then we would need to shutdown the running/broken instance somehow
 
             //keep instance running for another 20 minutes
             this.indexKeepAliveTimer.extendTTL20(userId);
+            
             //return the client handle
-            return this.getESTransportClient(userId);
+            return client;
+        }
 
-        } catch (SearchProviderException e) {
-            //in this case we need to fire up an ES instance for this user
-            try {
-                this.startupInstance(userId);
-                return this.getESTransportClient(userId);
+        //in this case we need to fire up an ES instance for this user
+        try {
+            return this.startupInstance(userId);
 
-            } catch (IndexManagerCoreException e1) {
-                // rollback the startup steps that were already performed
-                this.shutdownInstance(userId);
-                this.log.error("failed to startup/connect with running instance and return a client object for user "
-                        + userId + ". Returning null", e1);
+        } catch (IndexManagerCoreException e1) {
+            // rollback the startup steps that were already performed
+            this.shutdownInstance(userId);
+            this.log.error("failed to startup/connect with running instance and return a client object for user "
+                    + userId + ". Returning null", e1);
 
-                //in this case return null for now.
-                throw e1;
-            }
+            //in this case return null for now.
+            throw e1;
         }
     }
 
-    // TODO @see ESConfigurationHandler.checkPortRangeAccepted - these values
-    // are currently hard coded there
-
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private final Map<URL, AvailableESInstanceState> availableESInstances = new HashMap<>();
-    private URL defaultHost;
 
+    @Inject 
+    private UserDataStorage dataContainer;
+    @Inject 
+    private EncryptionProvider encryptionProvider;
+    @Inject 
+    private SearchInstances searchInstance;
     @Inject
     private IndexManagerDao dao;
     @Inject
@@ -99,23 +94,18 @@ public class IndexManager {
 
     @PostConstruct
     public void startupIndexManager() {
-        try {
-            if (cleanupTask!=null) {
-                // not in tests, so start it
-             
-                // add .toString() for eagerly initialising ApplicationScoped Beans
-                // need to instantiate in order for the timer to start running
-                this.cleanupTask.toString();
-            }
-
-            // Initialisation of IndexManager managed ElasticSearch instances
-            initAvailableInstances();
-
-            this.log.debug("startup() IndexManager (ApplicationScoped) completed");
-
-        } catch (MalformedURLException | URISyntaxException | UnknownHostException e) {
-            this.log.error("IndexManager initialization failed ", e);
+        if (cleanupTask!=null) {
+            // not in tests, so start it
+         
+            // add .toString() for eagerly initialising ApplicationScoped Beans
+            // need to instantiate in order for the timer to start running
+            this.cleanupTask.toString();
         }
+
+        // Initialisation of IndexManager managed ElasticSearch instances
+        syncManagerAfterStartupFromDBRecords(searchInstance.getDefaultHost());
+
+        this.log.debug("startup() IndexManager (ApplicationScoped) completed");
     }
 
     // TODO PK needs db and transaction in another thread
@@ -124,39 +114,10 @@ public class IndexManager {
         this.log.debug("shutdown IndexManager (ApplicationScoped) started");
 
         //cleanup - shutdown all running instances
-        shutdownAllRunningInstances(this.defaultHost);
-        this.log.debug("shutdown all running ElasticSearch instances on " + this.defaultHost + " completed");
+        shutdownAllRunningInstances(searchInstance.getDefaultHost());
     }
 
     // ========================================================================
-
-    /**
-     * For now this information is static and only synced with running records stored within the DB. TODO - add the
-     * option for cluster configuration in property file - central connection to all cluster instances - lightweight
-     * module to start/stop instances on each cluster instance
-     */
-    private void initAvailableInstances() throws MalformedURLException, URISyntaxException, UnknownHostException {
-
-        this.defaultHost = new URI("http", InetAddress.getLocalHost().getHostAddress() + "", null, null).toURL();
-
-        List<Integer> supportedTcpPorts = new ArrayList<>();
-        List<Integer> supportedHttpPorts = new ArrayList<>();
-
-        // init the available port range on elasticsearch
-        // Note: @see ESConfigurationHandler.checkPortRangeAccepted - these
-        // values are currently also hardcoded there
-        // TODO reset the port range to 9300 and 9200
-        for (int i = 9360; i <= 9399; i++) {
-            supportedTcpPorts.add(i);
-        }
-        for (int i = 9260; i <= 9299; i++) {
-            supportedHttpPorts.add(i);
-        }
-        AvailableESInstanceState esInstance1 = new AvailableESInstanceState(supportedTcpPorts, supportedHttpPorts);
-        this.availableESInstances.put(this.defaultHost, esInstance1);
-
-        syncManagerAfterStartupFromDBRecords(this.defaultHost);
-    }
 
     /**
      * When initializing the manager sync the available port information with the ones already in use - this information
@@ -175,16 +136,13 @@ public class IndexManager {
         // update the list of available ports for this host
         for (RunningIndexUserConfig config : runningConfigs) {
             if ((config.getHostAddress() != null) && (config.getHttpPort() != null)) {
-                if (this.availableESInstances.get(config.getHostAddress()) != null) {
+                if (searchInstance.isKnownHost(config.getHostAddress())) {
                     //check the instance's state
                     try {
                         //check if the instance is still up and running
                         this.getESClusterState(config.getUser());
                         // remove host + port from available ones
-                        this.availableESInstances.get(config.getHostAddress()).removeAvailableHTTPPort(
-                                config.getHttpPort());
-                        this.availableESInstances.get(config.getHostAddress()).removeAvailableTCPPort(
-                                config.getTcpPort());
+                        searchInstance.takeHostPort(config);
                         //register this instance for GarbageCollection
                         this.indexKeepAliveTimer.extendTTL20(config.getUser());
 
@@ -192,7 +150,7 @@ public class IndexManager {
                                 + config.getHostAddress() + " and userID: " + config.getUserID() + " and httpPort: "
                                 + config.getHttpPort());
 
-                    } catch (SearchProviderException e) {
+                    } catch (SearchInstanceException e) {
                         this.log.debug("skipping recovery - instance not responding for " + config.getHostAddress()
                                 + " and userID: " + config.getUserID() + " and httpPort: " + config.getHttpPort());
                         //not reachable - try to clean up the mess
@@ -224,117 +182,59 @@ public class IndexManager {
      * @throws IllegalArgumentException
      *             when the TrueCrypt instance was not configured properly
      */
-    public synchronized void startupInstance(User userID) throws IndexManagerCoreException {
+    synchronized Client startupInstance(User userID) throws IndexManagerCoreException {
 
         this.log.debug("startupInstance for userID: " + userID + " started");
 
         // 1) check if user has been initialized
-        File fTCContainerOnDataSink = null;
-        try {
-            fTCContainerOnDataSink = ThemisDataSink.getIndexTrueCryptContainer(userID);
-        } catch (IOException e) {
-            // initialize user
-            init(userID);
-            // try the call again - user now initialized, if error -> fail
-            try {
-                fTCContainerOnDataSink = ThemisDataSink.getIndexTrueCryptContainer(userID);
-            } catch (IOException e1) {
-                String s = "startupInstance for userID: " + userID + " step1 - failed";
-                this.log.debug(s, e1);
-                throw new UserDataStorageException(s, e1);
-            }
-        }
+        File fTCContainerOnDataSink = dataContainer.getUserStorageCryptContainerFor(userID);
         this.log.debug("startupInstance for userID: " + userID + " step1 - ok");
 
         // 2) get a local copy of the TrueCrypt container for the given user
-        File fTCContainer;
-        try {
-            fTCContainer = copyTCContainerFileToLocalWorkingDir(fTCContainerOnDataSink, userID);
-            this.log.debug("startupInstance for userID: " + userID + " step2 - ok");
-        } catch (IOException e1) {
-            String s = "startupInstance for userID: " + userID + " step2 - failed";
-            this.log.debug(s, e1);
-            throw new UserDataStorageException(s, e1);
-        }
+        File fTCContainer = dataContainer.copyUserStorageCryptContainerToLocalWorkingDir(userID, fTCContainerOnDataSink);
+        this.log.debug("startupInstance for userID: " + userID + " step2 - ok");
 
         // 3) Now mount the ES data volume
-        // TODO currently when all available drives are in use the system will throw an IOException
-        String tcMountedDriveLetter;
-
-        try {
-            tcMountedDriveLetter = TCMountHandler.mount(fTCContainer, "12345", TCMountHandler
-                    .getSupportedDriveLetters().get(0));
-            this.log.debug("startupInstance for userID: " + userID + " step3 - ok");
-            this.log.debug("Mounted Drive Letter: " + tcMountedDriveLetter + "from: " + fTCContainer.getAbsolutePath());
-        } catch (ExceptionInInitializerError | IllegalArgumentException | IOException | InterruptedException e1) {
-            String s = "startupInstance for userID: " + userID + " step3 - failed";
-            this.log.debug(s, e1);
-            throw new EncryptionProviderException(s, e1);
-        }
+        String tcMountedDriveLetter = encryptionProvider.getNextFreeMountPoint(userID, fTCContainer);
+        this.log.debug("startupInstance for userID: " + userID + " step3 - ok");
 
         // 4) crate a user specific ElasticSearch startup configuration file
-        // TODO currently when all available ports are in use the system will throw a NumberFormatException
-        int tcpPort = getFreeESTCPPort();
-        int httpPort = getFreeESHttpPort();
+        RunningIndexUserConfig runningConfig = searchInstance.createIndexConfig(userID, fTCContainer, tcMountedDriveLetter);
 
         // this file contains the user specific ES startup config (data, ports, etc.)
-        try {
-            ESConfigurationHandler.createUserYMLStartupFile(userID, this.defaultHost, tcpPort, httpPort,
-                    tcMountedDriveLetter);
-            this.log.debug("startupInstance for userID: " + userID + " step4 - ok");
-        } catch (NumberFormatException | ExceptionInInitializerError | IOException e1) {
-            String s = "startupInstance for userID: " + userID + " step4 - failed";
-            this.log.debug(s, e1);
-            throw new SearchProviderException(s, e1);
-        }
+        searchInstance.createIndexStartFile(userID, runningConfig);
 
         // 5) persist the configuration within the database
-        try {
-            // TODO currently only one host machine for ES supported: localhost
-            URI uri = new URI("http", InetAddress.getLocalHost().getHostAddress() + "", "", "");
-
-            // keep a database record of this configuration
-            RunningIndexUserConfig runningConfig = new RunningIndexUserConfig(userID, uri.toURL(),
-                    tcpPort, httpPort, "user" + userID, tcMountedDriveLetter, fTCContainer.getAbsolutePath());
-
-            // persist the configuration
-            runningConfig = this.dao.save(runningConfig);
-            this.log.debug("startupInstance for userID: " + userID + " step5 - ok");
-
-        } catch (URISyntaxException | UnknownHostException | MalformedURLException e1) {
-            String s = "startupInstance for userID: " + userID + " step5 - failed";
-            this.log.debug(s, e1);
-            throw new SearchProviderException(s, e1);
-        }
+        runningConfig = this.dao.save(runningConfig);
+        this.log.debug("startupInstance for userID: " + userID + " step5 - ok");
 
         // 6) now power on elasticsearch
-        try {
-            ESConfigurationHandler.startElasticSearch(userID);
-            this.log.debug("startupInstance for userID: " + userID + " step6 - ok");
-            this.log.info("started ES Instance " + getRunningIndexUserConfig(userID).getClusterName() + " on host: "
-                    + getRunningIndexUserConfig(userID).getHostAddress().getHost() + ":"
-                    + getRunningIndexUserConfig(userID).getHttpPort());
-
-        } catch (IOException | InterruptedException e1) {
-            String s = "startupInstance for userID: " + userID + " step6 - failed";
-            this.log.debug(s, e1);
-            throw new SearchProviderException(s, e1);
-        }
+        searchInstance.startIndexNode(userID, runningConfig);
 
         // 7) check instance up and running
-        int sleepSeconds = 2;
+        Client client = this.getESTransportClient(userID, runningConfig);
+        
         int maxAttempts = 3;
-        boolean loop = true;
+        int sleepSeconds = 2;
+        getESClusterState(userID, client, maxAttempts, sleepSeconds);
+
+        //keep instance running for another 20 minutes
+        this.indexKeepAliveTimer.extendTTL20(userID);
+
+        return client;
+    }
+
+    private void getESClusterState(User userID, Client client, int maxAttempts, int sleepSeconds) {
         int count = 1;
-        while (loop) {
+        while (true) {
             try {
 
                 //try to receive a clusterstate reply
-                getESClusterState(userID);
-                loop = false;
+                this.getESClusterState(userID, client);
                 this.log.debug("startupInstance for userID: " + userID + " step7 - ok");
+                return;
 
-            } catch (SearchProviderException e1) {
+            } catch (SearchInstanceException e1) {
                 String s = "startupInstance for userID: " + userID
                         + " step7 - waiting for cluster reply. number of attempts: " + count;
                 this.log.debug(s, e1);
@@ -352,9 +252,6 @@ public class IndexManager {
             }
             count++;
         }
-
-        // 8) register a timeout for this instance
-        this.indexKeepAliveTimer.extendTTL20(userID);
     }
 
     /**
@@ -371,40 +268,29 @@ public class IndexManager {
                     + " step1 - failed, no configuration persisted in db");
             return;
         }
+        shutdownInstance(userID, runningInstanceConfig);
+    }
+
+    private synchronized void shutdownInstance(User userID, RunningIndexUserConfig config) {
         this.log.debug("shutdownInstance for userID: " + userID + " step1 - ok");
 
         //2. shutdown the ElasticSearch Instance
-        try {
-            ESConfigurationHandler.stopElasticSearch(userID, this);
-            this.log.debug("shutdownInstance for userID: " + userID + " step2 - ok");
-        } catch (IOException e) {
-            this.log.debug("shutdownInstance for userID: " + userID + " step2 - failed", e);
-        }
+        searchInstance.shutdownNode(userID, config);
 
         //3. unmount the truecrypt volume
-        try {
-            String driveLetter = runningInstanceConfig.getMountedTCDriveLetter();
-            TCMountHandler.unmount(driveLetter);
-            this.log.debug("shutdownInstance for userID: " + userID + " step3 - ok");
-        } catch (IllegalArgumentException | ExceptionInInitializerError | IOException | InterruptedException e) {
-            this.log.debug("shutdownInstance for userID: " + userID + " step3 - failed", e);
-        }
+        encryptionProvider.unmount(userID, config);
 
         //4. persist the index data files within the container back to the Themis data sink
-        try {
-            ThemisDataSink.saveIndexTrueCryptContainer(new File(runningInstanceConfig.getMountedContainerLocation()),
-                    userID);
-            this.log.debug("shutdownInstance for userID: " + userID + " step4 - ok");
-        } catch (IOException e) {
-            this.log.debug("shutdownInstance for userID: " + userID + " step4 - failed", e);
-        }
+        dataContainer.persistIndexDataBackToContainer(userID, config);
 
         //5. remove the userconfiguration from db and release the ports
-        releaseRunningInstanceMapping(userID);
+        searchInstance.releaseRunningInstanceMapping(config);
+        
+        this.dao.delete(config);
         this.log.debug("shutdownInstance for userID: " + userID + " step4 - ok");
 
         //6. wipe the temp working directory
-        deleteLocalWorkingDir(userID);
+        UserDataWorkingDir.deleteLocalWorkingDir(userID);
         this.log.debug("shutdownInstance for userID: " + userID + " completed ok");
 
         //7. remove entries in the garbage collector
@@ -418,8 +304,9 @@ public class IndexManager {
         // get all running instances according to the DB entries
         List<RunningIndexUserConfig> runningConfigs = this.dao.getAllESInstanceConfigs(host);
         for (RunningIndexUserConfig con : runningConfigs) {
-            shutdownInstance(con.getUser());
+            shutdownInstance(con.getUser(), con);
         }
+        this.log.debug("shutdown all running ElasticSearch instances on " + host + " completed");
     }
 
     /**
@@ -427,20 +314,10 @@ public class IndexManager {
      * instances
      */
     private void cleanupRude() {
-
-        this.log.debug("cleanupRude: started stopping all ES instances");
-        // shutdown all elastic search instances
-        ESConfigurationHandler.stopAllRude();
-        this.log.debug("cleanupRude: completed - no ES instances running");
+        searchInstance.stopAllNodes();
 
         // unmount all open TrueCrypt volumes
-        try {
-            this.log.debug("cleanupRude: started unmounting all TC instances");
-            TCMountHandler.unmountAll();
-            this.log.debug("cleanupRude: completed - all TC volumes unmounted");
-        } catch (IOException | InterruptedException e) {
-            this.log.debug("cleanupRude: unmounting all TC volumes failed", e);
-        }
+        encryptionProvider.unmountAll();
 
         //remove the userconfiguration from db and release the ports
         this.log.debug("cleanupRude: started removing all DB records: executing " + "DELETE FROM +"
@@ -450,7 +327,8 @@ public class IndexManager {
 
         try {
             this.log.debug("cleanupRude: started reInitializing");
-            initAvailableInstances();
+            searchInstance.initAvailableInstances();
+            syncManagerAfterStartupFromDBRecords(searchInstance.getDefaultHost());
             this.log.debug("cleanupRude: completed reInitializing");
         } catch (MalformedURLException | UnknownHostException | URISyntaxException e) {
             this.log.debug("cleanupRude: reInitializing failed", e);
@@ -459,144 +337,73 @@ public class IndexManager {
         // TODO delete all working directories?
     }
 
-    public RunningIndexUserConfig getRunningIndexUserConfig(User userID) {
+    RunningIndexUserConfig getRunningIndexUserConfig(User userID) {
         return this.dao.findConfigByUser(userID);
-    }
-
-    private int getFreeESHttpPort() {
-        // TODO Loadbalancing between the different host machines
-        return this.availableESInstances.get(this.defaultHost).useNextHTTPPort();
-    }
-
-    private int getFreeESTCPPort() {
-        // TODO Loadbalancing between the different host machines
-        return this.availableESInstances.get(this.defaultHost).useNextTCPPort();
-    }
-
-    /**
-     * Cleans up the available and used port mapping and updates the database This method does not stop running ES and
-     * TC instances
-     */
-    private void releaseRunningInstanceMapping(User userID) {
-        RunningIndexUserConfig config = this.dao.findById(userID.id());
-        this.availableESInstances.get(this.defaultHost).addAvailableHTTPPort(config.getHttpPort());
-        this.availableESInstances.get(this.defaultHost).addAvailableTCPPort(config.getTcpPort());
-
-        this.dao.delete(config);
-    }
-
-    /**
-     * Inits a user specific elasticsearch instance i.e. copies the container file and registers it within the
-     * themis-datasink
-     */
-    private void init(User userID) {
-        // TODO fix weakness currently all copied TC container files have the
-        // same default password as this cannot be changed via TC command line
-        // interface. idea: keep default password but encrypt the container file
-        try {
-            ThemisDataSink.saveIndexTrueCryptContainer(
-                    getClass().getClassLoader().getResourceAsStream("elasticsearch_userdata_template_TC_150MB.tc"),
-                    userID);
-        } catch (IOException e) {
-            this.log.debug("IndexManager init ES instance failed for user" + userID + " due to " + e);
-        }
     }
 
     /**
      * Configures and returns a Client to ElasticSearch to interact with for a specific user
      */
-    public Client getESTransportClient(User userID) throws SearchProviderException {
+    public Client getESTransportClient(User userID) throws SearchInstanceException {
         //TODO Keep Clients and last accessed timestamp? 
-        //check if we've got a DB record
         RunningIndexUserConfig conf = getRunningIndexUserConfig(userID);
-        if (conf != null) {
-            Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", conf.getClusterName()).build();
+        return getESTransportClient(userID, conf);
+    }
 
-            // now try to connect with the TransportClient - requires the
-            // transport.tcp.port for connection
-            @SuppressWarnings("resource") // this is a factory method
-            Client client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(conf
-                    .getHostAddress().getHost(), conf.getTcpPort()));
-            return client;
+    private Client getESTransportClient(User userID, RunningIndexUserConfig conf) {
+        //check if we've got a DB record
+        if (conf == null) {
+            throw new SearchInstanceException("Failed to create ES TransportClient for userID: " + userID
+                    + " due to missing RunningIndexUserConfig");
         }
+        
+        Settings settings = ImmutableSettings.settingsBuilder().put("cluster.name", conf.getClusterName()).build();
 
-        throw new SearchProviderException("Failed to create ES TransportClient for userID: " + userID
-                + " due to missing RunningIndexUserConfig");
+        // now try to connect with the TransportClient - requires the
+        // transport.tcp.port for connection
+        @SuppressWarnings("resource") // this is a factory method
+        Client client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(conf
+                .getHostAddress().getHost(), conf.getTcpPort()));
+        return client;
     }
 
     /**
      * Retrieves the ClusterState of a mounted ES cluster for a given userID
      * 
-     * @throws SearchProviderException
+     * @throws SearchInstanceException
      *             if now instance is available
      */
-    public ClusterState getESClusterState(User userId) throws SearchProviderException {
-        try (Client client = this.getESTransportClient(userId)) {
-            //request clusterstate and cluster health
-            ClusterState clusterState = client.admin().cluster().state(new ClusterStateRequest())
-                    .actionGet(10, TimeUnit.SECONDS).getState();
-            ClusterHealthResponse clusterHealthResponse = client.admin().cluster().health(new ClusterHealthRequest())
-                    .actionGet(10, TimeUnit.SECONDS);
+    public ClusterState getESClusterState(User userId) throws SearchInstanceException {
+        RunningIndexUserConfig conf = getRunningIndexUserConfig(userId);
+        return getESClusterState(userId, conf);
+    }
 
-            this.log.debug("get ES Cluster health state for userID: " + userId + " " + clusterHealthResponse.toString());
-            return clusterState;
+    private ClusterState getESClusterState(User userId, RunningIndexUserConfig conf) {
+        try (Client client = this.getESTransportClient(userId, conf)) {
+            return getESClusterState(userId, client);
         } catch (NoNodeAvailableException | RemoteTransportException e) {
             //TODO AL update to ElasticSearch 1.2.1 which fixes the NoNodeAvailableExeption which sometimes occurs
             //https://github.com/jprante/elasticsearch-knapsack/issues/49
             this.log.debug("Get ES cluster state for userID: " + userId + " threw exception: " + e.toString());
-            throw new SearchProviderException("Clusterstate for userID: " + userId + " " + "Cluster not responding");
+            throw new SearchInstanceException("Clusterstate for userID: " + userId + " " + "Cluster not responding");
         }
     }
 
-    /**
-     * Gets the root directory (for index operations) for all users done.
-     */
-    private static String getUserDataWorkingDirRoot() {
-        String s = Configuration.getProperty("index.temp.data.home.dir");
-        if (s != null && s.length() > 0 && !s.contains("\"")) {
-            File f = new File(s);
-            if (f.isDirectory() && f.exists()) {
-                return f.getAbsolutePath();
-            }
+    private ClusterState getESClusterState(User userId, Client client) {
+        //request clusterstate and cluster health
+        ClusterState clusterState = client.admin().cluster().state(new ClusterStateRequest())
+                .actionGet(10, TimeUnit.SECONDS).getState();
+        ClusterHealthResponse clusterHealthResponse = client.admin().cluster().health(new ClusterHealthRequest())
+                .actionGet(10, TimeUnit.SECONDS);
 
-            f.mkdirs();
-            if (f.isDirectory() && f.exists()) {
-                return f.getAbsolutePath();
-            }
-
-            throw new ExceptionInInitializerError(
-                    "index.temp.data.home.dir does not exist or is not accessible to system");
-        }
-        throw new ExceptionInInitializerError(
-                "index.temp.data.home.dir not properly configured within backmeup-indexer.properties");
-    }
-
-    /**
-     * Gets the user's working directory on the temporary file share to operate the index upon
-     */
-    public static String getUserDataWorkingDir(User userID) {
-        return getUserDataWorkingDirRoot() + "/user" + userID;
-    }
-
-    private File copyTCContainerFileToLocalWorkingDir(File f, User userID) throws IOException {
-        return FileUtils.copyFileUsingChannel(f, new File(getUserDataWorkingDir(userID)
-                + "/index/elasticsearch_userdata_TC_150MB.tc"));
-    }
-
-    /**
-     * Deletes the working directory for a given user including all files within it
-     */
-    private void deleteLocalWorkingDir(User userID) {
-        File f = new File(getUserDataWorkingDir(userID));
-        if (f.exists()) {
-            FileUtils.deleteDirectory(f);
-        }
+        this.log.debug("get ES Cluster health state for userID: " + userId + " " + clusterHealthResponse.toString());
+        return clusterState;
     }
 
     /**
      * required for testing purposes to inject a different db configuration
      */
-    public void injectForTests(EntityManager em) {
+    void injectForTests(EntityManager em) {
         JPADataAccessLayer dal = new JPADataAccessLayer();
         dal.setEntityManager(em);
         this.dao = dal.createIndexManagerDao();

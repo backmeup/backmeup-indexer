@@ -1,4 +1,6 @@
-package org.backmeup.index.error;
+package org.backmeup.index.core.datacontainer;
+
+import org.backmeup.index.error.IndexManagerCoreException;
 
 public class UserDataStorageException extends IndexManagerCoreException {
 

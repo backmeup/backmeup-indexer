@@ -62,10 +62,10 @@ public class IndexManagerTest extends IndexManagerSetup {
     @Test
     public void testUserStartupArtefakts() throws IndexManagerCoreException {
         this.indexManager.startupInstance(_999991L);
-        File fTC = new File(IndexManager.getUserDataWorkingDir(_999991L) + "/index/elasticsearch_userdata_TC_150MB.tc");
+        File fTC = new File(UserDataWorkingDir.getDir(_999991L) + "/index/elasticsearch_userdata_TC_150MB.tc");
         Assert.assertTrue("Local copy of the TC data container should exist", fTC.exists());
 
-        File fYML = new File(IndexManager.getUserDataWorkingDir(_999991L) + "/index/elasticsearch.config.user" + _999991L
+        File fYML = new File(UserDataWorkingDir.getDir(_999991L) + "/index/elasticsearch.config.user" + _999991L
                 + ".yml");
         Assert.assertTrue("User specific ES YML file should exist", fYML.exists());
     }

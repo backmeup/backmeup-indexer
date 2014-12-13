@@ -19,6 +19,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.backmeup.index.IndexManager;
+import org.backmeup.index.UserDataWorkingDir;
 import org.backmeup.index.config.Configuration;
 import org.backmeup.index.core.elasticsearch.tokenreader.MapTokenResolver;
 import org.backmeup.index.core.elasticsearch.tokenreader.TokenReplaceReader;
@@ -70,9 +71,9 @@ public class ESConfigurationHandler {
             tokens.put("pathtologs", mountedTCVolume + ":" + "/index/index-logs");
             tokens.put("pathtodata", mountedTCVolume + ":" + "/index/index-data");
         } else {
-            log.debug("creating data + log on standard volume" + IndexManager.getUserDataWorkingDir(userID));
-            tokens.put("pathtologs", IndexManager.getUserDataWorkingDir(userID) + "/index/index-logs");
-            tokens.put("pathtodata", IndexManager.getUserDataWorkingDir(userID) + "/index/index-data");
+            log.debug("creating data + log on standard volume" + UserDataWorkingDir.getDir(userID));
+            tokens.put("pathtologs", UserDataWorkingDir.getDir(userID) + "/index/index-logs");
+            tokens.put("pathtodata", UserDataWorkingDir.getDir(userID) + "/index/index-data");
         }
 
         MapTokenResolver resolver = new MapTokenResolver(tokens);
@@ -82,7 +83,7 @@ public class ESConfigurationHandler {
         try (Reader inputReader = new InputStreamReader(classpathResource)) {
 
             try (Reader tokenReplaceReader = new TokenReplaceReader(inputReader, resolver)) {
-                String outputFile = IndexManager.getUserDataWorkingDir(userID) + "/index/elasticsearch.config.user"
+                String outputFile = UserDataWorkingDir.getDir(userID) + "/index/elasticsearch.config.user"
                         + userID + ".yml";
 
                 File file = new File(outputFile);
@@ -108,12 +109,12 @@ public class ESConfigurationHandler {
         // performance)
         String command = null;
         if (SystemUtils.IS_OS_LINUX) {
-            command = getElasticSearchExecutable() + " " + "-Des.config=" + IndexManager.getUserDataWorkingDir(userID)
+            command = getElasticSearchExecutable() + " " + "-Des.config=" + UserDataWorkingDir.getDir(userID)
                     + "/index/elasticsearch.config.user" + userID + ".yml";
         }
         if (SystemUtils.IS_OS_WINDOWS) {
             command = "\"" + getElasticSearchExecutable() + "\"" + " " + "-Des.config="
-                    + IndexManager.getUserDataWorkingDir(userID) + "/index/elasticsearch.config.user" + userID + ".yml";
+                    + UserDataWorkingDir.getDir(userID) + "/index/elasticsearch.config.user" + userID + ".yml";
         }
         log.debug(command);
 
@@ -131,8 +132,7 @@ public class ESConfigurationHandler {
         }
     }
 
-    public static void stopElasticSearch(User userID, IndexManager indexManager) throws ClientProtocolException, IOException {
-        RunningIndexUserConfig config = indexManager.getRunningIndexUserConfig(userID);
+    public static void stopElasticSearch(User userID, RunningIndexUserConfig config) throws IOException {
         if (config != null) {
             HttpPost shutdownRequest = new HttpPost(config.getHostAddress() + ":" + config.getHttpPort() + "/_shutdown");
             shutdownElasticSearch(shutdownRequest);
