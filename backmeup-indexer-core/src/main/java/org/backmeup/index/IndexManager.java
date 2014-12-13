@@ -18,7 +18,6 @@ import org.backmeup.index.core.elasticsearch.SearchInstances;
 import org.backmeup.index.core.model.RunningIndexUserConfig;
 import org.backmeup.index.core.truecrypt.EncryptionProvider;
 import org.backmeup.index.dal.IndexManagerDao;
-import org.backmeup.index.error.IndexManagerCoreException;
 import org.backmeup.index.model.User;
 import org.backmeup.index.query.ES;
 import org.elasticsearch.client.Client;
@@ -54,7 +53,7 @@ public class IndexManager {
         try {
             return this.startupInstance(userId);
 
-        } catch (IndexManagerCoreException e1) {
+        } catch (Exception e1) {
             // rollback the startup steps that were already performed
             this.shutdownInstance(userId);
             this.log.error("failed to startup/connect with running instance and return a client object for user "
@@ -172,7 +171,7 @@ public class IndexManager {
      * @throws IllegalArgumentException
      *             when the TrueCrypt instance was not configured properly
      */
-    synchronized Client startupInstance(User userID) throws IndexManagerCoreException {
+    synchronized Client startupInstance(User userID) {
 
         this.log.debug("startupInstance for userID: " + userID + " started");
 

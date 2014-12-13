@@ -18,7 +18,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.backmeup.index.core.elasticsearch.ESConfigurationHandler;
 import org.backmeup.index.core.model.RunningIndexUserConfig;
-import org.backmeup.index.error.IndexManagerCoreException;
 import org.backmeup.index.model.User;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
@@ -31,20 +30,15 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class IndexManagerIntegrationTest extends IndexManagerSetup {
 
     private static final User _999991L = new User(999991L); // TODO what is special about the user? better name!
     private static final User _999992L = new User(999992L); // TODO what is special about the user? better name!
     
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
-
     @Test
-    public void testESandTCLaunchTest() throws IndexManagerCoreException, IOException {
+    public void testESandTCLaunchTest() throws IOException {
         this.indexManager.startupInstance(_999992L);
 
         RunningIndexUserConfig conf = this.dao.findConfigByUser(_999992L);
@@ -60,7 +54,7 @@ public class IndexManagerIntegrationTest extends IndexManagerSetup {
     }
 
     @Test
-    public void testUserStartupArtefakts() throws IndexManagerCoreException {
+    public void testUserStartupArtefakts() {
         this.indexManager.startupInstance(_999991L);
         File fTC = new File(UserDataWorkingDir.getDir(_999991L) + "/index/elasticsearch_userdata_TC_150MB.tc");
         Assert.assertTrue("Local copy of the TC data container should exist", fTC.exists());
@@ -71,13 +65,7 @@ public class IndexManagerIntegrationTest extends IndexManagerSetup {
     }
 
     @Test
-    public void testFailForMissingConfig() throws IndexManagerCoreException {
-        this.exception.expect(IndexManagerCoreException.class);
-        this.es.getESTransportClient(_999992L);
-    }
-
-    @Test
-    public void testRetrieveTransportClientAndClusterState() throws IndexManagerCoreException {
+    public void testRetrieveTransportClientAndClusterState() {
         //startup or get running instance
         try (Client client = this.indexManager.initAndCreateAndDoEverthing(_999992L)) {
             assertNotNull(client);
@@ -88,7 +76,7 @@ public class IndexManagerIntegrationTest extends IndexManagerSetup {
     }
 
     @Test
-    public void testConnectViaTransportClient() throws IndexManagerCoreException, IOException {
+    public void testConnectViaTransportClient() throws IOException {
 
         this.indexManager.startupInstance(_999992L);
 
@@ -127,7 +115,7 @@ public class IndexManagerIntegrationTest extends IndexManagerSetup {
     }
 
     @Test
-    public void testCreateIndexElementViaHttpClient() throws IndexManagerCoreException, IOException {
+    public void testCreateIndexElementViaHttpClient() throws IOException {
 
         this.indexManager.startupInstance(_999991L);
         System.out.println("startup done");
