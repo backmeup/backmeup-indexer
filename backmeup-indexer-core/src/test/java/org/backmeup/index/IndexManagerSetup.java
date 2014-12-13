@@ -6,26 +6,20 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
-import org.backmeup.index.dal.IndexManagerDao;
 import org.backmeup.index.model.User;
-import org.backmeup.index.query.ES;
 import org.junit.After;
 import org.junit.Before;
 
 public class IndexManagerSetup {
 
-    protected EntityManagerFactory entityManagerFactory;
-    protected EntityManager entityManager;
-    protected IndexManager indexManager;
-    protected IndexStartup startup; // TODO PK need to inkect and all
-    protected IndexShutdown shutdown; // TODO PK need to inkect and all
-    protected ES es; // TODO PK need to inkect and all
-    protected IndexManagerDao dao; // TODO PK need to inkect and all
+    public EntityManagerFactory entityManagerFactory;
+    public EntityManager entityManager;
+    public IndexManager indexManager;
 
     @After
     public void after() {
-        shutdown.shutdownInstance(new User(999991L));
-        shutdown.shutdownInstance(new User(999992L));
+        indexManager.shutdownInstance(new User(999991L));
+        indexManager.shutdownInstance(new User(999992L));
         closeEntityManager();
     }
 

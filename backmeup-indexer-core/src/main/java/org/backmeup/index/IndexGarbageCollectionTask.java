@@ -16,7 +16,7 @@ public class IndexGarbageCollectionTask implements Runnable {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Inject
-    private IndexShutdown indexShutdown;
+    private IndexManager indexManager;
     @Inject
     private IndexKeepAliveTimer indexKeepAliveTimer;
 
@@ -45,7 +45,7 @@ public class IndexGarbageCollectionTask implements Runnable {
             log.info("IndexCoreGarbageCollector executing shutdown for userID: " + userId);
 
             //iterate over all instances to shutdown
-            indexShutdown.shutdownInstance(userId);
+            indexManager.shutdownInstance(userId);
         }
     }
 }
