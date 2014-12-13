@@ -49,8 +49,12 @@ public class SearchInstances {
      * module to start/stop instances on each cluster instance
      */
     @PostConstruct
-    public void initAvailableInstances() throws MalformedURLException, URISyntaxException, UnknownHostException {
-        this.defaultHost = new URI("http", InetAddress.getLocalHost().getHostAddress() + "", null, null).toURL();
+    public void initAvailableInstances() {
+        try {
+            this.defaultHost = new URI("http", InetAddress.getLocalHost().getHostAddress(), null, null).toURL();
+        } catch (MalformedURLException | UnknownHostException | URISyntaxException e) {
+            throw new IllegalArgumentException("InetAddress.getLocalHost().getHostAddress()", e);
+        }
 
         availableESInstances.clear();
         this.availableESInstances.put(this.defaultHost, portsForDefaultIndexNode());

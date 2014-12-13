@@ -1,10 +1,7 @@
 package org.backmeup.index;
 
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -277,14 +274,10 @@ public class IndexManager {
         this.dao.deleteAll();
         this.log.debug("cleanupRude: removing all DB records: completed");
 
-        try {
-            this.log.debug("cleanupRude: started reInitializing");
-            searchInstance.initAvailableInstances();
-            syncManagerAfterStartupFromDBRecords(searchInstance.getDefaultHost());
-            this.log.debug("cleanupRude: completed reInitializing");
-        } catch (MalformedURLException | UnknownHostException | URISyntaxException e) {
-            this.log.debug("cleanupRude: reInitializing failed", e);
-        }
+        this.log.debug("cleanupRude: started reInitializing");
+        searchInstance.initAvailableInstances();
+        syncManagerAfterStartupFromDBRecords(searchInstance.getDefaultHost());
+        this.log.debug("cleanupRude: completed reInitializing");
 
         // TODO delete all working directories?
     }
