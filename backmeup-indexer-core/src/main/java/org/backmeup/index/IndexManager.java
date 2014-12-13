@@ -20,6 +20,7 @@ import org.backmeup.index.core.truecrypt.EncryptionProvider;
 import org.backmeup.index.dal.RunningIndexUserConfigDao;
 import org.backmeup.index.model.User;
 import org.backmeup.index.query.ES;
+import org.backmeup.index.utils.cdi.RunRequestScoped;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.cluster.ClusterState;
@@ -81,27 +82,16 @@ public class IndexManager {
     private RunningIndexUserConfigDao dao;
     @Inject
     private IndexKeepAliveTimer indexKeepAliveTimer;
-    @Inject 
-    private IndexCoreGarbageCollector cleanupTask;
 
-    @PostConstruct
+    @RunRequestScoped
     public void startupIndexManager() {
-        if (cleanupTask!=null) {
-            // not in tests, so start it
-         
-            // add .toString() for eagerly initialising ApplicationScoped Beans
-            // need to instantiate in order for the timer to start running
-            this.cleanupTask.toString();
-        }
-
         // Initialisation of IndexManager managed ElasticSearch instances
         syncManagerAfterStartupFromDBRecords(searchInstance.getDefaultHost());
 
         this.log.debug("startup() IndexManager (ApplicationScoped) completed");
     }
 
-    // TODO PK needs db and transaction in another thread
-    @PreDestroy
+    @RunRequestScoped
     public void shutdownIndexManager() {
         this.log.debug("shutdown IndexManager (ApplicationScoped) started");
 

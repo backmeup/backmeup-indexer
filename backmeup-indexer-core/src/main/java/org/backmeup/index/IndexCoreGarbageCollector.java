@@ -5,8 +5,6 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
@@ -19,7 +17,7 @@ import org.slf4j.LoggerFactory;
 @ApplicationScoped
 public class IndexCoreGarbageCollector {
 
-    private static final int MINUTES_BETWEEN_GBCOLLECTION = 7;
+    private static final int MINUTES_BETWEEN_GBCOLLECTION = 1;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     
@@ -28,7 +26,6 @@ public class IndexCoreGarbageCollector {
     @Inject
     private IndexGarbageCollectionTask cleanup;
 
-    @PostConstruct
     public void init() {
         this.log.debug("startup garbage collector timer (ApplicationScoped) - started");
 
@@ -37,7 +34,6 @@ public class IndexCoreGarbageCollector {
         this.log.debug("startup garbage collector timer (ApplicationScoped) - completed");
     }
     
-    @PreDestroy
     public void end() {
         this.log.debug("shutdown garbage collector timer (ApplicationScoped) - started");
         //stop the garbage collector

@@ -9,6 +9,10 @@
         <description>Initialise Weld container.</description>
         <listener-class>org.jboss.weld.environment.servlet.Listener</listener-class>
     </listener>
+    <listener>
+        <description>Initialise Index Handling.</description>
+        <listener-class>org.backmeup.index.IndexManagerContextListener</listener-class>
+    </listener>
 
     <servlet>
         <description>Resteasy enty point.</description>
