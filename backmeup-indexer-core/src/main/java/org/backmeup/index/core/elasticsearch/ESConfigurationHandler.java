@@ -12,13 +12,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang.SystemUtils;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.backmeup.index.IndexManager;
 import org.backmeup.index.UserDataWorkingDir;
 import org.backmeup.index.config.Configuration;
 import org.backmeup.index.core.elasticsearch.tokenreader.MapTokenResolver;
