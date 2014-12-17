@@ -30,30 +30,28 @@ public class CdiBackgroundAsRequestScopeInterceptor {
     @AroundInvoke
     public Object manageTransaction(InvocationContext ctx) throws Exception {
         try {
-            log.debug("starting request scope for " + ctx.getMethod().getName());
+            this.log.debug("starting request scope for " + ctx.getMethod().getName());
             startRequest(ctx.getContextData());
 
             return ctx.proceed();
 
         } finally {
             endRequest(ctx.getContextData());
-            log.debug("ended request scope for " + ctx.getMethod().getName());
+            this.log.debug("ended request scope for " + ctx.getMethod().getName());
         }
     }
 
     private void startRequest(Map<String, Object> requestDataStore) {
-        requestContext.associate(requestDataStore);
-        requestContext.activate();
+        this.requestContext.associate(requestDataStore);
+        this.requestContext.activate();
     }
-
-    /* End the request, providing the same data store as was used to start the request */
 
     private void endRequest(Map<String, Object> requestDataStore) {
         try {
-            requestContext.invalidate();
-            requestContext.deactivate();
+            this.requestContext.invalidate();
+            this.requestContext.deactivate();
         } finally {
-            requestContext.dissociate(requestDataStore);
+            this.requestContext.dissociate(requestDataStore);
         }
     }
 
