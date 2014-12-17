@@ -155,7 +155,7 @@
         </profile>
         
 
-    	<!-- the default profile activated on Windows with backmeup-indexer_windows.properties 
+    	<!-- the default profile activated on Linux with backmeup-indexer_linux.properties 
     	- skipping integration tests -->
         <profile>
             <id>defaultLinux</id>
