@@ -13,7 +13,7 @@ public class SearchEntry {
     private String type;
     private String thumbnailUrl;
     private String datasource;
-    private Long datasourceId;
+    private String datasourceId;
     private String jobName;
     private String preview;
     private final Map<String, String> properties = new HashMap<>();
@@ -21,7 +21,8 @@ public class SearchEntry {
     public SearchEntry() {
     }
 
-    public SearchEntry(String fileId, Date timeStamp, String type, String title, String thumbnailUrl, String datasource, String jobName) {
+    public SearchEntry(String fileId, Date timeStamp, String type, String title, String thumbnailUrl,
+            String datasource, String jobName) {
         this.fileId = fileId;
         this.timeStamp = timeStamp;
         this.title = title;
@@ -32,19 +33,19 @@ public class SearchEntry {
     }
 
     public String getProperty(String key) {
-        return properties.get(key);
+        return this.properties.get(key);
     }
 
     public void setProperty(String key, String value) {
-        properties.put(key, value);
+        this.properties.put(key, value);
     }
 
     public Set<String> getPropertyKeys() {
-        return properties.keySet();
+        return this.properties.keySet();
     }
 
     public Date getTimeStamp() {
-        return timeStamp;
+        return this.timeStamp;
     }
 
     public void setTimeStamp(Date timeStamp) {
@@ -52,7 +53,7 @@ public class SearchEntry {
     }
 
     public String getTitle() {
-        return title;
+        return this.title;
     }
 
     public void setTitle(String filename) {
@@ -60,7 +61,7 @@ public class SearchEntry {
     }
 
     public String getThumbnailUrl() {
-        return thumbnailUrl;
+        return this.thumbnailUrl;
     }
 
     public void setThumbnailUrl(String thumbnailUrl) {
@@ -68,7 +69,7 @@ public class SearchEntry {
     }
 
     public String getFileId() {
-        return fileId;
+        return this.fileId;
     }
 
     public void setFileId(String id) {
@@ -76,7 +77,7 @@ public class SearchEntry {
     }
 
     public String getType() {
-        return type;
+        return this.type;
     }
 
     public void setType(String type) {
@@ -84,7 +85,7 @@ public class SearchEntry {
     }
 
     public String getDatasource() {
-        return datasource;
+        return this.datasource;
     }
 
     public void setDatasource(String datasource) {
@@ -92,7 +93,7 @@ public class SearchEntry {
     }
 
     public String getPreviewSnippet() {
-        return preview;
+        return this.preview;
     }
 
     public void setPreviewSnippet(String preview) {
@@ -100,22 +101,22 @@ public class SearchEntry {
     }
 
     public String getJobName() {
-        return jobName;
+        return this.jobName;
     }
 
     public void setJobName(String jobName) {
         this.jobName = jobName;
     }
 
-    public Long getDatasourceId() {
-        return datasourceId;
+    public String getDatasourceId() {
+        return this.datasourceId;
     }
 
-    public void setDatasourceId(Long datasourceId) {
+    public void setDatasourceId(String datasourceId) {
         this.datasourceId = datasourceId;
     }
 
-    public void copyProperty(String key, Map<String, Object> source) {
+    public void copyPropertyIfExist(String key, Map<String, Object> source) {
         if (source.get(key) != null) {
             setProperty(key, source.get(key).toString());
         }
@@ -123,9 +124,10 @@ public class SearchEntry {
 
     @Override
     public String toString() {
-        return "SearchEntry [fileId=" + fileId + ", timeStamp=" + timeStamp + ", title=" + title + ", type=" + type + ", thumbnailUrl="
-                + thumbnailUrl + ", datasource=" + datasource + ", datasourceId=" + datasourceId + ", jobName=" + jobName + ", preview="
-                + preview + ", properties=" + properties + "]";
+        return "SearchEntry [fileId=" + this.fileId + ", timeStamp=" + this.timeStamp + ", title=" + this.title
+                + ", type=" + this.type + ", thumbnailUrl=" + this.thumbnailUrl + ", datasource=" + this.datasource
+                + ", datasourceId=" + this.datasourceId + ", jobName=" + this.jobName + ", preview=" + this.preview
+                + ", properties=" + this.properties + "]";
     }
 
 }

@@ -27,464 +27,458 @@ import org.slf4j.LoggerFactory;
 class IndexUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IndexUtils.class);
-	
+
     private static final String THUMBNAILS_FOLDER = "thumbnails/";
-	
-	private IndexUtils() {
+
+    private IndexUtils() {
     }
-	
-	public static Set<FileItem> convertToFileItems(org.elasticsearch.action.search.SearchResponse esResponse) {
-		Set<FileItem> fItems = new HashSet<>();
-		
-		for (SearchHit hit : esResponse.getHits()) {
-			FileItem fileItem = new FileItem();
-			
-			Map<String, Object> source = hit.getSource();
-	    	String hash = source.get(IndexFields.FIELD_FILE_HASH).toString();
-	    	Integer owner = (Integer) source.get(IndexFields.FIELD_OWNER_ID);
-	    	Long timestamp = (Long) source.get(IndexFields.FIELD_BACKUP_AT);
-			
-	    	String fileId = owner + ":" + hash + ":" + timestamp;
-			fileItem.setFileId(fileId);
-			fileItem.setTitle(source.get(IndexFields.FIELD_FILENAME).toString());
-			fileItem.setTimeStamp(new Date(timestamp));
-			
-			if (source.get(IndexFields.FIELD_THUMBNAIL_PATH) != null) {
-				fileItem.setThumbnailURL(THUMBNAILS_FOLDER + owner + "/" + fileId);
-			}
-			
-			fItems.add(fileItem);
-		}
-		
-		return fItems;
-	}
-	
-	public static FileInfo convertToFileInfo(org.elasticsearch.action.search.SearchResponse esResponse) {
-	  if (esResponse.getHits().totalHits() == 0) {
-	    return null;
-	  }
-	  
-	  SearchHit hit = esResponse.getHits().getHits()[0];
-	  Map<String, Object> source = hit.getSource();
-	  String hash = source.get(IndexFields.FIELD_FILE_HASH).toString();
-      Integer owner = (Integer) source.get(IndexFields.FIELD_OWNER_ID);
-      Long timestamp = (Long) source.get(IndexFields.FIELD_BACKUP_AT);
-	  FileInfo fi = new FileInfo();
-	  fi.setFileId(owner + ":" + hash + ":" + timestamp);
-	  fi.setSource(source.get(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_NAME) + " (" + source.get(IndexFields.FIELD_BACKUP_SOURCE_IDENTIFICATION) + ")");
-	  fi.setSourceId(Long.valueOf((Integer) source.get(IndexFields.FIELD_BACKUP_SOURCE_ID)));
-	  fi.setTimeStamp(timestamp.longValue());
-	  fi.setTitle(source.get(IndexFields.FIELD_FILENAME).toString());
-	  fi.setPath(source.get(IndexFields.FIELD_PATH).toString());
-	  fi.setSink(source.get(IndexFields.FIELD_BACKUP_SINK).toString());
-	  Object contentType = source.get(IndexFields.FIELD_CONTENT_TYPE);
-	  if (contentType != null) {
-		  fi.setType(getTypeFromMimeType(contentType.toString()));
-	  } else {
-		  fi.setType(getTypeFromMimeType("other"));
-	  }
-	  return fi;
-	}
-	
-	public static List<SearchEntry> convertSearchEntries(org.elasticsearch.action.search.SearchResponse esResponse, String userName) {	    
-	    List<SearchEntry> entries = new ArrayList<>();
 
-	    LOGGER.debug("converting " + esResponse.getHits().totalHits() + " search results");
-	    
-	    for (SearchHit hit : esResponse.getHits()) {
-	    	Map<String, Object> source = hit.getSource();
-	    	
-			StringBuilder preview = null;
-			HighlightField highlight = hit.getHighlightFields().get(IndexFields.FIELD_FULLTEXT);
-			if (highlight != null) {
-				preview = new StringBuilder("... ");
-				for (Text fragment : highlight.fragments()) {
-					preview.append(fragment.string().replace("\n", " ").trim() + " ... ");
-				}
-			}	
+    public static Set<FileItem> convertToFileItems(org.elasticsearch.action.search.SearchResponse esResponse) {
+        Set<FileItem> fItems = new HashSet<>();
 
-	    	String hash = source.get(IndexFields.FIELD_FILE_HASH).toString();
-	    	Integer owner = (Integer) source.get(IndexFields.FIELD_OWNER_ID);
-	    	Long timestamp = (Long) source.get(IndexFields.FIELD_BACKUP_AT);
-	    	
-	    	SearchEntry entry = new SearchEntry();
-	    	
-	    	// We're constructing a (reasonably) unique ID using owner, hash and timestamp
-	    	entry.setFileId(owner + ":" + hash + ":" + timestamp);
-	    	entry.setTitle(source.get(IndexFields.FIELD_FILENAME).toString());
-	    	entry.setTimeStamp(new Date(timestamp));
-	    	
-	    	if (source.get(IndexFields.FIELD_BACKUP_SOURCE_ID) != null) {
-	    		entry.setDatasourceId(Long.valueOf((Integer) source.get(IndexFields.FIELD_BACKUP_SOURCE_ID)));
-	    		entry.setDatasource(source.get(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_NAME) + " (" + source.get(IndexFields.FIELD_BACKUP_SOURCE_IDENTIFICATION) + ")");
-	    	}
-	    	
-	    	if (source.get(IndexFields.FIELD_JOB_NAME) != null) {
-	    		entry.setJobName(source.get(IndexFields.FIELD_JOB_NAME).toString());
-	    	}
-	    	
-			if (preview != null) {
-				entry.setPreviewSnippet(preview.toString().trim());
-			}
-	    	
-	    	Object contentType = source.get(IndexFields.FIELD_CONTENT_TYPE);
-	    	if (contentType != null) {
-	    		entry.setType(getTypeFromMimeType(contentType.toString()));
-	    	} else {
-	    		entry.setType("other");
-	    	}
-	    	
-	    	entry.setProperty(IndexFields.FIELD_PATH, source.get(IndexFields.FIELD_PATH).toString());
-	    	
-            entry.copyProperty(IndexFields.FIELD_BACKUP_SINK, source);
-	    	
-	    	entry.setProperty(IndexFields.FIELD_FILE_HASH, hash);
-	    	
-			if (source.get(IndexFields.FIELD_THUMBNAIL_PATH) != null) {
-				entry.setThumbnailUrl(THUMBNAILS_FOLDER + userName + "/" + owner + ":" + hash + ":" + timestamp);
-			}
-			
-			// Custom props
-			entry.copyProperty("destination", source);
-			entry.copyProperty("message", source);
-			entry.copyProperty("parent", source);
-			entry.copyProperty("author", source);
-			entry.copyProperty("source", source);
-			entry.copyProperty("likes", source);
-			entry.copyProperty("tags", source);
-			entry.copyProperty("modified", source);
-			
-	    	entries.add(entry);
-	    }
-		return entries;
-	}
+        for (SearchHit hit : esResponse.getHits()) {
+            FileItem fileItem = new FileItem();
 
-    public static List<CountedEntry> getBySource(org.elasticsearch.action.search.SearchResponse esResponse) {		
-		// TODO we currently group by 'list of sources' rather than source
-		return groupBySource(esResponse);
-	}
-	
-	public static List<CountedEntry> getByType(org.elasticsearch.action.search.SearchResponse esResponse) {
-		return groupByContentType(esResponse);
-	}
-	
-	public static List<CountedEntry> getByJob(org.elasticsearch.action.search.SearchResponse esResponse) {
-		return groupByContentJob (esResponse);
-	}
-	
-	private static List<CountedEntry> groupBySource(org.elasticsearch.action.search.SearchResponse esResponse) {
-		// Now where's my Scala groupBy!? *heul*
-		Map<String, Integer> groupedHits = new HashMap<>();
-		for (SearchHit hit : esResponse.getHits()) {
-			if (hit.getSource().get(IndexFields.FIELD_JOB_ID) != null) {
-				String backupSourcePluginName = hit.getSource().get(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_NAME).toString();
-				String backupSourceIdentification = hit.getSource().get(IndexFields.FIELD_BACKUP_SOURCE_IDENTIFICATION).toString();
-				String label = backupSourcePluginName + " (" + backupSourceIdentification + ")";
-				Integer count = groupedHits.get(label);
-				if (count == null) {
-					count = Integer.valueOf(1);
-				} else {
-					count = Integer.valueOf(count.intValue() + 1);
-				}
-				groupedHits.put(label, count);
-			}
-		}
-		
-		// ...and .map
-		List<CountedEntry> countedEntries = new ArrayList<>();
-		for (Entry<String, Integer> entry : groupedHits.entrySet()) {
-			countedEntries.add(new CountedEntry(entry.getKey(), entry.getValue().intValue()));
-		}
-		
-		return countedEntries;		
-	}
-	
-	private static List<CountedEntry> groupByContentType(org.elasticsearch.action.search.SearchResponse esResponse) {
-		// Now where's my Scala groupBy!? *heul*
-		Map<String, Integer> groupedHits = new HashMap<>();
-		for (SearchHit hit : esResponse.getHits()) {
-			String type;
-			if (hit.getSource().get(IndexFields.FIELD_CONTENT_TYPE) != null) {
-				type = getTypeFromMimeType(hit.getSource().get(IndexFields.FIELD_CONTENT_TYPE).toString());
-			} else {
-				type = "other";
-			}
-			
-			Integer count = groupedHits.get(type);
-			if (count == null) {
-				count = Integer.valueOf(1);
-			} else {
-				count = Integer.valueOf(count.intValue() + 1);
-			}
-			groupedHits.put(type, count);
-		}
-		
-		// ...and .map
-		List<CountedEntry> countedEntries = new ArrayList<>();
-		for (Entry<String, Integer> entry : groupedHits.entrySet()) {
-			countedEntries.add(new CountedEntry(entry.getKey(), entry.getValue().intValue()));
-		}
-		
-		return countedEntries;			
-	}
-	
-	private static List<CountedEntry> groupByContentJob(org.elasticsearch.action.search.SearchResponse esResponse) {
-		// Now where's my Scala groupBy!? *heul*
-		Map<String, Integer> groupedHits = new HashMap<>();
-		for (SearchHit hit : esResponse.getHits()) {
-			if (hit.getSource().get(IndexFields.FIELD_JOB_ID) != null) {
-				String backupJobName = hit.getSource().get(IndexFields.FIELD_JOB_NAME).toString();
-				String backupTimestamp = hit.getSource().get(IndexFields.FIELD_BACKUP_AT).toString();
-				String label = backupJobName + " (" + backupTimestamp + ")";
-				Integer count = groupedHits.get(label);
-				if (count == null) {
-					count = Integer.valueOf(1);
-				} else {
-					count = Integer.valueOf(count.intValue() + 1);
-				}
-				groupedHits.put(label, count);
-			}
-		}
+            Map<String, Object> source = hit.getSource();
+            String hash = source.get(IndexFields.FIELD_FILE_HASH).toString();
+            Integer owner = (Integer) source.get(IndexFields.FIELD_OWNER_ID);
+            Long timestamp = (Long) source.get(IndexFields.FIELD_BACKUP_AT);
 
-		// ...and .map
-		List<CountedEntry> countedEntries = new ArrayList<>();
-		for (Entry<String, Integer> entry : groupedHits.entrySet()) {
-			countedEntries.add(new CountedEntry(entry.getKey(), entry.getValue().intValue()));
-		}
+            String fileId = owner + ":" + hash + ":" + timestamp;
+            fileItem.setFileId(fileId);
+            fileItem.setTitle(source.get(IndexFields.FIELD_FILENAME).toString());
+            fileItem.setTimeStamp(new Date(timestamp));
 
-		return countedEntries;
-	}
-	
-	private static String getTypeFromMimeType(String mime) {
-		return getTypeFromMimeTypeLowerCase(mime.toLowerCase());
-	}
+            if (source.get(IndexFields.FIELD_THUMBNAIL_PATH) != null) {
+                fileItem.setThumbnailURL(THUMBNAILS_FOLDER + owner + "/" + fileId);
+            }
+
+            fItems.add(fileItem);
+        }
+
+        return fItems;
+    }
+
+    public static FileInfo convertToFileInfo(org.elasticsearch.action.search.SearchResponse esResponse) {
+        if (esResponse.getHits().totalHits() == 0) {
+            return null;
+        }
+
+        SearchHit hit = esResponse.getHits().getHits()[0];
+        Map<String, Object> source = hit.getSource();
+        String hash = source.get(IndexFields.FIELD_FILE_HASH).toString();
+        Integer owner = (Integer) source.get(IndexFields.FIELD_OWNER_ID);
+        Long timestamp = (Long) source.get(IndexFields.FIELD_BACKUP_AT);
+        FileInfo fi = new FileInfo();
+        fi.setFileId(owner + ":" + hash + ":" + timestamp);
+        fi.setSource(source.get(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_NAME) + " ("
+                + source.get(IndexFields.FIELD_BACKUP_SOURCE_IDENTIFICATION) + ")");
+        fi.setSourceId(source.get(IndexFields.FIELD_BACKUP_SOURCE_ID).toString());
+        fi.setTimeStamp(timestamp.longValue());
+        fi.setTitle(source.get(IndexFields.FIELD_FILENAME).toString());
+        fi.setPath(source.get(IndexFields.FIELD_PATH).toString());
+        fi.setSink(source.get(IndexFields.FIELD_BACKUP_SINK).toString());
+        Object contentType = source.get(IndexFields.FIELD_CONTENT_TYPE);
+        if (contentType != null) {
+            fi.setType(getTypeFromMimeType(contentType.toString()));
+        } else {
+            fi.setType(getTypeFromMimeType("other"));
+        }
+        return fi;
+    }
+
+    public static List<SearchEntry> convertSearchEntries(org.elasticsearch.action.search.SearchResponse esResponse,
+            String userName) {
+        List<SearchEntry> entries = new ArrayList<>();
+
+        LOGGER.debug("converting " + esResponse.getHits().totalHits() + " search results");
+
+        for (SearchHit hit : esResponse.getHits()) {
+            Map<String, Object> source = hit.getSource();
+
+            StringBuilder preview = null;
+            HighlightField highlight = hit.getHighlightFields().get(IndexFields.FIELD_FULLTEXT);
+            if (highlight != null) {
+                preview = new StringBuilder("... ");
+                for (Text fragment : highlight.fragments()) {
+                    preview.append(fragment.string().replace("\n", " ").trim() + " ... ");
+                }
+            }
+
+            String hash = source.get(IndexFields.FIELD_FILE_HASH).toString();
+            Integer owner = (Integer) source.get(IndexFields.FIELD_OWNER_ID);
+            Long timestamp = (Long) source.get(IndexFields.FIELD_BACKUP_AT);
+
+            SearchEntry entry = new SearchEntry();
+
+            // We're constructing a (reasonably) unique ID using owner, hash and timestamp
+            entry.setFileId(owner + ":" + hash + ":" + timestamp);
+            entry.setTitle(source.get(IndexFields.FIELD_FILENAME).toString());
+            entry.setTimeStamp(new Date(timestamp));
+
+            if (source.get(IndexFields.FIELD_BACKUP_SOURCE_ID) != null) {
+                entry.setDatasourceId(source.get(IndexFields.FIELD_BACKUP_SOURCE_ID).toString());
+                entry.setDatasource(source.get(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_NAME) + " ("
+                        + source.get(IndexFields.FIELD_BACKUP_SOURCE_IDENTIFICATION) + ")");
+            }
+
+            if (source.get(IndexFields.FIELD_JOB_NAME) != null) {
+                entry.setJobName(source.get(IndexFields.FIELD_JOB_NAME).toString());
+            }
+
+            if (preview != null) {
+                entry.setPreviewSnippet(preview.toString().trim());
+            }
+
+            Object contentType = source.get(IndexFields.FIELD_CONTENT_TYPE);
+            if (contentType != null) {
+                entry.setType(getTypeFromMimeType(contentType.toString()));
+            } else {
+                entry.setType("other");
+            }
+
+            entry.setProperty(IndexFields.FIELD_PATH, source.get(IndexFields.FIELD_PATH).toString());
+
+            entry.copyPropertyIfExist(IndexFields.FIELD_BACKUP_SINK, source);
+
+            entry.setProperty(IndexFields.FIELD_FILE_HASH, hash);
+
+            if (source.get(IndexFields.FIELD_THUMBNAIL_PATH) != null) {
+                entry.setThumbnailUrl(THUMBNAILS_FOLDER + userName + "/" + owner + ":" + hash + ":" + timestamp);
+            }
+
+            // Custom props
+            entry.copyPropertyIfExist("destination", source);
+            entry.copyPropertyIfExist("message", source);
+            entry.copyPropertyIfExist("parent", source);
+            entry.copyPropertyIfExist("author", source);
+            entry.copyPropertyIfExist("source", source);
+            entry.copyPropertyIfExist("likes", source);
+            entry.copyPropertyIfExist("tags", source);
+            entry.copyPropertyIfExist("modified", source);
+
+            entries.add(entry);
+        }
+        return entries;
+    }
+
+    public static List<CountedEntry> getBySource(org.elasticsearch.action.search.SearchResponse esResponse) {
+        // TODO we currently group by 'list of sources' rather than source
+        return groupBySource(esResponse);
+    }
+
+    public static List<CountedEntry> getByType(org.elasticsearch.action.search.SearchResponse esResponse) {
+        return groupByContentType(esResponse);
+    }
+
+    public static List<CountedEntry> getByJob(org.elasticsearch.action.search.SearchResponse esResponse) {
+        return groupByContentJob(esResponse);
+    }
+
+    private static List<CountedEntry> groupBySource(org.elasticsearch.action.search.SearchResponse esResponse) {
+        // Now where's my Scala groupBy!? *heul*
+        Map<String, Integer> groupedHits = new HashMap<>();
+        for (SearchHit hit : esResponse.getHits()) {
+            if (hit.getSource().get(IndexFields.FIELD_JOB_ID) != null) {
+                String backupSourcePluginName = hit.getSource().get(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_NAME)
+                        .toString();
+                String backupSourceIdentification = hit.getSource().get(IndexFields.FIELD_BACKUP_SOURCE_IDENTIFICATION)
+                        .toString();
+                String label = backupSourcePluginName + " (" + backupSourceIdentification + ")";
+                Integer count = groupedHits.get(label);
+                if (count == null) {
+                    count = Integer.valueOf(1);
+                } else {
+                    count = Integer.valueOf(count.intValue() + 1);
+                }
+                groupedHits.put(label, count);
+            }
+        }
+
+        // ...and .map
+        List<CountedEntry> countedEntries = new ArrayList<>();
+        for (Entry<String, Integer> entry : groupedHits.entrySet()) {
+            countedEntries.add(new CountedEntry(entry.getKey(), entry.getValue().intValue()));
+        }
+
+        return countedEntries;
+    }
+
+    private static List<CountedEntry> groupByContentType(org.elasticsearch.action.search.SearchResponse esResponse) {
+        // Now where's my Scala groupBy!? *heul*
+        Map<String, Integer> groupedHits = new HashMap<>();
+        for (SearchHit hit : esResponse.getHits()) {
+            String type;
+            if (hit.getSource().get(IndexFields.FIELD_CONTENT_TYPE) != null) {
+                type = getTypeFromMimeType(hit.getSource().get(IndexFields.FIELD_CONTENT_TYPE).toString());
+            } else {
+                type = "other";
+            }
+
+            Integer count = groupedHits.get(type);
+            if (count == null) {
+                count = Integer.valueOf(1);
+            } else {
+                count = Integer.valueOf(count.intValue() + 1);
+            }
+            groupedHits.put(type, count);
+        }
+
+        // ...and .map
+        List<CountedEntry> countedEntries = new ArrayList<>();
+        for (Entry<String, Integer> entry : groupedHits.entrySet()) {
+            countedEntries.add(new CountedEntry(entry.getKey(), entry.getValue().intValue()));
+        }
+
+        return countedEntries;
+    }
+
+    private static List<CountedEntry> groupByContentJob(org.elasticsearch.action.search.SearchResponse esResponse) {
+        // Now where's my Scala groupBy!? *heul*
+        Map<String, Integer> groupedHits = new HashMap<>();
+        for (SearchHit hit : esResponse.getHits()) {
+            if (hit.getSource().get(IndexFields.FIELD_JOB_ID) != null) {
+                String backupJobName = hit.getSource().get(IndexFields.FIELD_JOB_NAME).toString();
+                String backupTimestamp = hit.getSource().get(IndexFields.FIELD_BACKUP_AT).toString();
+                String label = backupJobName + " (" + backupTimestamp + ")";
+                Integer count = groupedHits.get(label);
+                if (count == null) {
+                    count = Integer.valueOf(1);
+                } else {
+                    count = Integer.valueOf(count.intValue() + 1);
+                }
+                groupedHits.put(label, count);
+            }
+        }
+
+        // ...and .map
+        List<CountedEntry> countedEntries = new ArrayList<>();
+        for (Entry<String, Integer> entry : groupedHits.entrySet()) {
+            countedEntries.add(new CountedEntry(entry.getKey(), entry.getValue().intValue()));
+        }
+
+        return countedEntries;
+    }
+
+    private static String getTypeFromMimeType(String mime) {
+        return getTypeFromMimeTypeLowerCase(mime.toLowerCase());
+    }
 
     private static String getTypeFromMimeTypeLowerCase(String mime) {
         if (mime.contains("html")) {
             return "html";
-        }	
-		if (mime.startsWith("image")) {
+        }
+        if (mime.startsWith("image")) {
             return "image";
         }
-		if (mime.startsWith("video")) {
+        if (mime.startsWith("video")) {
             return "video";
         }
-		if (mime.startsWith("audio")) {
+        if (mime.startsWith("audio")) {
             return "audio";
         }
-		if (mime.startsWith("text")) {
+        if (mime.startsWith("text")) {
             return "text";
         }
-		if (mime.contains("pdf")) {
+        if (mime.contains("pdf")) {
             return "text";
         }
-		if (mime.contains("ogg")) {
+        if (mime.contains("ogg")) {
             return "audio";
         }
 
-		// Add more special rules as needed 
-		return "other";
+        // Add more special rules as needed 
+        return "other";
     }
 
-	public static String getFilterSuffix(Map<String, List<String>> filters) {
-		if (filters == null) {
-			return "";
-		}
-		
-		StringBuilder filterstr = new StringBuilder();
-		
-		if (filters.containsKey("type")) {
-			filterstr.append('(');
+    public static String getFilterSuffix(Map<String, List<String>> filters) {
+        if (filters == null) {
+            return "";
+        }
 
-			for (String filter : filters.get("type")) {
-				if (filter.toLowerCase().equals("html")) {
-				    filterstr.append("Content-Type:*html* OR ");
-				} else if (filter.toLowerCase().equals("image")) {
-				    filterstr.append("Content-Type:image* OR ");
-				} else if (filter.toLowerCase().equals("video")) {
-				    filterstr.append("Content-Type:video* OR ");
-				} else if (filter.toLowerCase().equals("audio")) {
-				    filterstr.append("Content-Type:audio* OR ");
-				} else if (filter.toLowerCase().equals("text")) {
-				    filterstr.append("Content-Type:text* OR ");
-				}
-			}
+        StringBuilder filterstr = new StringBuilder();
 
-			// remove the last " OR " and close the search string for this part
-            filterstr.setLength(filterstr.length() - 4);
-			filterstr.append(") AND ");
-		}
-		
-		// TODO if "ProfileName" includes special chars like (,", ... we will have a problem with the search?
-		if (filters.containsKey("source")) {
+        if (filters.containsKey("type")) {
             filterstr.append('(');
 
-			// something like this will come "org.backmeup.source (ProfileName)"
-			for (String filter : filters.get("source")) {
-				// get out the source plugin, result will be
-				// "org.backmeup.source"
-				String source = filter.substring(0, filter.indexOf(" "));
+            for (String filter : filters.get("type")) {
+                if (filter.toLowerCase().equals("html")) {
+                    filterstr.append("Content-Type:*html* OR ");
+                } else if (filter.toLowerCase().equals("image")) {
+                    filterstr.append("Content-Type:image* OR ");
+                } else if (filter.toLowerCase().equals("video")) {
+                    filterstr.append("Content-Type:video* OR ");
+                } else if (filter.toLowerCase().equals("audio")) {
+                    filterstr.append("Content-Type:audio* OR ");
+                } else if (filter.toLowerCase().equals("text")) {
+                    filterstr.append("Content-Type:text* OR ");
+                }
+            }
 
-				// get out the profile "(Profilename)"
-				String profile = filter.substring(filter.indexOf(" ") + 1,
-						filter.length());
-				// remove the brackets at begin and end, result will be
-				// "ProfileName"
-				profile = profile.substring(1, profile.length() - 1);
-
-				filterstr.append("(" + IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_NAME + ":"
-						+ source + " AND " + IndexFields.FIELD_BACKUP_SOURCE_IDENTIFICATION
-						+ ":" + profile + ") OR ");
-			}
-
-			// remove the last " OR " and close the search string for this part
+            // remove the last " OR " and close the search string for this part
             filterstr.setLength(filterstr.length() - 4);
             filterstr.append(") AND ");
-		}
-		
-		// TODO if job contains special chars ...
-		if (filters.containsKey("job")) {
+        }
+
+        // TODO if "ProfileName" includes special chars like (,", ... we will have a problem with the search?
+        if (filters.containsKey("source")) {
             filterstr.append('(');
 
-			// something like this will come "JobName (Timestamp)" (java
-			// timestamp -> 13 chars)
-			for (String filter : filters.get("job")) {
-				// get out the timestamp (also remove the "()").
-				String timestamp = filter.substring(filter.length() - 14,
-						filter.length() - 1);
+            // something like this will come "org.backmeup.source (ProfileName)"
+            for (String filter : filters.get("source")) {
+                // get out the source plugin, result will be
+                // "org.backmeup.source"
+                String source = filter.substring(0, filter.indexOf(" "));
 
-				// get out the job name
-				String jobname = filter.substring(0, filter.length() - 16);
+                // get out the profile "(Profilename)"
+                String profile = filter.substring(filter.indexOf(" ") + 1, filter.length());
+                // remove the brackets at begin and end, result will be
+                // "ProfileName"
+                profile = profile.substring(1, profile.length() - 1);
 
-				filterstr.append("(" + IndexFields.FIELD_BACKUP_AT + ":" + timestamp + " AND "
-						+ IndexFields.FIELD_JOB_NAME + ":" + jobname + ") OR ");
-			}
+                filterstr.append("(" + IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_NAME + ":" + source + " AND "
+                        + IndexFields.FIELD_BACKUP_SOURCE_IDENTIFICATION + ":" + profile + ") OR ");
+            }
 
-			// remove the last " OR " and close the search string for this part
+            // remove the last " OR " and close the search string for this part
             filterstr.setLength(filterstr.length() - 4);
             filterstr.append(") AND ");
-		}
-		
-		return filterstr.toString();
-	}
-	
-	public static QueryBuilder buildQuery(User userid, String queryString,
-			Map<String, List<String>> filters) {
-		BoolQueryBuilder qBuilder = new BoolQueryBuilder();
-		qBuilder.must(QueryBuilders.matchQuery(IndexFields.FIELD_OWNER_ID,
-				userid));
-		qBuilder.must(QueryBuilders.queryString(queryString));
+        }
 
-		if (filters == null) {
-			return qBuilder;
-		}
+        // TODO if job contains special chars ...
+        if (filters.containsKey("job")) {
+            filterstr.append('(');
 
-		BoolQueryBuilder typematches = buildTypeQuery(filters);
-		BoolQueryBuilder sourcematches = buildSourceQuery(filters);
-		BoolQueryBuilder jobmatches = buildJobQuery(filters);
+            // something like this will come "JobName (Timestamp)" (java
+            // timestamp -> 13 chars)
+            for (String filter : filters.get("job")) {
+                // get out the timestamp (also remove the "()").
+                String timestamp = filter.substring(filter.length() - 14, filter.length() - 1);
 
-		if (typematches != null) {
-			qBuilder.must(typematches);
-		}
-		if (sourcematches != null) {
-			qBuilder.must(sourcematches);
-		}
-		if (jobmatches != null) {
-			qBuilder.must(jobmatches);
-		}
+                // get out the job name
+                String jobname = filter.substring(0, filter.length() - 16);
 
-		return qBuilder;
-	}
-	
-	private static BoolQueryBuilder buildTypeQuery(
-			Map<String, List<String>> filters) {
-		BoolQueryBuilder typematches = null;
+                filterstr.append("(" + IndexFields.FIELD_BACKUP_AT + ":" + timestamp + " AND "
+                        + IndexFields.FIELD_JOB_NAME + ":" + jobname + ") OR ");
+            }
 
-		if (filters.containsKey("type")) {
-			typematches = new BoolQueryBuilder();
-			// minimum 1 of the should clausels must match
-			typematches.minimumNumberShouldMatch(1);
+            // remove the last " OR " and close the search string for this part
+            filterstr.setLength(filterstr.length() - 4);
+            filterstr.append(") AND ");
+        }
 
-			for (String filter : filters.get("type")) {
-				if (filter.toLowerCase().equals("html")) {
-					typematches.should(QueryBuilders.matchPhraseQuery(
-					        IndexFields.FIELD_CONTENT_TYPE, "*html*"));
-				} else if (filter.toLowerCase().equals("image")) {
-					typematches.should(QueryBuilders.matchPhraseQuery(
-					        IndexFields.FIELD_CONTENT_TYPE, "image*"));
-				} else if (filter.toLowerCase().equals("video")) {
-					typematches.should(QueryBuilders.matchPhraseQuery(
-					        IndexFields.FIELD_CONTENT_TYPE, "video*"));
-				} else if (filter.toLowerCase().equals("audio")) {
-					typematches.should(QueryBuilders.matchPhraseQuery(
-					        IndexFields.FIELD_CONTENT_TYPE, "audio*"));
-				} else if (filter.toLowerCase().equals("text")) {
-					typematches.should(QueryBuilders.matchPhraseQuery(
-					        IndexFields.FIELD_CONTENT_TYPE, "text*"));
-				}
-			}
-		}
+        return filterstr.toString();
+    }
 
-		return typematches;
-	}
-	
-	private static BoolQueryBuilder buildSourceQuery(
-			Map<String, List<String>> filters) {
-		BoolQueryBuilder sourcematches = null;
+    public static QueryBuilder buildQuery(User userid, String queryString, Map<String, List<String>> filters) {
+        BoolQueryBuilder qBuilder = new BoolQueryBuilder();
+        qBuilder.must(QueryBuilders.matchQuery(IndexFields.FIELD_OWNER_ID, userid));
+        qBuilder.must(QueryBuilders.queryString(queryString));
 
-		if (filters.containsKey("source")) {
-			sourcematches = new BoolQueryBuilder();
-			// minimum 1 of the should clausels must match
-			sourcematches.minimumNumberShouldMatch(1);
+        if (filters == null) {
+            return qBuilder;
+        }
 
-			for (String filter : filters.get("source")) {
-				// get out the source plugin, result will be
-				// "org.backmeup.source"
-				String source = filter.substring(0, filter.indexOf(" "));
+        BoolQueryBuilder typematches = buildTypeQuery(filters);
+        BoolQueryBuilder sourcematches = buildSourceQuery(filters);
+        BoolQueryBuilder jobmatches = buildJobQuery(filters);
 
-				// get out the profile "(Profilename)"
-				String profile = filter.substring(filter.indexOf(" ") + 1, filter.length());
+        if (typematches != null) {
+            qBuilder.must(typematches);
+        }
+        if (sourcematches != null) {
+            qBuilder.must(sourcematches);
+        }
+        if (jobmatches != null) {
+            qBuilder.must(jobmatches);
+        }
 
-				// remove the brackets at begin and end, result will be "ProfileName"
-				profile = profile.substring(1, profile.length() - 1);
+        return qBuilder;
+    }
 
-				BoolQueryBuilder tempbuilder = new BoolQueryBuilder();
-				tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_NAME, source));
-				tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_BACKUP_SOURCE_IDENTIFICATION, profile));
+    private static BoolQueryBuilder buildTypeQuery(Map<String, List<String>> filters) {
+        BoolQueryBuilder typematches = null;
 
-				// tempbuilder1 or tempbulder2 or ...
-				sourcematches.should(tempbuilder);
-			}
-		}
+        if (filters.containsKey("type")) {
+            typematches = new BoolQueryBuilder();
+            // minimum 1 of the should clausels must match
+            typematches.minimumNumberShouldMatch(1);
 
-		return sourcematches;
-	}
-	
-	private static BoolQueryBuilder buildJobQuery( Map<String, List<String>> filters) {
-		BoolQueryBuilder jobmatches = null;
+            for (String filter : filters.get("type")) {
+                if (filter.toLowerCase().equals("html")) {
+                    typematches.should(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_CONTENT_TYPE, "*html*"));
+                } else if (filter.toLowerCase().equals("image")) {
+                    typematches.should(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_CONTENT_TYPE, "image*"));
+                } else if (filter.toLowerCase().equals("video")) {
+                    typematches.should(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_CONTENT_TYPE, "video*"));
+                } else if (filter.toLowerCase().equals("audio")) {
+                    typematches.should(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_CONTENT_TYPE, "audio*"));
+                } else if (filter.toLowerCase().equals("text")) {
+                    typematches.should(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_CONTENT_TYPE, "text*"));
+                }
+            }
+        }
 
-		if (filters.containsKey("job")) {
-			jobmatches = new BoolQueryBuilder();
-			// minimum 1 of the should clausels must match
-			jobmatches.minimumNumberShouldMatch(1);
+        return typematches;
+    }
 
-			// something like this will come "JobName (Timestamp)" (java timestamp -> 13 chars)
-			for (String filter : filters.get("job")) {
-				// get out the timestamp (also remove the "()").
-				String timestamp = filter.substring(filter.length() - 14, filter.length() - 1);
+    private static BoolQueryBuilder buildSourceQuery(Map<String, List<String>> filters) {
+        BoolQueryBuilder sourcematches = null;
 
-				// get out the job name
-				String jobname = filter.substring(0, filter.length() - 16);
+        if (filters.containsKey("source")) {
+            sourcematches = new BoolQueryBuilder();
+            // minimum 1 of the should clausels must match
+            sourcematches.minimumNumberShouldMatch(1);
 
-				BoolQueryBuilder tempbuilder = new BoolQueryBuilder();
-				tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_BACKUP_AT, timestamp));
-				tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_JOB_NAME, jobname));
+            for (String filter : filters.get("source")) {
+                // get out the source plugin, result will be
+                // "org.backmeup.source"
+                String source = filter.substring(0, filter.indexOf(" "));
 
-				// tempbuilder1 or tempbulder2 or ...
-				jobmatches.should(tempbuilder);
-			}
-		}
+                // get out the profile "(Profilename)"
+                String profile = filter.substring(filter.indexOf(" ") + 1, filter.length());
 
-		return jobmatches;
-	}
+                // remove the brackets at begin and end, result will be "ProfileName"
+                profile = profile.substring(1, profile.length() - 1);
+
+                BoolQueryBuilder tempbuilder = new BoolQueryBuilder();
+                tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_NAME, source));
+                tempbuilder.must(QueryBuilders
+                        .matchPhraseQuery(IndexFields.FIELD_BACKUP_SOURCE_IDENTIFICATION, profile));
+
+                // tempbuilder1 or tempbulder2 or ...
+                sourcematches.should(tempbuilder);
+            }
+        }
+
+        return sourcematches;
+    }
+
+    private static BoolQueryBuilder buildJobQuery(Map<String, List<String>> filters) {
+        BoolQueryBuilder jobmatches = null;
+
+        if (filters.containsKey("job")) {
+            jobmatches = new BoolQueryBuilder();
+            // minimum 1 of the should clausels must match
+            jobmatches.minimumNumberShouldMatch(1);
+
+            // something like this will come "JobName (Timestamp)" (java timestamp -> 13 chars)
+            for (String filter : filters.get("job")) {
+                // get out the timestamp (also remove the "()").
+                String timestamp = filter.substring(filter.length() - 14, filter.length() - 1);
+
+                // get out the job name
+                String jobname = filter.substring(0, filter.length() - 16);
+
+                BoolQueryBuilder tempbuilder = new BoolQueryBuilder();
+                tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_BACKUP_AT, timestamp));
+                tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_JOB_NAME, jobname));
+
+                // tempbuilder1 or tempbulder2 or ...
+                jobmatches.should(tempbuilder);
+            }
+        }
+
+        return jobmatches;
+    }
 }

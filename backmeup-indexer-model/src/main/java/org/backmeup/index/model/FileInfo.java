@@ -4,7 +4,7 @@ public class FileInfo {
 
     private String fileId;
     private String source;
-    private Long sourceId;
+    private String sourceId;
     private long timeStamp;
     private String title;
     private String type;
@@ -25,7 +25,7 @@ public class FileInfo {
     }
 
     public String getFileId() {
-        return fileId;
+        return this.fileId;
     }
 
     public void setFileId(String fileId) {
@@ -33,7 +33,7 @@ public class FileInfo {
     }
 
     public String getSource() {
-        return source;
+        return this.source;
     }
 
     public void setSource(String source) {
@@ -41,7 +41,7 @@ public class FileInfo {
     }
 
     public long getTimeStamp() {
-        return timeStamp;
+        return this.timeStamp;
     }
 
     public void setTimeStamp(long timeStamp) {
@@ -49,7 +49,7 @@ public class FileInfo {
     }
 
     public String getTitle() {
-        return title;
+        return this.title;
     }
 
     public void setTitle(String title) {
@@ -57,7 +57,7 @@ public class FileInfo {
     }
 
     public String getType() {
-        return type;
+        return this.type;
     }
 
     public void setType(String type) {
@@ -65,7 +65,7 @@ public class FileInfo {
     }
 
     public String getThumbnailURL() {
-        return thumbnailURL;
+        return this.thumbnailURL;
     }
 
     public void setThumbnailURL(String thumbnailURL) {
@@ -73,7 +73,7 @@ public class FileInfo {
     }
 
     public String getPath() {
-        return path;
+        return this.path;
     }
 
     public void setPath(String path) {
@@ -88,18 +88,19 @@ public class FileInfo {
         return this.sink;
     }
 
-    public Long getSourceId() {
-        return sourceId;
+    public String getSourceId() {
+        return this.sourceId;
     }
 
-    public void setSourceId(Long sourceId) {
+    public void setSourceId(String sourceId) {
         this.sourceId = sourceId;
     }
 
     @Override
     public String toString() {
-        return "FileInfo [fileId=" + fileId + ", source=" + source + ", sourceId=" + sourceId + ", timeStamp=" + timeStamp + ", title="
-                + title + ", type=" + type + ", thumbnailURL=" + thumbnailURL + ", path=" + path + ", sink=" + sink + "]";
+        return "FileInfo [fileId=" + this.fileId + ", source=" + this.source + ", sourceId=" + this.sourceId
+                + ", timeStamp=" + this.timeStamp + ", title=" + this.title + ", type=" + this.type + ", thumbnailURL="
+                + this.thumbnailURL + ", path=" + this.path + ", sink=" + this.sink + "]";
     }
 
 }
