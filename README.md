@@ -14,8 +14,8 @@ BackMeUp v2 "Themis" Index Component. Provides a central interface for handling 
 
 Specific to index-core
  - Truecrypt v7.1a [from https://www.grc.com/misc/truecrypt/truecrypt.htm]
- - Elasticsearch 1.2.0 [http://www.elasticsearch.org/downloads/1-2-0/] 
- -- Elasticsearch Marvel Dashboard [https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.2.0.zip]
+ - Elasticsearch 1.4.0 [http://www.elasticsearch.org/downloads/1-4-0/]
+ -- Elasticsearch Marvel Dashboard [https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.4.0.zip]
 
 Elasticsearch + Marvel beide in Version 1.2.0 zum download zur Verfügung gestellt:
 http://www.share-online.biz/dl/Q2AY2ZEN8ZP
@@ -56,9 +56,9 @@ sudo ./truecrypt-7.1a-setup-console-x64
 
 3) Configuration
 ================
-Make sure to install TrueCrypt v7.1a and ElasticSearch v1.2.0 on your operating system. 
-Go to backmeup-indexer-core>src>main>resources>backmeup-indexer.properties and edit
-according to your setup
+Make sure to install TrueCrypt v7.1a and ElasticSearch v1.4.0 on your operating system.
+Go to backmeup-indexer-core>src>main>resources>backmeup-indexer_windows.properties or 
+backmeup-indexer_linux.properties depending on your OS and edit according to your setup
 
 Truecrypt
  - Linux:
@@ -70,7 +70,7 @@ Truecrypt
    * truecrypt.mountable.drives=I,J,K,L - a comma seperated list of mountable drives to use
  
  Elasticsearch
- - elasticsearch.home.dir = C:/Program Files/elasticsearch-1.2.0
+ - elasticsearch.home.dir = C:/Program Files/elasticsearch-1.4.0
 
  #a directory where Truecrypt container files are copied to when mounting them
  #as well as Elasticsearch yml files when starting the ES user instances
