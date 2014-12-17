@@ -69,6 +69,7 @@
 		<!-- Maven Plugin versions -->
         <version.org.apache.felix.maven-bundle-plugin>2.4.0</version.org.apache.felix.maven-bundle-plugin>
 		<version.org.apache.maven.plugins.maven-compiler-plugin>3.1</version.org.apache.maven.plugins.maven-compiler-plugin>
+		<version.org.apache.maven.plugins.maven-copy-rename-plugin>1.0</version.org.apache.maven.plugins.maven-copy-rename-plugin>
 		<version.org.apache.maven.plugins.maven-dependency-plugin>2.8</version.org.apache.maven.plugins.maven-dependency-plugin>
         <version.org.apache.maven.plugins.maven-eclipse-plugin>2.9</version.org.apache.maven.plugins.maven-eclipse-plugin>
 		<version.org.apache.maven.plugins.maven-failsafe-plugin>2.16</version.org.apache.maven.plugins.maven-failsafe-plugin>

@@ -105,13 +105,36 @@
     </dependencies>
 
     <profiles>
+    	<!-- the default profile activated on Windows with backmeup-indexer_windows.properties 
+    	- skipping integration tests -->
         <profile>
-            <id>default</id>
+            <id>defaultWindows</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
+                <os>
+                	<family>Windows</family>
+                </os>
             </activation>
             <build>
                 <plugins>
+                	<plugin>
+                		<groupId>com.coderplus.maven.plugins</groupId>
+                		<artifactId>copy-rename-maven-plugin</artifactId>
+                		<version>${version.org.apache.maven.plugins.maven-copy-rename-plugin}</version>
+                		<executions>
+      						<execution>
+        						<id>rename-file</id>
+        						<phase>compile</phase>
+        						<goals>
+          							<goal>rename</goal>
+        						</goals>
+       							 <configuration>
+          							<sourceFile>${project.build.outputDirectory}/backmeup-indexer_windows.properties</sourceFile>
+          							<destinationFile>${project.build.outputDirectory}/backmeup-indexer.properties</destinationFile>
+        						</configuration>
+      						</execution>
+   						 </executions>
+                	</plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
@@ -130,6 +153,57 @@
                 </plugins>
             </build>
         </profile>
+        
+
+    	<!-- the default profile activated on Windows with backmeup-indexer_windows.properties 
+    	- skipping integration tests -->
+        <profile>
+            <id>defaultLinux</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <os>
+                	<family>Linux</family>
+                </os>
+            </activation>
+            <build>
+                <plugins>
+                	<plugin>
+                		<groupId>com.coderplus.maven.plugins</groupId>
+                		<artifactId>copy-rename-maven-plugin</artifactId>
+                		<version>${version.org.apache.maven.plugins.maven-copy-rename-plugin}</version>
+                		<executions>
+      						<execution>
+        						<id>rename-file</id>
+        						<phase>compile</phase>
+        						<goals>
+          							<goal>rename</goal>
+        						</goals>
+       							 <configuration>
+          							<sourceFile>${project.build.outputDirectory}/backmeup-indexer_linux.properties</sourceFile>
+          							<destinationFile>${project.build.outputDirectory}/backmeup-indexer.properties</destinationFile>
+        						</configuration>
+      						</execution>
+   						 </executions>
+                	</plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${version.org.apache.maven.plugins.maven-surefire-plugin}</version>
+                        <configuration>
+                            <excludes>
+    							<!-- tests need TrueCrypt Linux installation, skip by default -->
+                                <exclude>org/backmeup/data/dummy/ThemisDataSinkTest.java</exclude>
+                                <!-- tests need Elastic Search installation, skip by default -->
+                                <exclude>org/backmeup/index/core/elasticsearch/ESConfigurationHandlerTest.java</exclude>
+                                <exclude>org/backmeup/index/core/truecrypt/TCMountHandlerTest.java</exclude>
+                                <exclude>**/*IntegrationTest.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        
         <profile>
             <id>IntegrationTestsLinux</id>
             <activation>
