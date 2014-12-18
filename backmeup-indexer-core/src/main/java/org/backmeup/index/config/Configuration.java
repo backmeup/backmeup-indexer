@@ -7,8 +7,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.lang.SystemUtils;
+
 public class Configuration {
-    private static final String PROPERTYFILE = "backmeup-indexer.properties";
+    private static final String PROPERTYFILE_WINDOWS = "backmeup-indexer_windows.properties";
+    private static final String PROPERTYFILE_LINUX = "backmeup-indexer_linux.properties";
 
     private static final Properties properties = new Properties();
 
@@ -23,13 +26,25 @@ public class Configuration {
 
     private static void loadPropertiesFromClasspath() throws IOException {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        try (InputStream stream = loader.getResourceAsStream(PROPERTYFILE)) {
-            properties.load(stream);
+        if (SystemUtils.IS_OS_LINUX) {
+            try (InputStream stream = loader.getResourceAsStream(PROPERTYFILE_LINUX)) {
+                properties.load(stream);
+            }
+        }
+        if (SystemUtils.IS_OS_WINDOWS) {
+            try (InputStream stream = loader.getResourceAsStream(PROPERTYFILE_WINDOWS)) {
+                properties.load(stream);
+            }
         }
 
         // check if properties were loaded
         if (properties.size() < 1) {
-            throw new IOException("unable to load properties file: " + PROPERTYFILE);
+            if (SystemUtils.IS_OS_LINUX) {
+                throw new IOException("unable to load properties file: " + PROPERTYFILE_LINUX);
+            }
+            if (SystemUtils.IS_OS_WINDOWS) {
+                throw new IOException("unable to load properties file: " + PROPERTYFILE_WINDOWS);
+            }
         }
     }
 
