@@ -65,9 +65,19 @@ public class ESConfigurationHandler {
         // check if a Truecrypt Volume has been mounted, if not use the default
         // working dir path
         if (mountedTCVolume != null) {
-            log.debug("creating data + log on mounted TC volume" + mountedTCVolume);
-            tokens.put("pathtologs", mountedTCVolume + ":" + "/index/index-logs");
-            tokens.put("pathtodata", mountedTCVolume + ":" + "/index/index-data");
+            String pathtoloogs = "";
+            String pathtodata = "";
+            if (SystemUtils.IS_OS_LINUX) {
+                pathtoloogs = mountedTCVolume + "/index/index-logs";
+                pathtodata = mountedTCVolume + "/index/index-data";
+            }
+            if (SystemUtils.IS_OS_WINDOWS) {
+                pathtoloogs = mountedTCVolume + ":" + "/index/index-logs";
+                pathtodata = mountedTCVolume + ":" + "/index/index-data";
+            }
+            log.debug("creating data + log on mounted TC volume" + pathtodata + " and " + pathtoloogs);
+            tokens.put("pathtologs", pathtoloogs);
+            tokens.put("pathtodata", pathtodata);
         } else {
             log.debug("creating data + log on standard volume" + UserDataWorkingDir.getDir(userID));
             tokens.put("pathtologs", UserDataWorkingDir.getDir(userID) + "/index/index-logs");
