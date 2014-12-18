@@ -32,7 +32,7 @@ class TCMountHandler {
      */
     public static String mount(File tcVolume, String password, String proposedDriveLetter) throws IOException,
             InterruptedException, ExceptionInInitializerError, IllegalArgumentException {
-        
+
         // 1. check if a driveLetter is given and if it's allowed according to
         // config
         String driveLetter;
@@ -82,6 +82,7 @@ class TCMountHandler {
             // creating mountpoint 
             command = "mkdir -p " + driveLetter;
             executeCmd(command);
+            log.debug("created directory to mount in " + command);
             //    throw new IOException("Failed to create mount point: " + driveLetter);
         }
 
@@ -116,6 +117,7 @@ class TCMountHandler {
             Process process = Runtime.getRuntime().exec(command);
             // TODO ProcessBuilder?
 
+            //on windows don't read result, as nothing returns (blocking process)
             if (SystemUtils.IS_OS_LINUX) {
                 log.debug("checking Output of command");
                 try (BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
@@ -128,7 +130,7 @@ class TCMountHandler {
                 }
             }
 
-            log.debug("waiting for command t finish");
+            log.debug("waiting for command to finish");
             process.waitFor();
             // TODO Andrew, use the exit code if maybe it is ok - int errorCode = process.waitFor(); 
 
