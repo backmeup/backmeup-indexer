@@ -81,8 +81,8 @@ public class ESConfigurationHandler {
         try (Reader inputReader = new InputStreamReader(classpathResource)) {
 
             try (Reader tokenReplaceReader = new TokenReplaceReader(inputReader, resolver)) {
-                String outputFile = UserDataWorkingDir.getDir(userID) + "/index/elasticsearch.config.user"
-                        + userID + ".yml";
+                String outputFile = UserDataWorkingDir.getDir(userID) + "/index/elasticsearch.config.user" + userID
+                        + ".yml";
 
                 File file = new File(outputFile);
                 file.getParentFile().mkdirs();
@@ -107,7 +107,7 @@ public class ESConfigurationHandler {
         // performance)
         String command = null;
         if (SystemUtils.IS_OS_LINUX) {
-            command = getElasticSearchExecutable() + " " + "-Des.config=" + UserDataWorkingDir.getDir(userID)
+            command = "sudo " + getElasticSearchExecutable() + " " + "-Des.config=" + UserDataWorkingDir.getDir(userID)
                     + "/index/elasticsearch.config.user" + userID + ".yml";
         }
         if (SystemUtils.IS_OS_WINDOWS) {

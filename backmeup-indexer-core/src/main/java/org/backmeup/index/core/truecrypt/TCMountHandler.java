@@ -80,7 +80,7 @@ class TCMountHandler {
         String command = null;
         if (SystemUtils.IS_OS_LINUX) {
             // creating mountpoint 
-            command = "mkdir -p " + driveLetter;
+            command = "sudo mkdir -p " + driveLetter;
             executeCmd(command);
             log.debug("created directory to mount in " + command);
             //    throw new IOException("Failed to create mount point: " + driveLetter);
@@ -144,7 +144,7 @@ class TCMountHandler {
 
         String command = null;
         if (SystemUtils.IS_OS_LINUX) {
-            command = /*"sudo " + */getTrueCryptExe() + " --password=" + password + " --non-interactive "
+            command = "sudo " + getTrueCryptExe() + " --password=" + password + " --non-interactive "
                     + tcVolume.getAbsolutePath() + " " + driveLetter;
             //command =  getTrueCryptExe() + " " + tcVolume.getAbsolutePath() + " " + driveLetter + " --password=" + password + " --non-interactive";
         }
