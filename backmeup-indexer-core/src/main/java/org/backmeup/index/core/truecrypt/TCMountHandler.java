@@ -281,7 +281,8 @@ class TCMountHandler {
             executeCmd(command);
 
             if (SystemUtils.IS_OS_LINUX) {
-                command = "rmdir " + driveLetter;
+                command = "sudo rmdir " + driveLetter;
+                log.debug("cleaning up mounting point " + command);
                 executeCmd(command);
             }
         }
