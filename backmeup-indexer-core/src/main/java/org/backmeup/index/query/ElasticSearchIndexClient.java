@@ -53,7 +53,7 @@ public class ElasticSearchIndexClient implements IndexClient {
             CreateIndexResponse createIndexResponse = cirb.execute().actionGet();
             if (!createIndexResponse.isAcknowledged()) {
                 // throw new Exception("Could not create index ["+ INDEX_NAME +"].");
-                this.logger.info("Could not create index [" + INDEX_NAME + " ].");
+                this.logger.error("Could not create index [" + INDEX_NAME + " ].");
             }
         }
     }
@@ -220,9 +220,9 @@ public class ElasticSearchIndexClient implements IndexClient {
     @Override
     public void index(IndexDocument document) throws IOException {
         this.logger.debug("Pushing to ES index...");
-        try(XContentBuilder elasticBuilder = new ElasticContentBuilder(document).asElastic()) {
-            IndexResponse response = this.client.prepareIndex(INDEX_NAME, DOCUMENT_TYPE_BACKUP).setSource(elasticBuilder).setRefresh(true)
-                    .execute().actionGet();
+        try (XContentBuilder elasticBuilder = new ElasticContentBuilder(document).asElastic()) {
+            IndexResponse response = this.client.prepareIndex(INDEX_NAME, DOCUMENT_TYPE_BACKUP)
+                    .setSource(elasticBuilder).setRefresh(true).execute().actionGet();
             this.logger.debug("ingested in index: " + response.getIndex() + " type: " + response.getType() + " id: "
                     + response.getId());
         }
