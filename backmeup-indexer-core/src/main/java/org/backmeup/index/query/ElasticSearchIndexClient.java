@@ -114,8 +114,9 @@ public class ElasticSearchIndexClient implements IndexClient {
         this.logger.debug("QueryString:\n" + qBuilder.toString());
         this.logger.debug("#######################################");
 
-        return this.client.prepareSearch(INDEX_NAME).setQuery(qBuilder).addSort("backup_at", SortOrder.DESC)
-                .addHighlightedField(IndexFields.FIELD_FULLTEXT).setSize(100).execute().actionGet();
+        return this.client.prepareSearch(INDEX_NAME).setQuery(qBuilder)
+                .addSort(IndexFields.FIELD_BACKUP_AT, SortOrder.DESC).addHighlightedField(IndexFields.FIELD_FULLTEXT)
+                .setSize(100).execute().actionGet();
     }
 
     private String buildQuery(String query) {

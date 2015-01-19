@@ -76,7 +76,7 @@ class IndexUtils {
         fi.setSourceId(source.get(IndexFields.FIELD_BACKUP_SOURCE_ID).toString());
         fi.setTimeStamp(timestamp.longValue());
         fi.setTitle(source.get(IndexFields.FIELD_FILENAME).toString());
-        fi.setPath(source.get(IndexFields.FIELD_PATH).toString());
+        //fi.setPath(source.get(IndexFields.FIELD_PATH).toString());
         fi.setSink(source.get(IndexFields.FIELD_BACKUP_SINK).toString());
         Object contentType = source.get(IndexFields.FIELD_CONTENT_TYPE);
         if (contentType != null) {
@@ -137,7 +137,7 @@ class IndexUtils {
                 entry.setType("other");
             }
 
-            entry.setProperty(IndexFields.FIELD_PATH, source.get(IndexFields.FIELD_PATH).toString());
+            //entry.setProperty(IndexFields.FIELD_PATH, source.get(IndexFields.FIELD_PATH).toString());
 
             entry.copyPropertyIfExist(IndexFields.FIELD_BACKUP_SINK, source);
 
