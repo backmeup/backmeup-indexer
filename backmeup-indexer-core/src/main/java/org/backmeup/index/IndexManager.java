@@ -17,9 +17,7 @@ import org.backmeup.index.model.User;
 import org.backmeup.index.query.ES;
 import org.backmeup.index.utils.cdi.RunRequestScoped;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.cluster.ClusterState;
-import org.elasticsearch.transport.RemoteTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,20 +30,23 @@ public class IndexManager {
      */
     public synchronized Client initAndCreateAndDoEverthing(User userId) {
         RunningIndexUserConfig conf = getRunningIndexUserConfig(userId);
-        if (conf != null) {
-            //checks if an ES instance is responding and returns a new client instance if so
+        try {
+            if (conf != null) {
+                //checks if an ES instance is responding and returns a new client instance if so
 
-            Client client = es.getESTransportClient(conf);
-            
-            // sanity check cluster state
-            es.getESClusterState(userId, client);
-            // TODO this can cause exception, then we would need to shutdown the running/broken instance somehow
+                Client client = this.es.getESTransportClient(conf);
 
-            //keep instance running for another 20 minutes
-            this.indexKeepAliveTimer.extendTTL20(userId);
-            
-            //return the client handle
-            return client;
+                // sanity check cluster state
+                this.es.getESClusterState(userId, client, 1, 2);
+
+                //keep instance running for another 20 minutes
+                this.indexKeepAliveTimer.extendTTL20(userId);
+
+                //return the client handle
+                return client;
+            }
+        } catch (SearchInstanceException ex) {
+            this.shutdownInstance(userId);
         }
 
         //in this case we need to fire up an ES instance for this user
@@ -65,13 +66,13 @@ public class IndexManager {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Inject 
+    @Inject
     private ES es;
-    @Inject 
+    @Inject
     private UserDataStorage dataContainer;
-    @Inject 
+    @Inject
     private EncryptionProvider encryptionProvider;
-    @Inject 
+    @Inject
     private SearchInstances searchInstance;
     @Inject
     private RunningIndexUserConfigDao dao;
@@ -81,7 +82,7 @@ public class IndexManager {
     @RunRequestScoped
     public void startupIndexManager() {
         // Initialisation of IndexManager managed ElasticSearch instances
-        syncManagerAfterStartupFromDBRecords(searchInstance.getDefaultHost());
+        syncManagerAfterStartupFromDBRecords(this.searchInstance.getDefaultHost());
 
         this.log.debug("startup() IndexManager (ApplicationScoped) completed");
     }
@@ -91,7 +92,7 @@ public class IndexManager {
         this.log.debug("shutdown IndexManager (ApplicationScoped) started");
 
         //cleanup - shutdown all running instances
-        shutdownAllRunningInstances(searchInstance.getDefaultHost());
+        shutdownAllRunningInstances(this.searchInstance.getDefaultHost());
     }
 
     // ========================================================================
@@ -113,13 +114,13 @@ public class IndexManager {
         // update the list of available ports for this host
         for (RunningIndexUserConfig config : runningConfigs) {
             if ((config.getHostAddress() != null) && (config.getHttpPort() != null)) {
-                if (searchInstance.isKnownHost(config.getHostAddress())) {
+                if (this.searchInstance.isKnownHost(config.getHostAddress())) {
                     //check the instance's state
                     try {
                         //check if the instance is still up and running
                         getESClusterState(config.getUser());
                         // remove host + port from available ones
-                        searchInstance.takeHostPorts(config);
+                        this.searchInstance.takeHostPorts(config);
                         //register this instance for GarbageCollection
                         this.indexKeepAliveTimer.extendTTL20(config.getUser());
 
@@ -164,39 +165,45 @@ public class IndexManager {
         this.log.debug("startupInstance for userID: " + userID + " started");
 
         // 1) check if user has been initialized
-        File fTCContainerOnDataSink = dataContainer.getUserStorageCryptContainerFor(userID);
+        File fTCContainerOnDataSink = this.dataContainer.getUserStorageCryptContainerFor(userID);
         this.log.debug("startupInstance for userID: " + userID + " step1 - ok");
 
         // 2) get a local copy of the TrueCrypt container for the given user
-        File fTCContainer = dataContainer.copyUserStorageCryptContainerToLocalWorkingDir(userID, fTCContainerOnDataSink);
+        File fTCContainer = this.dataContainer.copyUserStorageCryptContainerToLocalWorkingDir(userID,
+                fTCContainerOnDataSink);
         this.log.debug("startupInstance for userID: " + userID + " step2 - ok");
 
         // 3) Now mount the ES data volume
-        String tcMountedDriveLetter = encryptionProvider.mountNextFreeMountPoint(userID, fTCContainer);
+        String tcMountedDriveLetter = this.encryptionProvider.mountNextFreeMountPoint(userID, fTCContainer);
         this.log.debug("startupInstance for userID: " + userID + " step3 - ok");
 
         // 4) crate a user specific ElasticSearch startup configuration file
-        RunningIndexUserConfig runningConfig = searchInstance.createIndexUserConfig(userID, fTCContainer, tcMountedDriveLetter);
+        RunningIndexUserConfig runningConfig = this.searchInstance.createIndexUserConfig(userID, fTCContainer,
+                tcMountedDriveLetter);
 
         // this file contains the user specific ES startup config (data, ports, etc.)
-        searchInstance.createIndexStartFile(runningConfig);
+        this.searchInstance.createIndexStartFile(runningConfig);
 
         // 5) persist the configuration within the database
         runningConfig = this.dao.save(runningConfig);
         this.log.debug("startupInstance for userID: " + userID + " step5 - ok");
 
         // 6) now power on elasticsearch
-        searchInstance.startIndexNode(runningConfig);
+        this.searchInstance.startIndexNode(runningConfig);
+        this.log.debug("startupInstance for userID: " + userID + " step6 - ok");
 
         // 7) check instance up and running
-        Client client = es.getESTransportClient(runningConfig);
-        
+        Client client = this.es.getESTransportClient(runningConfig);
+
         int maxAttempts = 3;
         int sleepSeconds = 2;
-        es.getESClusterState(userID, client, maxAttempts, sleepSeconds);
+        this.es.getESClusterState(userID, client, maxAttempts, sleepSeconds);
+        this.log.debug("startupInstance for userID: " + userID + " step7 - ok");
 
         //keep instance running for another 20 minutes
         this.indexKeepAliveTimer.extendTTL20(userID);
+
+        this.log.debug("startupInstance for userID: " + userID + " completed ok");
 
         return client;
     }
@@ -224,17 +231,17 @@ public class IndexManager {
         this.log.debug("shutdownInstance for userID: " + userID + " step1 - ok");
 
         //2. shutdown the ElasticSearch Instance
-        searchInstance.shutdownIndexNode(config);
+        this.searchInstance.shutdownIndexNode(config);
 
         //3. unmount the truecrypt volume
-        encryptionProvider.unmount(config);
+        this.encryptionProvider.unmount(config);
 
         //4. persist the index data files within the container back to the Themis data sink
-        dataContainer.copyCryptContainerDataBackIntoUserStorage(config);
+        this.dataContainer.copyCryptContainerDataBackIntoUserStorage(config);
 
         //5. remove the userconfiguration from db and release the ports
-        searchInstance.releaseHostPorts(config);
-        
+        this.searchInstance.releaseHostPorts(config);
+
         this.dao.delete(config);
         this.log.debug("shutdownInstance for userID: " + userID + " step4 - ok");
 
@@ -263,10 +270,10 @@ public class IndexManager {
      * instances
      */
     private void cleanupRude() {
-        searchInstance.shutdownAllIndexNodes();
+        this.searchInstance.shutdownAllIndexNodes();
 
         // unmount all open TrueCrypt volumes
-        encryptionProvider.unmountAll();
+        this.encryptionProvider.unmountAll();
 
         //remove the userconfiguration from db and release the ports
         this.log.debug("cleanupRude: started removing all DB records: executing " + "DELETE FROM +"
@@ -275,8 +282,8 @@ public class IndexManager {
         this.log.debug("cleanupRude: removing all DB records: completed");
 
         this.log.debug("cleanupRude: started reInitializing");
-        searchInstance.initAvailableInstances();
-        syncManagerAfterStartupFromDBRecords(searchInstance.getDefaultHost());
+        this.searchInstance.initAvailableInstances();
+        syncManagerAfterStartupFromDBRecords(this.searchInstance.getDefaultHost());
         this.log.debug("cleanupRude: completed reInitializing");
 
         // TODO delete all working directories?
@@ -292,7 +299,7 @@ public class IndexManager {
     public Client getESTransportClient(User userID) throws SearchInstanceException {
         //TODO Keep Clients and last accessed timestamp? 
         RunningIndexUserConfig conf = getRunningIndexUserConfig(userID);
-        return es.getESTransportClient(conf);
+        return this.es.getESTransportClient(conf);
     }
 
     /**
@@ -303,15 +310,13 @@ public class IndexManager {
      */
     public ClusterState getESClusterState(User userId) throws SearchInstanceException {
         RunningIndexUserConfig conf = getRunningIndexUserConfig(userId);
-        
-        try (Client client = es.getESTransportClient(conf)) {
-            return es.getESClusterState(userId, client);
-        } catch (NoNodeAvailableException | RemoteTransportException e) {
-            //TODO AL update to ElasticSearch 1.2.1 which fixes the NoNodeAvailableExeption which sometimes occurs
-            //https://github.com/jprante/elasticsearch-knapsack/issues/49
+
+        try (Client client = this.es.getESTransportClient(conf)) {
+            return this.es.getESClusterState(userId, client, 3, 2);
+        } catch (SearchInstanceException e) {
             this.log.debug("Get ES cluster state for userID: " + userId + " threw exception: " + e.toString());
             throw new SearchInstanceException("Clusterstate for userID: " + userId + " " + "Cluster not responding");
         }
     }
-    
+
 }
