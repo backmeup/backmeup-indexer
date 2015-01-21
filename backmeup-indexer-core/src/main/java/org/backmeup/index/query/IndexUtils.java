@@ -15,12 +15,10 @@ import org.backmeup.index.model.FileInfo;
 import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.SearchEntry;
 import org.backmeup.index.model.User;
-import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.highlight.HighlightField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,12 +95,20 @@ class IndexUtils {
             Map<String, Object> source = hit.getSource();
 
             StringBuilder preview = null;
-            HighlightField highlight = hit.getHighlightFields().get(IndexFields.FIELD_FULLTEXT);
+            //TODO Andrew need to check why HighlightFields is not working properly. It is set in the query.
+            /*HighlightField highlight = hit.getHighlightFields().get(IndexFields.FIELD_FULLTEXT);
             if (highlight != null) {
                 preview = new StringBuilder("... ");
                 for (Text fragment : highlight.fragments()) {
                     preview.append(fragment.string().replace("\n", " ").trim() + " ... ");
                 }
+            }*/
+
+            //TODO workaround for now
+            if (source.get(IndexFields.FIELD_FULLTEXT) != null) {
+                String fulltext = source.get(IndexFields.FIELD_FULLTEXT).toString();
+                preview = new StringBuilder("... ");
+                preview.append(fulltext.replace("\n", " ").trim() + " ... ");
             }
 
             String hash = source.get(IndexFields.FIELD_FILE_HASH).toString();
