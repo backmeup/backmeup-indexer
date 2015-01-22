@@ -133,7 +133,7 @@ class IndexUtils {
             }
 
             if (preview != null) {
-                entry.setPreviewSnippet(preview.toString().trim());
+                entry.setPreview(preview.toString().trim());
             }
 
             Object contentType = source.get(IndexFields.FIELD_CONTENT_TYPE);

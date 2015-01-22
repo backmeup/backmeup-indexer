@@ -16,13 +16,13 @@ public class SearchEntry {
     private String datasourceId;
     private String jobName;
     private String preview;
-    private final Map<String, String> properties = new HashMap<>();
+    private Map<String, String> properties = new HashMap<>();
 
     public SearchEntry() {
     }
 
     public SearchEntry(String fileId, Date timeStamp, String type, String title, String thumbnailUrl,
-            String datasource, String jobName) {
+            String datasource, String jobName, String preview, Map<String, String> properties) {
         this.fileId = fileId;
         this.timeStamp = timeStamp;
         this.title = title;
@@ -30,6 +30,16 @@ public class SearchEntry {
         this.thumbnailUrl = thumbnailUrl;
         this.datasource = datasource;
         this.jobName = jobName;
+        this.preview = preview;
+        this.properties = properties;
+    }
+
+    public Map<String, String> getProperties() {
+        return this.properties;
+    }
+
+    public void setProperties(Map<String, String> properties) {
+        this.properties = properties;
     }
 
     public String getProperty(String key) {
@@ -92,11 +102,11 @@ public class SearchEntry {
         this.datasource = datasource;
     }
 
-    public String getPreviewSnippet() {
+    public String getPreview() {
         return this.preview;
     }
 
-    public void setPreviewSnippet(String preview) {
+    public void setPreview(String preview) {
         this.preview = preview;
     }
 
