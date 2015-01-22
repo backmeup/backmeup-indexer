@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
@@ -38,7 +39,7 @@ public class IndexTest {
     @Rule
     public final EmbeddedRestServer server = new EmbeddedRestServer(IndexWithMockedFactory.class);
 
-    private final String baseUrl = server.host + server.port + "/index/" + USER;
+    private final String baseUrl = this.server.host + this.server.port + "/index/" + USER;
     private final HttpClient httpClient = HttpClientBuilder.create().build();
 
     private static IndexClient indexClient;
@@ -50,7 +51,7 @@ public class IndexTest {
 
             ElasticSearchSetup clientFactory = mock(ElasticSearchSetup.class);
             when(clientFactory.createIndexClient(new User(USER))).thenReturn(indexClient);
-            
+
             // Note: this depends on private field clientFactory in Index class.
             Whitebox.setInternalState(this, "clientFactory", clientFactory);
         }
@@ -61,44 +62,46 @@ public class IndexTest {
         searchResponse.setByJob(Arrays.asList(new CountedEntry("first Job", 1), new CountedEntry("next Job", 1)));
         searchResponse.setBySource(Arrays.asList(new CountedEntry("Dropbox", 2), new CountedEntry("Facebook", 2)));
         searchResponse.setByType(Arrays.asList(new CountedEntry("Type", 3)));
-        searchResponse.setFiles(Arrays.asList(new SearchEntry("fileId", new Date(), "type", "A wonderful file (title)", "thmbnailUrl",
-                "Dropbox", "first Job")));
+        searchResponse.setFiles(Arrays.asList(new SearchEntry("fileId", new Date(), "type", "A wonderful file (title)",
+                "thmbnailUrl", "Dropbox", "first Job", null, new HashMap<String, String>())));
         return searchResponse;
     }
 
     @Test
     public void shouldGetSearchResultForUserAndQuery() throws IOException {
-        HttpGet method = new HttpGet(baseUrl + "?query=find_me&username=peter");
+        HttpGet method = new HttpGet(this.baseUrl + "?query=find_me&username=peter");
 
-        HttpResponse response = httpClient.execute(method);
+        HttpResponse response = this.httpClient.execute(method);
 
         assertStatusCode(200, response);
 
         HttpEntity entity = response.getEntity();
         String body = IOUtils.toString(entity.getContent());
         // System.out.println(body);
-        assertTrue(body.indexOf("\"byJob\":[{\"title\":\"first Job\",\"count\":1},{\"title\":\"next Job\",\"count\":1}]") >= 0);
+        assertTrue(body
+                .indexOf("\"byJob\":[{\"title\":\"first Job\",\"count\":1},{\"title\":\"next Job\",\"count\":1}]") >= 0);
         assertTrue(body.indexOf("\"byType\":[{\"title\":\"Type\",\"count\":3}]") >= 0);
-        assertTrue(body.indexOf("\"bySource\":[{\"title\":\"Dropbox\",\"count\":2},{\"title\":\"Facebook\",\"count\":2}]") >= 0);
+        assertTrue(body
+                .indexOf("\"bySource\":[{\"title\":\"Dropbox\",\"count\":2},{\"title\":\"Facebook\",\"count\":2}]") >= 0);
         assertTrue(body.indexOf("\"files\":[{\"fileId\":\"fileId\",") >= 0);
     }
 
     @Test
     public void shouldGetBadRequestForMissingQuery() throws IOException {
-        HttpGet method = new HttpGet(baseUrl + "?username=peter");
+        HttpGet method = new HttpGet(this.baseUrl + "?username=peter");
 
-        HttpResponse response = httpClient.execute(method);
+        HttpResponse response = this.httpClient.execute(method);
 
         assertStatusCode(400, response);
     }
 
     @Test
     public void shouldIndexDocument() throws IOException {
-        HttpPost method = new HttpPost(baseUrl);
+        HttpPost method = new HttpPost(this.baseUrl);
 
         String jsonDocument = "{\"fields\":{ \"name\":\"Peter\", \"size\":42}, \"largeFields\":{}}";
         method.setEntity(new StringEntity(jsonDocument, ContentType.APPLICATION_JSON));
-        HttpResponse response = httpClient.execute(method);
+        HttpResponse response = this.httpClient.execute(method);
 
         assertStatusCode(201, response);
 
