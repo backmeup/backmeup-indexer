@@ -48,6 +48,7 @@ class IndexUtils {
             fileItem.setTimeStamp(new Date(timestamp));
 
             if (source.get(IndexFields.FIELD_THUMBNAIL_PATH) != null) {
+                //TODO andrew is this correct? FIXME
                 fileItem.setThumbnailURL(THUMBNAILS_FOLDER + owner + "/" + fileId);
             }
 
@@ -74,7 +75,7 @@ class IndexUtils {
         fi.setSourceId(source.get(IndexFields.FIELD_BACKUP_SOURCE_ID).toString());
         fi.setTimeStamp(timestamp.longValue());
         fi.setTitle(source.get(IndexFields.FIELD_FILENAME).toString());
-        //fi.setPath(source.get(IndexFields.FIELD_PATH).toString());
+        fi.setPath(source.get(IndexFields.FIELD_PATH).toString());
         fi.setSink(source.get(IndexFields.FIELD_BACKUP_SINK).toString());
         Object contentType = source.get(IndexFields.FIELD_CONTENT_TYPE);
         if (contentType != null) {
@@ -110,6 +111,7 @@ class IndexUtils {
                 preview = new StringBuilder("... ");
                 preview.append(fulltext.replace("\n", " ").trim() + " ... ");
             }
+            // END workaround
 
             String hash = source.get(IndexFields.FIELD_FILE_HASH).toString();
             Integer owner = (Integer) source.get(IndexFields.FIELD_OWNER_ID);
@@ -143,7 +145,19 @@ class IndexUtils {
                 entry.setType("other");
             }
 
-            //entry.setProperty(IndexFields.FIELD_PATH, source.get(IndexFields.FIELD_PATH).toString());
+            entry.setProperty(IndexFields.FIELD_PATH, source.get(IndexFields.FIELD_PATH).toString());
+
+            //add the download URL if sink supports always on
+            if (source.get(IndexFields.FIELD_SINK_DOWNLOAD_BASE) != null) {
+                if (entry.getProperty(IndexFields.FIELD_PATH) != null) {
+                    //e.g. http://localhost:8080/backmeup-storage-service/files/#REPLACEAUTHTOKEN#/
+                    String sinkDownloadBaseURL = (String) source.get(IndexFields.FIELD_SINK_DOWNLOAD_BASE);
+                    //e.g. BMU_filegenerator_492_22_01_2015_21_14/folder1/text01.txt
+                    String relPathOnSink = entry.getProperty(IndexFields.FIELD_PATH);
+                    //TODO andrew check baseURL + relPath with proper slashes / 
+                    entry.setProperty("downloadURL", sinkDownloadBaseURL + relPathOnSink);
+                }
+            }
 
             entry.copyPropertyIfExist(IndexFields.FIELD_BACKUP_SINK, source);
 
@@ -153,7 +167,7 @@ class IndexUtils {
                 entry.setThumbnailUrl(THUMBNAILS_FOLDER + userName + "/" + owner + ":" + hash + ":" + timestamp);
             }
 
-            // Custom props
+            // Custom props for e.g. facebook, mail plugin
             entry.copyPropertyIfExist("destination", source);
             entry.copyPropertyIfExist("message", source);
             entry.copyPropertyIfExist("parent", source);

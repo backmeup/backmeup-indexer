@@ -1,8 +1,7 @@
 package org.backmeup.index.api;
 
 /**
- * Symbolic names of content fields of the data to be indexed. All fields are
- * either String or Long.
+ * Symbolic names of content fields of the data to be indexed. All fields are either String or Long.
  */
 public class IndexFields {
 
@@ -21,6 +20,7 @@ public class IndexFields {
     public static final String FIELD_JOB_ID = "job_id";
     public static final String FIELD_JOB_NAME = "job_name";
     public static final String FIELD_FULLTEXT = "fulltext";
+    public static final String FIELD_SINK_DOWNLOAD_BASE = "sink_download_base";
 
     /*----Fields manipulated by the Index-Core or Storage components----*/
     public static final String FIELD_INDEX_UUID = "indexrecord_uuid";
