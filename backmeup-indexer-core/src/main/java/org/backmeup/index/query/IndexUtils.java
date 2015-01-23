@@ -150,7 +150,7 @@ class IndexUtils {
             //add the download URL if sink supports always on
             if (source.get(IndexFields.FIELD_SINK_DOWNLOAD_BASE) != null) {
                 if (entry.getProperty(IndexFields.FIELD_PATH) != null) {
-                    //e.g. http://localhost:8080/backmeup-storage-service/files/#REPLACEAUTHTOKEN#/
+                    //e.g. http://localhost:8080/backmeup-storage-service/download/
                     String sinkDownloadBaseURL = (String) source.get(IndexFields.FIELD_SINK_DOWNLOAD_BASE);
                     //e.g. BMU_filegenerator_492_22_01_2015_21_14/folder1/text01.txt
                     String relPathOnSink = entry.getProperty(IndexFields.FIELD_PATH);
