@@ -246,6 +246,22 @@ class TCMountHandler {
             log.error("Error executing: " + command + " " + e.toString());
             throw e;
         }
+
+        for (String drive : getSupportedDriveLetters()) {
+            cleanUpMountingPoint(drive);
+        }
+
+    }
+
+    private static void cleanUpMountingPoint(String driveLetter) throws IOException, InterruptedException {
+        if (SystemUtils.IS_OS_LINUX) {
+            File f = new File(driveLetter);
+            if ((f != null) && f.exists()) {
+                String command = "sudo rmdir " + driveLetter;
+                log.debug("cleaning up mounting point " + command);
+                executeCmd(command);
+            }
+        }
     }
 
     private static String createUnmountAllCommand() {
@@ -280,11 +296,7 @@ class TCMountHandler {
             log.debug("unmounting: " + command);
             executeCmd(command);
 
-            if (SystemUtils.IS_OS_LINUX) {
-                command = "sudo rmdir " + driveLetter;
-                log.debug("cleaning up mounting point " + command);
-                executeCmd(command);
-            }
+            cleanUpMountingPoint(driveLetter);
         }
     }
 
