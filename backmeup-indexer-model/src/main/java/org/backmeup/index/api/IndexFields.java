@@ -23,6 +23,6 @@ public class IndexFields {
     public static final String FIELD_SINK_DOWNLOAD_BASE = "sink_download_base";
 
     /*----Fields manipulated by the Index-Core or Storage components----*/
-    public static final String FIELD_INDEX_UUID = "indexrecord_uuid";
+    public static final String FIELD_INDEX_DOCUMENT_UUID = "indexrecord_uuid";
 
 }

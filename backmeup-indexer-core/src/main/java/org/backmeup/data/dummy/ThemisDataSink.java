@@ -59,7 +59,8 @@ public class ThemisDataSink {
      * @param f
      *            the user specific yml ES startup file
      */
-    @SuppressWarnings("resource") // new FileInputStream(f) is closed inside FileUtils.copyInputStreamToFile
+    @SuppressWarnings("resource")
+    // new FileInputStream(f) is closed inside FileUtils.copyInputStreamToFile
     public static void saveIndexTrueCryptContainer(File f, User userID) throws IOException {
         if (f == null) {
             throw new IOException("file f is null");
@@ -116,14 +117,14 @@ public class ThemisDataSink {
         UUID uuid = null;
 
         // check if we need to generate a unique file name or if if it's sharing
-        if (indexFragment.getFields().containsKey(IndexFields.FIELD_INDEX_UUID)) {
+        if (indexFragment.getFields().containsKey(IndexFields.FIELD_INDEX_DOCUMENT_UUID)) {
             // existing object, has already assigned a UUID
-            String uuidString = (String) indexFragment.getFields().get(IndexFields.FIELD_INDEX_UUID);
+            String uuidString = (String) indexFragment.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID);
             uuid = UUID.fromString(uuidString);
         } else {
             uuid = UUID.randomUUID();
             // before serializing we add the UUID as element within the object
-            indexFragment.field(IndexFields.FIELD_INDEX_UUID, uuid.toString());
+            indexFragment.field(IndexFields.FIELD_INDEX_DOCUMENT_UUID, uuid.toString());
         }
 
         // serialize the IndexDocument to JSON
@@ -145,7 +146,7 @@ public class ThemisDataSink {
     public static IndexDocument getIndexFragment(UUID objectID, User userID, IndexFragmentType type) throws IOException {
         File f = getIndexFragmentFile(objectID, userID, type);
 
-        if (userID.id()> -1 && (f.exists() && f.canRead())) {
+        if (userID.id() > -1 && (f.exists() && f.canRead())) {
             List<String> lines = FileUtils.readLines(f, "UTF-8");
 
             String serObject = "";
