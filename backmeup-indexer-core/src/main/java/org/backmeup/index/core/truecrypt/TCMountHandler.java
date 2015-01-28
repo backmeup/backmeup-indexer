@@ -190,7 +190,7 @@ class TCMountHandler {
 
     private static List<String> generateSupportedDrivesForLinux() {
         List<String> r = new ArrayList<>();
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 500; i++) {
             r.add("/media/themis/volume" + i);
         }
         return r;
@@ -256,7 +256,7 @@ class TCMountHandler {
     private static void cleanUpMountingPoint(String driveLetter) throws IOException, InterruptedException {
         if (SystemUtils.IS_OS_LINUX) {
             File f = new File(driveLetter);
-            if ((f != null) && f.exists()) {
+            if ((f != null) && (f.exists())) {
                 String command = "sudo rmdir " + driveLetter;
                 log.debug("cleaning up mounting point " + command);
                 executeCmd(command);
