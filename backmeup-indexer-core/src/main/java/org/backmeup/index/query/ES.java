@@ -1,5 +1,7 @@
 package org.backmeup.index.query;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -25,6 +27,8 @@ import org.slf4j.LoggerFactory;
 public class ES {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
+    //cache of ClusterStateCache per userID mapping -> to speed up response times
+    private Map<Long, ESClusterStateCache> clusterStateCache = new HashMap<Long, ESClusterStateCache>();
 
     public Client getESTransportClient(RunningIndexUserConfig conf) {
         //check if we've got a DB record
@@ -53,22 +57,21 @@ public class ES {
      * @param maxAttempts
      * @param sleepSeconds
      */
-    public ClusterState getESClusterState(User userID, Client client, int maxAttempts, int sleepSeconds) {
+    public ClusterState getESClusterState(User user, Client client, int maxAttempts, int sleepSeconds) {
         int count = 1;
         while (true) {
             try {
-
                 //try to receive a clusterstate reply
-                this.log.debug("checking cluster state for userID " + userID);
-                return this.getESClusterState(client);
+                this.log.debug("checking cluster state for userID " + user.id());
+                return this.getESClusterState(user.id(), client);
 
             } catch (SearchInstanceException e1) {
-                String s = "cluster state reply for userID " + userID + " not responding. number of attempts: " + count
-                        + " out of " + maxAttempts;
+                String s = "cluster state reply for userID " + user.id() + " not responding. number of attempts: "
+                        + count + " out of " + maxAttempts;
                 this.log.debug(s);
 
                 if (count == maxAttempts) {
-                    s = "cluster state reply for userID " + userID + " failed. cluster not responding.";
+                    s = "cluster state reply for userID " + user.id() + " failed. cluster not responding.";
                     this.log.debug(s, e1);
                     throw new SearchInstanceException(s);
                 }
@@ -84,21 +87,44 @@ public class ES {
 
     /**
      * Retrieve the clusterstate and cluster health response of a given ES instance. This method might throw a
-     * SearchInstanceException when max attempts reached
+     * SearchInstanceException when NoNodeAvailable, RemoteTransportException or timeout
      **/
-    private ClusterState getESClusterState(Client client) {
+    private ClusterState getESClusterState(Long userID, Client client) {
+        //check if we should return a cached value (performance)
+        if (isReturnClusterStateFromCacheOK(userID)) {
+            this.log.debug("ES cluster health response from cache");
+            return getClusterStateFromCache(userID);
+        }
+        //otherwise contact cluster on state
         try {
-            //request clusterstate and cluster health
+            //request clusterstate and cluster health from ES
             ClusterState clusterState = client.admin().cluster().state(new ClusterStateRequest())
                     .actionGet(10, TimeUnit.SECONDS).getState();
             ClusterHealthResponse clusterHealthResponse = client.admin().cluster().health(new ClusterHealthRequest())
                     .actionGet(10, TimeUnit.SECONDS);
 
             this.log.debug("ES cluster health response: " + clusterHealthResponse.toString());
+            addClusterStateToCache(userID, clusterState);
             return clusterState;
         } catch (NoNodeAvailableException | RemoteTransportException e1) {
             throw new SearchInstanceException("ES cluster not responding", e1);
         }
     }
 
+    private void addClusterStateToCache(Long userID, ClusterState clusterState) {
+        ESClusterStateCache cache = new ESClusterStateCache(userID, 30, clusterState);
+        this.clusterStateCache.put(userID, cache);
+    }
+
+    private ClusterState getClusterStateFromCache(Long userID) {
+        return this.clusterStateCache.get(userID).getClusterState();
+    }
+
+    private boolean isReturnClusterStateFromCacheOK(Long userID) {
+        if (this.clusterStateCache.containsKey(userID)) {
+            return !this.clusterStateCache.get(userID).isCacheExpired();
+        } else {
+            return false;
+        }
+    }
 }
