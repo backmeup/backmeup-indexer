@@ -47,17 +47,10 @@ class IndexUtils {
 
             //set the thumbnail if available
             if (source.get(IndexFields.FIELD_SINK_DOWNLOAD_BASE) != null) {
-                if (source.get(IndexFields.FIELD_PATH).toString() != null) {
-                    //e.g. http://localhost:8080/backmeup-storage-service/download/
+                if (source.get(IndexFields.FIELD_THUMBNAIL_PATH) != null) {
                     String sinkDownloadBaseURL = (String) source.get(IndexFields.FIELD_SINK_DOWNLOAD_BASE);
-                    //e.g. BMU_filegenerator_492_22_01_2015_21_14/folder1/text01.txt
-                    String relPathOnSink = source.get(IndexFields.FIELD_PATH).toString();
-
-                    //check if a thumbnail is available and attach
-                    if (source.get(IndexFields.FIELD_THUMBNAIL_PATH) != null) {
-                        String thumbnailpath = getThumnailPath(relPathOnSink);
-                        fileItem.setThumbnailURL(sinkDownloadBaseURL + thumbnailpath);
-                    }
+                    fileItem.setThumbnailURL(sinkDownloadBaseURL
+                            + source.get(IndexFields.FIELD_THUMBNAIL_PATH).toString());
                 }
             }
 
@@ -167,8 +160,8 @@ class IndexUtils {
 
                     //check if a thumbnail is available and attach
                     if (source.get(IndexFields.FIELD_THUMBNAIL_PATH) != null) {
-                        String thumbnailpath = getThumnailPath(relPathOnSink);
-                        entry.setThumbnailUrl(sinkDownloadBaseURL + thumbnailpath);
+                        entry.setThumbnailUrl(sinkDownloadBaseURL
+                                + source.get(IndexFields.FIELD_THUMBNAIL_PATH).toString());
                     }
                 }
             }
@@ -190,23 +183,6 @@ class IndexUtils {
             entries.add(entry);
         }
         return entries;
-    }
-
-    /**
-     * takes e.g. BMU_filegenerator_492_22_01_2015_21_14/folder1/text01.txt and returns
-     * BMU_filegenerator_492_22_01_2015_21_14/folder1/thumbs/text01.txt
-     * 
-     * @param ojbectPath
-     * @return
-     */
-    private static String getThumnailPath(String ojbectPath) {
-        String fileName = "";
-        String pathPrefix = "";
-        if (ojbectPath.indexOf('/') > -1) {
-            fileName = ojbectPath.substring(ojbectPath.lastIndexOf('/') + 1);
-            pathPrefix = ojbectPath.substring(0, ojbectPath.lastIndexOf('/'));
-        }
-        return pathPrefix + "/thumbs/" + fileName;
     }
 
     public static List<CountedEntry> getBySource(org.elasticsearch.action.search.SearchResponse esResponse) {
