@@ -43,4 +43,5 @@ public class SharingPolicyCreationTest {
         ps = this.shManager.getAllPoliciesForUser(this.ownerUserID);
         assertTrue(ps.size() == 0);
     }
+
 }

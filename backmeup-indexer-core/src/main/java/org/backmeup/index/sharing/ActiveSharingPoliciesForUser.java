@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Contains a List of SharingPolicies for a given User
+ * Contains a List of SharingPolicies that have been created for a given User
  *
  */
 public class ActiveSharingPoliciesForUser {
