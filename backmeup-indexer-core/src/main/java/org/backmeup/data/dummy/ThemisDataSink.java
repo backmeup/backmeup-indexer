@@ -53,8 +53,8 @@ public class ThemisDataSink {
     }
 
     /**
-     * Takes a truecrypt container file containing the Elasticsearch index data and persists configuration file within
-     * the it within the users personal file space
+     * Takes a truecrypt container file containing the Elasticsearch index data and persists it within the users
+     * personal file space
      * 
      * @param f
      *            the user specific yml ES startup file

@@ -75,6 +75,10 @@ public class ESConfigurationHandler {
                 pathtologs = mountedTCVolume + ":" + "/index/index-logs";
                 pathtodata = mountedTCVolume + ":" + "/index/index-data";
             }
+            File fileLogs = new File(pathtologs);
+            fileLogs.mkdirs();
+            File fileData = new File(pathtodata);
+            fileData.mkdirs();
             log.debug("creating data + log on mounted TC volume" + pathtodata + " and " + pathtologs);
             tokens.put("pathtologs", pathtologs);
             tokens.put("pathtodata", pathtodata);

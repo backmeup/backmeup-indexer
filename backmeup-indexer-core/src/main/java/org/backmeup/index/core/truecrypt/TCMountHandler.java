@@ -13,8 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 //Note: There are windows specific elements used within this class
-//TODO solve issue windows restricted to 24 drive letters
-//TODO add linux support 
 
 class TCMountHandler {
 
@@ -257,7 +255,7 @@ class TCMountHandler {
         if (SystemUtils.IS_OS_LINUX) {
             File f = new File(driveLetter);
             if ((f != null) && (f.exists())) {
-                String command = "sudo rmdir " + driveLetter;
+                String command = "sudo rm -rf " + driveLetter;
                 log.debug("cleaning up mounting point " + command);
                 executeCmd(command);
             }
@@ -268,7 +266,7 @@ class TCMountHandler {
         String command = null;
         if (SystemUtils.IS_OS_LINUX) {
             // unmount with either mounting point or Truecrypt container file
-            command = getTrueCryptExe() + " -d";
+            command = getTrueCryptExe() + " -d -f";
 
         }
         if (SystemUtils.IS_OS_WINDOWS) {
@@ -305,7 +303,7 @@ class TCMountHandler {
         String command = null;
         if (SystemUtils.IS_OS_LINUX) {
             // unmount with either mounting point or Truecrypt container file
-            command = "sudo " + getTrueCryptExe() + " -d " + driveLetter;
+            command = "sudo " + getTrueCryptExe() + " -d -f " + driveLetter;
         }
         if (SystemUtils.IS_OS_WINDOWS) {
             // use /f to force dismount
