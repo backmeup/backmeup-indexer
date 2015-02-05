@@ -37,8 +37,8 @@ public class TCMountHandlerTest {
         Assume.assumeTrue(SystemUtils.IS_OS_WINDOWS);
         File tcTestFile = new File("src/test/resources/tests/TestTCVol1.tc");
         try {
-            String drive = TCMountHandler.mount(tcTestFile, "12345", "I");
-            Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true, TCMountHandler.isDriveMounted("I"));
+            String drive = TCMountHandler.mount(tcTestFile, "12345", "J");
+            Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true, TCMountHandler.isDriveMounted("J"));
             TCMountHandler.unmount(drive);
             Assert.assertEquals("TrueCrypt Testvolume did not get unmounted properly", false,
                     TCMountHandler.isDriveMounted(drive));
@@ -102,11 +102,11 @@ public class TCMountHandlerTest {
         // possible
         File tcTestFile = new File("src/test/resources/tests/TestTCVol1.tc");
         try {
-            String drive1 = "I";
+            String drive1 = "J";
             drive1 = TCMountHandler.mount(tcTestFile, "12345", drive1);
             Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true, TCMountHandler.isDriveMounted(drive1));
 
-            String drive2 = "J";
+            String drive2 = "K";
             TCMountHandler.mount(tcTestFile, "12345", drive2);
             Assert.fail("IOException should have been thrown. TestFile " + tcTestFile.getAbsolutePath());
 
@@ -125,7 +125,7 @@ public class TCMountHandlerTest {
         File tcTestFile = new File("src/test/resources/tests/TestTCVol1.tc");
         File tcTestFile2 = new File("src/test/resources/tests/TestTCVol2.tc");
         try {
-            String drive1 = "I";
+            String drive1 = "J";
             drive1 = TCMountHandler.mount(tcTestFile, "12345", drive1);
             Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true, TCMountHandler.isDriveMounted(drive1));
 
