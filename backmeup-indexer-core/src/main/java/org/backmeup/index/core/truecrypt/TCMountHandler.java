@@ -303,7 +303,7 @@ class TCMountHandler {
         String command = null;
         if (SystemUtils.IS_OS_LINUX) {
             // unmount with either mounting point or Truecrypt container file
-            command = "sudo " + getTrueCryptExe() + " -d -f " + driveLetter;
+            command = "sudo " + getTrueCryptExe() + " -d -f --non-interactive " + driveLetter;
         }
         if (SystemUtils.IS_OS_WINDOWS) {
             // use /f to force dismount
