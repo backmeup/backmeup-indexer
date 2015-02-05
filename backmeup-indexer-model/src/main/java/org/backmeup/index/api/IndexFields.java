@@ -13,7 +13,9 @@ public class IndexFields {
     public static final String FIELD_BACKUP_SOURCE_ID = "backup_source_id";
     public static final String FIELD_BACKUP_SOURCE_IDENTIFICATION = "backup_source_identification";
     public static final String FIELD_BACKUP_SOURCE_PLUGIN_NAME = "backup_source_plugin_name";
-    public static final String FIELD_BACKUP_SINK = "backup_sink";
+    public static final String FIELD_BACKUP_SINK_ID = "backup_sink_id";
+    public static final String FIELD_BACKUP_SINK_IDENTIFICATION = "backup_sink_identification";
+    public static final String FIELD_BACKUP_SINK_PLUGIN_NAME = "backup_sink_plugin_name";
     public static final String FIELD_FILE_HASH = "file_md5_hash";
     public static final String FIELD_BACKUP_AT = "backup_at";
     public static final String FIELD_CONTENT_TYPE = "Content-Type";

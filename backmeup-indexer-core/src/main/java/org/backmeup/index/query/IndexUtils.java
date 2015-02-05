@@ -78,7 +78,6 @@ class IndexUtils {
         fi.setTimeStamp(timestamp.longValue());
         fi.setTitle(source.get(IndexFields.FIELD_FILENAME).toString());
         fi.setPath(source.get(IndexFields.FIELD_PATH).toString());
-        fi.setSink(source.get(IndexFields.FIELD_BACKUP_SINK).toString());
         Object contentType = source.get(IndexFields.FIELD_CONTENT_TYPE);
         if (contentType != null) {
             fi.setType(getTypeFromMimeType(contentType.toString()));
@@ -166,7 +165,11 @@ class IndexUtils {
                 }
             }
 
-            entry.copyPropertyIfExist(IndexFields.FIELD_BACKUP_SINK, source);
+            if (source.get(IndexFields.FIELD_BACKUP_SINK_ID) != null) {
+                entry.setDatasourceId(source.get(IndexFields.FIELD_BACKUP_SINK_ID).toString());
+                entry.setDatasource(source.get(IndexFields.FIELD_BACKUP_SINK_PLUGIN_NAME) + " ("
+                        + source.get(IndexFields.FIELD_BACKUP_SINK_IDENTIFICATION) + ")");
+            }
 
             entry.setProperty(IndexFields.FIELD_FILE_HASH, hash);
 
