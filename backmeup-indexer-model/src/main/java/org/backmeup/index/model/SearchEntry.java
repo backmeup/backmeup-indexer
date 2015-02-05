@@ -12,8 +12,11 @@ public class SearchEntry {
     private String title;
     private String type;
     private String thumbnailUrl;
+    private String downloadUrl;
     private String datasource;
     private String datasourceId;
+    private String datasink;
+    private String datasinkId;
     private String jobName;
     private String preview;
     private Map<String, String> properties = new HashMap<>();
@@ -21,14 +24,17 @@ public class SearchEntry {
     public SearchEntry() {
     }
 
-    public SearchEntry(String fileId, Date timeStamp, String type, String title, String thumbnailUrl,
-            String datasource, String jobName, String preview, Map<String, String> properties) {
+    public SearchEntry(String fileId, Date timeStamp, String type, String title, String downloadUrl,
+            String thumbnailUrl, String datasource, String datasink, String jobName, String preview,
+            Map<String, String> properties) {
         this.fileId = fileId;
         this.timeStamp = timeStamp;
         this.title = title;
         this.setType(type);
         this.thumbnailUrl = thumbnailUrl;
+        this.downloadUrl = downloadUrl;
         this.datasource = datasource;
+        this.datasink = datasink;
         this.jobName = jobName;
         this.preview = preview;
         this.properties = properties;
@@ -78,6 +84,14 @@ public class SearchEntry {
         this.thumbnailUrl = thumbnailUrl;
     }
 
+    public String getDownloadUrl() {
+        return this.downloadUrl;
+    }
+
+    public void setDownloadUrl(String downloadUrl) {
+        this.downloadUrl = downloadUrl;
+    }
+
     public String getFileId() {
         return this.fileId;
     }
@@ -100,6 +114,14 @@ public class SearchEntry {
 
     public void setDatasource(String datasource) {
         this.datasource = datasource;
+    }
+
+    public String getDatasink() {
+        return this.datasink;
+    }
+
+    public void setDatasink(String datasink) {
+        this.datasink = datasink;
     }
 
     public String getPreview() {
@@ -126,6 +148,14 @@ public class SearchEntry {
         this.datasourceId = datasourceId;
     }
 
+    public String getDatasinkId() {
+        return this.datasinkId;
+    }
+
+    public void setDatasinkId(String datasinkId) {
+        this.datasinkId = datasinkId;
+    }
+
     public void copyPropertyIfExist(String key, Map<String, Object> source) {
         if (source.get(key) != null) {
             setProperty(key, source.get(key).toString());
@@ -136,8 +166,9 @@ public class SearchEntry {
     public String toString() {
         return "SearchEntry [fileId=" + this.fileId + ", timeStamp=" + this.timeStamp + ", title=" + this.title
                 + ", type=" + this.type + ", thumbnailUrl=" + this.thumbnailUrl + ", datasource=" + this.datasource
-                + ", datasourceId=" + this.datasourceId + ", jobName=" + this.jobName + ", preview=" + this.preview
-                + ", properties=" + this.properties + "]";
+                + ", datasourceId=" + this.datasourceId + ", datasink=" + this.datasink + ", datasinkId="
+                + this.datasinkId + ", jobName=" + this.jobName + ", preview=" + this.preview + ", properties="
+                + this.properties + "]";
     }
 
 }

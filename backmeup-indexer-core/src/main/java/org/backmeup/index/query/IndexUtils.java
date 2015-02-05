@@ -72,9 +72,9 @@ class IndexUtils {
         Long timestamp = (Long) source.get(IndexFields.FIELD_BACKUP_AT);
         FileInfo fi = new FileInfo();
         fi.setFileId(owner + ":" + hash + ":" + timestamp);
-        fi.setSource(source.get(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_NAME) + " ("
-                + source.get(IndexFields.FIELD_BACKUP_SOURCE_IDENTIFICATION) + ")");
-        fi.setSourceId(source.get(IndexFields.FIELD_BACKUP_SOURCE_ID).toString());
+        fi.setSource(source.get(IndexFields.FIELD_BACKUP_SOURCE_AUTH_TITLE) + " ("
+                + source.get(IndexFields.FIELD_BACKUP_SOURCE_PROFILE_ID) + ")");
+        fi.setSourceId(source.get(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_ID).toString());
         fi.setTimeStamp(timestamp.longValue());
         fi.setTitle(source.get(IndexFields.FIELD_FILENAME).toString());
         fi.setPath(source.get(IndexFields.FIELD_PATH).toString());
@@ -125,10 +125,25 @@ class IndexUtils {
             entry.setTitle(source.get(IndexFields.FIELD_FILENAME).toString());
             entry.setTimeStamp(new Date(timestamp));
 
-            if (source.get(IndexFields.FIELD_BACKUP_SOURCE_ID) != null) {
-                entry.setDatasourceId(source.get(IndexFields.FIELD_BACKUP_SOURCE_ID).toString());
-                entry.setDatasource(source.get(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_NAME) + " ("
-                        + source.get(IndexFields.FIELD_BACKUP_SOURCE_IDENTIFICATION) + ")");
+            if (source.get(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_ID) != null) {
+                String sID = source.get(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_ID).toString();
+                entry.setDatasourceId(sID);
+                entry.setDatasource(sID);
+                if (source.get(IndexFields.FIELD_BACKUP_SOURCE_AUTH_TITLE) != null) {
+                    //e.g. org.backmeup.facebook (Wolfgang Eibner)"
+                    entry.setDatasource(sID + " (" + source.get(IndexFields.FIELD_BACKUP_SOURCE_AUTH_TITLE).toString()
+                            + ")");
+                }
+            }
+
+            if (source.get(IndexFields.FIELD_BACKUP_SINK_PLUGIN_ID) != null) {
+                String sID = source.get(IndexFields.FIELD_BACKUP_SINK_PLUGIN_ID).toString();
+                entry.setDatasinkId(sID);
+                entry.setDatasink(sID);
+                if (source.get(IndexFields.FIELD_BACKUP_SINK_AUTH_TITLE) != null) {
+                    entry.setDatasink(sID + " (" + source.get(IndexFields.FIELD_BACKUP_SINK_AUTH_TITLE).toString()
+                            + ")");
+                }
             }
 
             if (source.get(IndexFields.FIELD_JOB_NAME) != null) {
@@ -155,7 +170,7 @@ class IndexUtils {
                     String sinkDownloadBaseURL = (String) source.get(IndexFields.FIELD_SINK_DOWNLOAD_BASE);
                     //e.g. BMU_filegenerator_492_22_01_2015_21_14/folder1/text01.txt
                     String relPathOnSink = entry.getProperty(IndexFields.FIELD_PATH);
-                    entry.setProperty("downloadURL", sinkDownloadBaseURL + relPathOnSink);
+                    entry.setDownloadUrl(sinkDownloadBaseURL + relPathOnSink);
 
                     //check if a thumbnail is available and attach
                     if (source.get(IndexFields.FIELD_THUMBNAIL_PATH) != null) {
@@ -163,12 +178,6 @@ class IndexUtils {
                                 + source.get(IndexFields.FIELD_THUMBNAIL_PATH).toString());
                     }
                 }
-            }
-
-            if (source.get(IndexFields.FIELD_BACKUP_SINK_ID) != null) {
-                entry.setDatasourceId(source.get(IndexFields.FIELD_BACKUP_SINK_ID).toString());
-                entry.setDatasource(source.get(IndexFields.FIELD_BACKUP_SINK_PLUGIN_NAME) + " ("
-                        + source.get(IndexFields.FIELD_BACKUP_SINK_IDENTIFICATION) + ")");
             }
 
             entry.setProperty(IndexFields.FIELD_FILE_HASH, hash);
@@ -206,11 +215,14 @@ class IndexUtils {
         Map<String, Integer> groupedHits = new HashMap<>();
         for (SearchHit hit : esResponse.getHits()) {
             if (hit.getSource().get(IndexFields.FIELD_JOB_ID) != null) {
-                String backupSourcePluginName = hit.getSource().get(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_NAME)
-                        .toString();
-                String backupSourceIdentification = hit.getSource().get(IndexFields.FIELD_BACKUP_SOURCE_IDENTIFICATION)
-                        .toString();
-                String label = backupSourcePluginName + " (" + backupSourceIdentification + ")";
+                String backupSourceAuthTitle = "";
+                if (hit.getSource().get(IndexFields.FIELD_BACKUP_SOURCE_AUTH_TITLE) != null) {
+                    backupSourceAuthTitle = " ("
+                            + hit.getSource().get(IndexFields.FIELD_BACKUP_SOURCE_AUTH_TITLE).toString() + ")";
+                }
+                String backupSourcePluginID = hit.getSource().get(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_ID).toString();
+                //e.g. org.backmeup.facebook (Wolfgang Eibner)"
+                String label = backupSourcePluginID + backupSourceAuthTitle;
                 Integer count = groupedHits.get(label);
                 if (count == null) {
                     count = Integer.valueOf(1);
@@ -362,8 +374,8 @@ class IndexUtils {
                 // "ProfileName"
                 profile = profile.substring(1, profile.length() - 1);
 
-                filterstr.append("(" + IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_NAME + ":" + source + " AND "
-                        + IndexFields.FIELD_BACKUP_SOURCE_IDENTIFICATION + ":" + profile + ") OR ");
+                filterstr.append("(" + IndexFields.FIELD_BACKUP_SOURCE_AUTH_TITLE + ":" + source + " AND "
+                        + IndexFields.FIELD_BACKUP_SOURCE_PROFILE_ID + ":" + profile + ") OR ");
             }
 
             // remove the last " OR " and close the search string for this part
@@ -468,9 +480,8 @@ class IndexUtils {
                 profile = profile.substring(1, profile.length() - 1);
 
                 BoolQueryBuilder tempbuilder = new BoolQueryBuilder();
-                tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_NAME, source));
-                tempbuilder.must(QueryBuilders
-                        .matchPhraseQuery(IndexFields.FIELD_BACKUP_SOURCE_IDENTIFICATION, profile));
+                tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_BACKUP_SOURCE_AUTH_TITLE, source));
+                tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_BACKUP_SOURCE_PROFILE_ID, profile));
 
                 // tempbuilder1 or tempbulder2 or ...
                 sourcematches.should(tempbuilder);
