@@ -1,4 +1,4 @@
-package org.backmeup.index.sharing;
+package org.backmeup.index.sharing.execution;
 
 /**
  * Takes an IndexDocument produced by the IndexingPlugin and takes care of assigning an ID, checking sharing policies
@@ -6,7 +6,7 @@ package org.backmeup.index.sharing;
  * within the ES Instance
  *
  */
-public class IndexDocumentSharingManager {
+public class IndexDocumentImportManager {
 
     public void inportAllPendingDocumentsToES(Long userID) {
 

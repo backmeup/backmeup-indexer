@@ -15,19 +15,19 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /**
- * Tests the JPA Hibernate storage and retrieval layer for index user
- * configurations via derby DB with hibernate.hbm2ddl.auto=create
+ * Tests the JPA Hibernate storage and retrieval layer for index user configurations via derby DB with
+ * hibernate.hbm2ddl.auto=create
  */
 public class RunningIndexUserConfigDaoTest {
 
     @Rule
     public final DerbyDatabase database = new DerbyDatabase();
-    
-    private RunningIndexUserConfigDao indexManagerDao;  
+
+    private RunningIndexUserConfigDao indexManagerDao;
 
     @Before
     public void getDaoFromDb() {
-        indexManagerDao = database.indexManagerDao;
+        this.indexManagerDao = this.database.indexManagerDao;
     }
 
     @Test
@@ -36,7 +36,7 @@ public class RunningIndexUserConfigDaoTest {
         persistInTransaction(config);
 
         URL host = new URL("http", "localhost", 9999, "");
-        RunningIndexUserConfig found = indexManagerDao.findConfigByHttpPort(host);
+        RunningIndexUserConfig found = this.indexManagerDao.findConfigByHttpPort(host);
         assertNotNull("config with port 9999", found);
     }
 
@@ -45,7 +45,7 @@ public class RunningIndexUserConfigDaoTest {
         RunningIndexUserConfig config = createConfig();
         persistInTransaction(config);
 
-        RunningIndexUserConfig found = indexManagerDao.findConfigByUser(new User(77L));
+        RunningIndexUserConfig found = this.indexManagerDao.findConfigByUser(new User(77L));
         assertNotNull(found);
         assertEquals(config.getUserID(), found.getUserID());
     }
@@ -55,7 +55,7 @@ public class RunningIndexUserConfigDaoTest {
         RunningIndexUserConfig config = createConfig();
         persistInTransaction(config);
 
-        List<RunningIndexUserConfig> found = indexManagerDao.getAllESInstanceConfigs();
+        List<RunningIndexUserConfig> found = this.indexManagerDao.getAllESInstanceConfigs();
         assertNotNull(found);
         assertTrue(found.size() > 0);
         assertEquals(config.getUserID(), found.get(0).getUserID());
@@ -66,11 +66,11 @@ public class RunningIndexUserConfigDaoTest {
         RunningIndexUserConfig config = createConfig();
         persistInTransaction(config);
 
-        List<RunningIndexUserConfig> found = indexManagerDao.getAllESInstanceConfigs(new URL("http://localhost"));
+        List<RunningIndexUserConfig> found = this.indexManagerDao.getAllESInstanceConfigs(new URL("http://localhost"));
         assertNotNull(found);
         assertTrue(found.size() > 0);
         assertEquals(config.getUserID(), found.get(0).getUserID());
-        found = indexManagerDao.getAllESInstanceConfigs(new URL("http://localhost2"));
+        found = this.indexManagerDao.getAllESInstanceConfigs(new URL("http://localhost2"));
         assertNotNull(found);
         assertTrue(found.size() == 0);
     }
@@ -88,9 +88,9 @@ public class RunningIndexUserConfigDaoTest {
 
     private void persistInTransaction(RunningIndexUserConfig config) {
         // need manual transaction in test because transactional interceptor is not installed in tests
-        database.entityManager.getTransaction().begin(); 
-        indexManagerDao.save(config);
-        database.entityManager.getTransaction().commit();
+        this.database.entityManager.getTransaction().begin();
+        this.indexManagerDao.save(config);
+        this.database.entityManager.getTransaction().commit();
     }
 
 }

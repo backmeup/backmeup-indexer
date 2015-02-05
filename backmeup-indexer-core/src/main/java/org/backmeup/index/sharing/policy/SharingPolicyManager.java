@@ -1,4 +1,4 @@
-package org.backmeup.index.sharing;
+package org.backmeup.index.sharing.policy;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,6 +13,21 @@ public class SharingPolicyManager {
 
     private Map<Long, ActiveSharingPoliciesForUser> sharingPolicies = new HashMap<Long, ActiveSharingPoliciesForUser>();
     private Map<String, Long> policyIDToUserIDMapping = new HashMap<String, Long>();
+
+    private static SharingPolicyManager instance;
+
+    public static SharingPolicyManager getInstance() {
+        if (instance == null) {
+            synchronized (SharingPolicyManager.class) {
+                instance = new SharingPolicyManager();
+            }
+        }
+        return instance;
+    }
+
+    private SharingPolicyManager() {
+        //
+    }
 
     public List<SharingPolicy> getAllPoliciesForUser(Long userID) {
         if (this.sharingPolicies.containsKey(userID)) {

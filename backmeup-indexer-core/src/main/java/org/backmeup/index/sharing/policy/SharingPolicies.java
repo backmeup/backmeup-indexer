@@ -1,4 +1,4 @@
-package org.backmeup.index.sharing;
+package org.backmeup.index.sharing.policy;
 
 public enum SharingPolicies {
 

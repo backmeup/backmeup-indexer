@@ -1,4 +1,4 @@
-package org.backmeup.index.sharing;
+package org.backmeup.index.sharing.policy;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -17,7 +17,7 @@ public class SharingPolicyCreationTest {
 
     @Before
     public void before() {
-        this.shManager = new SharingPolicyManager();
+        this.shManager = SharingPolicyManager.getInstance();
     }
 
     @Test
