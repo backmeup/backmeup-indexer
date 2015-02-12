@@ -64,7 +64,7 @@ public class IndexTest {
         searchResponse.setByType(Arrays.asList(new CountedEntry("Type", 3)));
         searchResponse.setFiles(Arrays.asList(new SearchEntry("fileId", new Date(), "type", "A wonderful file (title)",
                 "downloadUrl", "thmbnailUrl", "Dropbox", "BMU Central Storage", "first Job", null,
-                new HashMap<String, String>())));
+                new HashMap<String, String>(), new HashMap<String, String>())));
         return searchResponse;
     }
 
