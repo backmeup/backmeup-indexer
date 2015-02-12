@@ -28,7 +28,7 @@ public class IndexFields {
     public static final String FIELD_INDEX_DOCUMENT_UUID = "indexrecord_uuid";
 
     /*----Fields which are provided by Tika and are used to build up the ojbect's metadata-----*/
-    //currently for doxc and pdf
+    //currently for doxc, pdf and jpeg (exif)
     public enum TikaMetadataFields {
         DC_SUBJECT("dc:subject"), DC_CREATOR("dc:creator"), DC_TITLE("dc:title"), DCTERMS_MODIFIED("dcterms:modified"), DCTERMS_CREATED(
                 "dcterms:created"), META_CREATION_DATE("meta:creation-date"), META_SAVE_DATE("meta:save-date"), META_AUTHOR(
@@ -44,7 +44,23 @@ public class IndexFields {
                 "meta:character-count"), META_WORD_COUNT("meta:word-count"), EXTENDED_PROPERTIES_COMPANY(
                 "extended-properties:Company"), X_PARSED_BY("X-Parsed-By"), DC_PUBLISHER("dc:publisher"), META_PAGE_COUNT(
                 "meta:page-count"), META_CHARACTER_COUNT_WITH_SPACES("meta:character-count-with-spaces"), CONTENT_TYPE(
-                "Content-Type");
+                "Content-Type"), GPS_ALTITUDE_REF("GPS Altitude Ref"), EXIF_VERSION("Exif Version"), TIFF_IMAGELENGTH(
+                "tiff:ImageLength"), TIFF_IMAGEWIDTH("tiff:ImageWidth"), TIFF_XRESOLUTION("tiff:XResolution"), EXIF_FLASH(
+                "exif:Flash"), INTEROPERABILITY_VERSION("Interoperability Version"), ISO_SPEED_RATINGS(
+                "ISO Speed Ratings"), X_RESOLUATION("X Resoluation"), SHUTTER_SPEED_VALUE("Shutter Speed Value"), IMAGE_WIDTH(
+                "Image Width"), GPS_LONGITUDE("GPS Longitude"), GPS_LONGITUDE_REF("GPS Longitude Ref"), EXIF_FNUMBER(
+                "exit:FNumber"), GPS_ALTITUDE("GPS Altitude"), COLOR_SPACE("Color Space"), DATA_PRECISION(
+                "Data Precision"), TIFF_BITS_PER_SAMPLE("tiff:BitsPerSample"), TIFF_YRESOLUTION("tiff:YResolution"), COMPRESSION_TYPE(
+                "Compression Type"), COMPONENTS_CONFIGURATION("Components Configuration"), YCBCR_POSITIONING(
+                "YCbCr Positioning"), GPS_IMG_DIRECTION("GPS Img Direction"), EXIF_ISOSPEEDRATINGS(
+                "exif:IsoSpeedRatings"), GPS_IMG_DIRECTION_REF("GPS Img Direction Ref"), EXIF_IMAGE_HEIGHT(
+                "Exif Image Height"), FOCAL_LENGTH("Focal Length"), DATE_TIME_ORIGINAL("Date/Time Original"), EXIF_IMAGE_WIDTH(
+                "Exif Image Width"), EXIF_EXPOSURETIME("exif:ExposureTime"), TIFF_RESOLUTIONUNIT("tiff:ResolutionUnit"), GPS_LATITUDE_REF(
+                "GPS Latitude Ref"), INTEROPERATBILITY_INDEX("Interoperability Index"), FLASH("Flash"), DATE_TIME_DIGITIZED(
+                "Date/Time Digitized"), RESOLUTION_UNIT("Resolution Unit"), IMAGE_HEIGHT("Image Height"), GPS_DATE_STAMP(
+                "GPS Date Stamp"), GEO_LAT("geo:lat"), EXPOSURE_TIME("Exposure Time"), GPS_TIME_STAMP("GPS Time-Stamp"), EXIF_DATETIMEORIGINAL(
+                "exif:DateTimeOriginal"), EXIF_FOCALLENGTH("exif:FocalLength"), GEO_LONG("geo:long"), GPS_PROCESSING_METHOD(
+                "GPS Processing Method"), Y_RESOLUTION("Y Resolution");
 
         private String key;
 
