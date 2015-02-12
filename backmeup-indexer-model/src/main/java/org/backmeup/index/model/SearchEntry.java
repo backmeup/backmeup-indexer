@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.backmeup.index.api.IndexFields;
+import org.backmeup.index.api.IndexFields.TikaMetadataFields;
+
 public class SearchEntry {
 
     private String fileId;
@@ -20,13 +23,14 @@ public class SearchEntry {
     private String jobName;
     private String preview;
     private Map<String, String> properties = new HashMap<>();
+    private Map<String, String> metadata = new HashMap<>();
 
     public SearchEntry() {
     }
 
     public SearchEntry(String fileId, Date timeStamp, String type, String title, String downloadUrl,
             String thumbnailUrl, String datasource, String datasink, String jobName, String preview,
-            Map<String, String> properties) {
+            Map<String, String> properties, Map<String, String> metadata) {
         this.fileId = fileId;
         this.timeStamp = timeStamp;
         this.title = title;
@@ -38,6 +42,7 @@ public class SearchEntry {
         this.jobName = jobName;
         this.preview = preview;
         this.properties = properties;
+        this.metadata = metadata;
     }
 
     public Map<String, String> getProperties() {
@@ -58,6 +63,26 @@ public class SearchEntry {
 
     public Set<String> getPropertyKeys() {
         return this.properties.keySet();
+    }
+
+    public Map<String, String> getMetadata() {
+        return this.metadata;
+    }
+
+    public void setMetadata(Map<String, String> metadata) {
+        this.metadata = metadata;
+    }
+
+    public String getMetadata(String key) {
+        return this.metadata.get(key);
+    }
+
+    public void setMetadata(String key, String value) {
+        this.metadata.put(key, value);
+    }
+
+    public Set<String> getMetadataKeys() {
+        return this.metadata.keySet();
     }
 
     public Date getTimeStamp() {
@@ -162,13 +187,22 @@ public class SearchEntry {
         }
     }
 
+    public void copyTikaMetadataIfExist(Map<String, Object> source) {
+        for (TikaMetadataFields field : IndexFields.TikaMetadataFields.values()) {
+            String key = field.getFieldKey();
+            if (source.get(key) != null) {
+                setMetadata(key, source.get(key).toString());
+            }
+        }
+    }
+
     @Override
     public String toString() {
         return "SearchEntry [fileId=" + this.fileId + ", timeStamp=" + this.timeStamp + ", title=" + this.title
                 + ", type=" + this.type + ", thumbnailUrl=" + this.thumbnailUrl + ", datasource=" + this.datasource
                 + ", datasourceId=" + this.datasourceId + ", datasink=" + this.datasink + ", datasinkId="
-                + this.datasinkId + ", jobName=" + this.jobName + ", preview=" + this.preview + ", properties="
-                + this.properties + "]";
+                + this.datasinkId + ", jobName=" + this.jobName + ", preview=" + this.preview + ", properties=["
+                + this.properties + "], metadata=[" + this.metadata + "]";
     }
 
 }

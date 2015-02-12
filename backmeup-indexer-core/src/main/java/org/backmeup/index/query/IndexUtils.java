@@ -180,7 +180,9 @@ class IndexUtils {
                 }
             }
 
-            entry.setProperty(IndexFields.FIELD_FILE_HASH, hash);
+            //get Tika Metadata fields from ES and add to Metadata properties list
+            entry.copyTikaMetadataIfExist(source);
+            entry.setMetadata(IndexFields.FIELD_FILE_HASH, hash);
 
             // Custom props for e.g. facebook, mail plugin
             entry.copyPropertyIfExist("destination", source);
