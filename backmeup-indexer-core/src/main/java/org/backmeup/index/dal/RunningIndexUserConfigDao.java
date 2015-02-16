@@ -7,37 +7,35 @@ import org.backmeup.index.core.model.RunningIndexUserConfig;
 import org.backmeup.index.model.User;
 
 /**
- * The IndexManagerDao contains all database relevant operations for the model
- * class ESRunningInstanceConfig and TCRunningInstanceConfig. It is used to
- * fetch the persistent information regarding an running index configuration
- * from DB this contains ES (Elastic Search) and TC (True Crypt) port and drive
- * to user ID mappings
+ * The RunningIndexUserConfigDao contains all database relevant operations for the model class ESRunningInstanceConfig
+ * and TCRunningInstanceConfig. It is used to fetch the persistent information regarding an running index configuration
+ * from DB this contains ES (Elastic Search) and TC (True Crypt) port and drive to user ID mappings
  */
 public interface RunningIndexUserConfigDao extends BaseDao<RunningIndexUserConfig> {
 
-	RunningIndexUserConfig findConfigByUser(User userID);
+    RunningIndexUserConfig findConfigByUser(User userID);
 
-	List<RunningIndexUserConfig> getAllESInstanceConfigs();
+    List<RunningIndexUserConfig> getAllESInstanceConfigs();
 
-	/**
-	 * Filters the list of running index data from a certain domain
-	 * 
-	 * @param url
-	 *            url must contain protocol and host, no port configuration
-	 */
-	List<RunningIndexUserConfig> getAllESInstanceConfigs(URL url);
+    /**
+     * Filters the list of running index data from a certain domain
+     * 
+     * @param url
+     *            url must contain protocol and host, no port configuration
+     */
+    List<RunningIndexUserConfig> getAllESInstanceConfigs(URL url);
 
-	/**
-	 * e.g. URL host = new URL("http", "localhost", 9999, "");
-	 * 
-	 * @param url
-	 *            url must contain protocol, host and httpPort
-	 */
-	RunningIndexUserConfig findConfigByHttpPort(URL url);
+    /**
+     * e.g. URL host = new URL("http", "localhost", 9999, "");
+     * 
+     * @param url
+     *            url must contain protocol, host and httpPort
+     */
+    RunningIndexUserConfig findConfigByHttpPort(URL url);
 
-	RunningIndexUserConfig findConfigByClusterName(String clustername);
+    RunningIndexUserConfig findConfigByClusterName(String clustername);
 
-	RunningIndexUserConfig findConfigByDriveLetter(String driveLetter);
+    RunningIndexUserConfig findConfigByDriveLetter(String driveLetter);
 
     void deleteAll();
 

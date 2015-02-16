@@ -32,7 +32,7 @@ public class IndexDocumentDropOffTest {
         assertEquals(2, queue.size());
     }
 
-    public IndexDocument createIndexDocument(Long userID) {
+    private IndexDocument createIndexDocument(Long userID) {
         try {
             File fIndexDocument = new File("src/test/resources/sampleIndexDocument.serindexdocument");
             String sampleFragment = FileUtils.readFileToString(fIndexDocument, "UTF-8");

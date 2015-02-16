@@ -2,6 +2,7 @@ package org.backmeup.index.sharing.execution;
 
 import java.util.LinkedList;
 
+import org.backmeup.index.core.model.QueuedIndexDocument;
 import org.backmeup.index.model.IndexDocument;
 
 /**
@@ -10,7 +11,7 @@ import org.backmeup.index.model.IndexDocument;
  */
 public class IndexDocumentDropOffQueue {
 
-    private LinkedList<IndexDocument> sortedQueue = new LinkedList<IndexDocument>();
+    private LinkedList<QueuedIndexDocument> sortedQueue = new LinkedList<QueuedIndexDocument>();
 
     private static IndexDocumentDropOffQueue instance;
 
@@ -28,11 +29,11 @@ public class IndexDocumentDropOffQueue {
     }
 
     public void addIndexDocument(IndexDocument indexDoc) {
-        this.sortedQueue.add(indexDoc);
+        this.sortedQueue.add(new QueuedIndexDocument(indexDoc));
     }
 
     public IndexDocument getNext() {
-        return this.sortedQueue.poll();
+        return this.sortedQueue.poll().getIndexDocument();
     }
 
     public int size() {
