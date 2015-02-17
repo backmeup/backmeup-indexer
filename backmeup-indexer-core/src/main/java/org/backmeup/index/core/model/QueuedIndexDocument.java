@@ -18,7 +18,7 @@ public class QueuedIndexDocument {
 
     @Id
     @GeneratedValue
-    private Long queuedId;
+    private Long Id;
 
     // Timestamp when IndexDocument was added to queue
     @Temporal(TemporalType.TIMESTAMP)
@@ -42,12 +42,12 @@ public class QueuedIndexDocument {
         this.serealizedIndexDocument = Json.serialize(doc);
     }
 
-    public Long getQueuedId() {
-        return this.queuedId;
+    public Long getId() {
+        return this.Id;
     }
 
-    public void setQueuedId(Long queuedId) {
-        this.queuedId = queuedId;
+    public void setId(Long queuedId) {
+        this.Id = queuedId;
     }
 
     /**

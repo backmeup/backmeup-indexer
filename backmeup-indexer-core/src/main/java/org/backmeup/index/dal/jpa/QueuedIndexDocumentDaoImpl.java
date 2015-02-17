@@ -21,7 +21,7 @@ public class QueuedIndexDocumentDaoImpl extends BaseDaoImpl<QueuedIndexDocument>
     @Override
     public List<QueuedIndexDocument> getAllQueuedIndexDocuments() {
         TypedQuery<QueuedIndexDocument> q = createTypedQuery("SELECT u FROM " + TABLENAME
-                + " u ORDER BY u.timestamp DESC");
+                + " u ORDER BY u.timestamp ASC");
         return executeQuery(q);
     }
 
@@ -41,6 +41,18 @@ public class QueuedIndexDocumentDaoImpl extends BaseDaoImpl<QueuedIndexDocument>
             return queuedIndexDocs;
         }
         return new ArrayList<>();
+    }
+
+    private QueuedIndexDocument executeQuerySelectFirst(TypedQuery<QueuedIndexDocument> q) {
+        List<QueuedIndexDocument> queuedIndexDocs = executeQuery(q);
+        return queuedIndexDocs.size() > 0 ? queuedIndexDocs.get(0) : null;
+    }
+
+    @Override
+    public QueuedIndexDocument findQueuedIndexDocumentByEntityId(Long entityId) {
+        TypedQuery<QueuedIndexDocument> q = createTypedQuery("SELECT u FROM " + TABLENAME + " u WHERE u.Id = :entityId");
+        q.setParameter("entityId", entityId);
+        return executeQuerySelectFirst(q);
     }
 
 }

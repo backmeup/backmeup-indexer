@@ -18,6 +18,8 @@ public interface QueuedIndexDocumentDao extends BaseDao<QueuedIndexDocument> {
      */
     List<QueuedIndexDocument> getAllQueuedIndexDocuments();
 
+    QueuedIndexDocument findQueuedIndexDocumentByEntityId(Long entityId);
+
     void deleteAll();
 
 }
