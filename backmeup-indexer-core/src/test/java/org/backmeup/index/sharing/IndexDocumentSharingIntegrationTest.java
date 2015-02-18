@@ -9,13 +9,15 @@ import org.junit.Before;
 
 public class IndexDocumentSharingIntegrationTest extends IndexDocumentTestingUtils {
 
-    SharingPolicyManager policyManager;
-    IndexDocumentDropOffQueue queue;
+    private SharingPolicyManager policyManager;
+    private IndexDocumentDropOffQueue queue;
+
+    //TODO get Derby into this. Persist Sharing Policies, test distribution;
 
     @Before
     public void before() {
         this.policyManager = SharingPolicyManager.getInstance();
-        this.queue = IndexDocumentDropOffQueue.getInstance();
+        //this.queue = IndexDocumentDropOffQueue.getInstance();
 
     }
 

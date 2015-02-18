@@ -4,11 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.net.MalformedURLException;
 import java.util.List;
 
 import org.backmeup.index.core.model.QueuedIndexDocument;
-import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.sharing.IndexDocumentTestingUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -31,8 +29,8 @@ public class QueuedIndexDocumentDaoTest extends IndexDocumentTestingUtils {
     }
 
     @Test
-    public void shouldStoreDocumentAndReadAllFromDB() throws MalformedURLException {
-        QueuedIndexDocument queuedDoc = createConfig();
+    public void shouldStoreDocumentAndReadAllFromDB() {
+        QueuedIndexDocument queuedDoc = createConfig(1L);
         persistInTransaction(queuedDoc);
 
         List<QueuedIndexDocument> found = this.queuedIndexDocsDao.getAllQueuedIndexDocuments();
@@ -42,11 +40,6 @@ public class QueuedIndexDocumentDaoTest extends IndexDocumentTestingUtils {
                 .size());
         assertEquals(queuedDoc.getIndexDocument().getFields().get("owner_name"), found.get(0).getIndexDocument()
                 .getFields().get("owner_name"));
-    }
-
-    private QueuedIndexDocument createConfig() throws MalformedURLException {
-        IndexDocument indexDoc = createIndexDocument(1L);
-        return new QueuedIndexDocument(indexDoc);
     }
 
     private void persistInTransaction(QueuedIndexDocument indexDoc) {

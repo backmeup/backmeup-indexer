@@ -29,14 +29,14 @@ public class IndexDocumentDropOffQueue {
 
     @RunRequestScoped
     public void startupDroOffQueue() {
-        // Initialization of IndexManager managed ElasticSearch instances
+        // Initialization drop off queue and sync of pending records from DB
         syncQueueAfterStartupFromDBRecords();
         this.log.debug("startup() IndexDocumentDropOffQueue (ApplicationScoped) completed");
     }
 
     @RunRequestScoped
     public void shutdownDroOffQueue() {
-        this.log.debug("shutdown IndexDocumentDropOffQueue (ApplicationScoped) started");
+        this.log.debug("shutdown IndexDocumentDropOffQueue (ApplicationScoped) completed");
     }
 
     // ========================================================================
@@ -56,12 +56,12 @@ public class IndexDocumentDropOffQueue {
         //
     }
 
-    public void addIndexDocument(IndexDocument indexDoc) {
+    public synchronized void addIndexDocument(IndexDocument indexDoc) {
         QueuedIndexDocument qidoc = this.dao.save(new QueuedIndexDocument(indexDoc));
         this.sortedQueue.add(qidoc);
     }
 
-    public IndexDocument getNext() {
+    public synchronized IndexDocument getNext() {
         QueuedIndexDocument next = this.sortedQueue.poll();
         if (next != null) {
             QueuedIndexDocument dbIndexDoc = this.dao.findQueuedIndexDocumentByEntityId(next.getId());
@@ -71,14 +71,14 @@ public class IndexDocumentDropOffQueue {
         return null;
     }
 
-    public int size() {
+    public synchronized int size() {
         return this.sortedQueue.size();
     }
 
     /**
      * When initializing the queue load entries from database
      */
-    private void syncQueueAfterStartupFromDBRecords() {
+    private synchronized void syncQueueAfterStartupFromDBRecords() {
 
         this.log.debug("syncQueueAfterStartupFromDBRecords");
         // get all queued instances according to the DB entries
