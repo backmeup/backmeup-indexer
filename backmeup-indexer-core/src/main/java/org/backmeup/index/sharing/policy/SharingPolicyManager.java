@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.backmeup.index.model.User;
+
 /**
  * Allows to set sharing policies e.g. User A shares IndexDocument with User B, User A shares Backup with User B, etc.
  *
@@ -29,19 +31,33 @@ public class SharingPolicyManager {
         //
     }
 
-    public List<SharingPolicy> getAllPoliciesForUser(Long userID) {
-        if (this.sharingPolicies.containsKey(userID)) {
-            return this.sharingPolicies.get(userID).getPolicies();
+    public List<SharingPolicy> getAllPoliciesForUser(User user) {
+        if (this.sharingPolicies.containsKey(user.id())) {
+            return this.sharingPolicies.get(user.id()).getPolicies();
         } else {
             return new ArrayList<SharingPolicy>();
         }
     }
 
-    public SharingPolicy createSharingRule(Long ownerUserID, Long shareWithUserID, SharingPolicies policy) {
-        SharingPolicy shPolicy = new SharingPolicy(ownerUserID, shareWithUserID, policy);
+    public SharingPolicy createSharingRule(User owner, User sharingWith, SharingPolicies policy) {
+        SharingPolicy shPolicy = new SharingPolicy(owner, sharingWith, policy);
         shPolicy.setPolicyID(createPolicyKey());
         addPolicy(shPolicy);
         return shPolicy;
+    }
+
+    /**
+     * @param owner
+     * @param sharingWith
+     * @param policy
+     * @param sharedElementID
+     *            either the IndexDocument UUID for SHARE_DOCUMENT or the BackupJobID for ShareBackupJob
+     * @return
+     */
+    public SharingPolicy createSharingRule(User owner, User sharingWith, SharingPolicies policy, String sharedElementID) {
+        SharingPolicy shPol = createSharingRule(owner, sharingWith, policy);
+        shPol.setSharedElementID(sharedElementID);
+        return shPol;
     }
 
     public void removeSharingRule(String sharingPolicyID) {

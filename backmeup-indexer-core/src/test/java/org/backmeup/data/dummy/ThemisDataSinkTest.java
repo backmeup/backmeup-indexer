@@ -1,5 +1,6 @@
 package org.backmeup.data.dummy;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -50,16 +51,16 @@ public class ThemisDataSinkTest {
     @AfterClass
     public static void afterclass() {
         try {
-            ThemisDataSink.deleteIndexTrueCryptContainer(_99998L);
-        } catch (IOException e) {
+            ThemisDataSink.deleteDataSinkHome(_99997L);
+        } catch (IllegalArgumentException e) {
         }
         try {
-            ThemisDataSink.deleteIndexTrueCryptContainer(_99999L);
-        } catch (IOException e) {
+            ThemisDataSink.deleteDataSinkHome(_99998L);
+        } catch (IllegalArgumentException e) {
         }
         try {
-            ThemisDataSink.deleteAllIndexFragments(_99998L, IndexFragmentType.TO_IMPORT_USER_OWNED);
-        } catch (IOException e) {
+            ThemisDataSink.deleteDataSinkHome(_99999L);
+        } catch (IllegalArgumentException e) {
         }
     }
 
@@ -115,8 +116,11 @@ public class ThemisDataSinkTest {
 
     @Test
     public void testPersistLoadAndDeleteIndexFragmentForUser() throws IOException {
+        UUID testUUID = UUID.randomUUID();
+        this.indexDoc.field(IndexFields.FIELD_INDEX_DOCUMENT_UUID, testUUID.toString());
+
         UUID fileID = ThemisDataSink.saveIndexFragment(this.indexDoc, _99998L, IndexFragmentType.TO_IMPORT_USER_OWNED);
-        assertNotNull(fileID);
+        assertEquals(fileID, testUUID);
 
         List<UUID> lUUIDs = ThemisDataSink.getAllIndexFragmentUUIDs(_99998L, IndexFragmentType.TO_IMPORT_USER_OWNED);
         assertNotNull(lUUIDs);
@@ -131,11 +135,17 @@ public class ThemisDataSinkTest {
     }
 
     @Test
-    public void testAddUUIDtoRecordWhenPersisting() throws IOException {
+    public void testNoUUIDInRecordWhenPersisting() throws IOException {
         assertFalse("Document should not contain an UUID yet",
                 this.indexDoc.getFields().containsKey(IndexFields.FIELD_INDEX_DOCUMENT_UUID));
+        try {
+            ThemisDataSink.saveIndexFragment(this.indexDoc, _99997L, IndexFragmentType.TO_IMPORT_USER_OWNED);
+        } catch (IOException e) {
+            assertTrue(e.toString().contains("The IndexFragment must have a document UUID assigned"));
+        }
+        UUID testUUID = UUID.randomUUID();
+        this.indexDoc.field(IndexFields.FIELD_INDEX_DOCUMENT_UUID, testUUID.toString());
         UUID fileID = ThemisDataSink.saveIndexFragment(this.indexDoc, _99997L, IndexFragmentType.TO_IMPORT_USER_OWNED);
-
         IndexDocument fragment = ThemisDataSink.getIndexFragment(fileID, _99997L,
                 IndexFragmentType.TO_IMPORT_USER_OWNED);
         assertNotNull("The returned IndexDocument must not be null", fragment);
@@ -145,13 +155,14 @@ public class ThemisDataSinkTest {
 
     @Test
     public void testDeleteAndMoveFragment() throws IOException {
-        UUID fileID = null;
-        fileID = ThemisDataSink.saveIndexFragment(this.indexDoc, _99997L, IndexFragmentType.TO_IMPORT_USER_OWNED);
+        UUID testUUID = UUID.randomUUID();
+        this.indexDoc.field(IndexFields.FIELD_INDEX_DOCUMENT_UUID, testUUID.toString());
+        testUUID = ThemisDataSink.saveIndexFragment(this.indexDoc, _99997L, IndexFragmentType.TO_IMPORT_USER_OWNED);
 
-        ThemisDataSink.deleteIndexFragment(fileID, _99997L, IndexFragmentType.TO_IMPORT_USER_OWNED);
+        ThemisDataSink.deleteIndexFragment(testUUID, _99997L, IndexFragmentType.TO_IMPORT_USER_OWNED);
 
         this.exception.expect(IOException.class);
-        ThemisDataSink.getIndexFragment(fileID, _99997L, IndexFragmentType.TO_IMPORT_USER_OWNED);
+        ThemisDataSink.getIndexFragment(testUUID, _99997L, IndexFragmentType.TO_IMPORT_USER_OWNED);
     }
 
 }

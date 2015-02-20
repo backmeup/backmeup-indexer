@@ -2,6 +2,7 @@ package org.backmeup.index.sharing;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.backmeup.index.api.IndexFields;
@@ -23,8 +24,15 @@ public class IndexDocumentTestingUtils {
         }
     }
 
-    public QueuedIndexDocument createConfig(Long userID) {
+    public QueuedIndexDocument createQueuedIndexDocument(Long userID) {
         IndexDocument indexDoc = createIndexDocument(userID);
+        return new QueuedIndexDocument(indexDoc);
+    }
+
+    public QueuedIndexDocument createQueuedIndexDocument(IndexDocument indexDoc) {
+        if (!indexDoc.getFields().containsKey(IndexFields.FIELD_INDEX_DOCUMENT_UUID)) {
+            indexDoc.field(IndexFields.FIELD_INDEX_DOCUMENT_UUID, UUID.randomUUID().toString());
+        }
         return new QueuedIndexDocument(indexDoc);
     }
 

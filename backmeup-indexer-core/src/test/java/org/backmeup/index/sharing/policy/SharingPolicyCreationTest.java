@@ -11,9 +11,9 @@ import org.junit.Test;
 
 public class SharingPolicyCreationTest {
 
-    SharingPolicyManager shManager;
-    Long ownerUserID = 1L;
-    Long shareWithUserID = 2L;
+    private SharingPolicyManager shManager;
+    private Long ownerUserID = 1L;
+    private Long shareWithUserID = 2L;
 
     @Before
     public void before() {
@@ -21,7 +21,7 @@ public class SharingPolicyCreationTest {
     }
 
     @Test
-    public void createSharingPolicy() {
+    public void createShareAllPolicy() {
 
         SharingPolicy p = this.shManager.createSharingRule(this.ownerUserID, this.shareWithUserID,
                 SharingPolicies.SHARE_ALL);
@@ -29,10 +29,11 @@ public class SharingPolicyCreationTest {
         assertEquals(this.ownerUserID, p.getFromUserID());
         assertEquals(this.shareWithUserID, p.getWithUserID());
         assertNotNull(p.getPolicyID());
+        assertEquals(SharingPolicies.SHARE_ALL, p.getPolicy());
     }
 
     @Test
-    public void addSharingPolicyAndRemoveIt() {
+    public void addShareAllPolicyAndRemoveIt() {
 
         SharingPolicy p = this.shManager.createSharingRule(this.ownerUserID, this.shareWithUserID,
                 SharingPolicies.SHARE_ALL);
@@ -42,6 +43,17 @@ public class SharingPolicyCreationTest {
         this.shManager.removeSharingRule(p.getPolicyID());
         ps = this.shManager.getAllPoliciesForUser(this.ownerUserID);
         assertTrue(ps.size() == 0);
+    }
+
+    @Test
+    public void createShareBackupJobPolicy() {
+        SharingPolicy p = this.shManager.createSharingRule(this.ownerUserID, this.shareWithUserID,
+                SharingPolicies.SHARE_BACKUP);
+        //share all elements of backupJobID 1
+        p.setSharedElementID("1");
+        List<SharingPolicy> ps = this.shManager.getAllPoliciesForUser(this.ownerUserID);
+        assertTrue(ps.contains(p));
+        assertTrue(ps.get(0).getSharedElementID().equals("1"));
     }
 
 }

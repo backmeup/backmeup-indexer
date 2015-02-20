@@ -2,6 +2,8 @@ package org.backmeup.index.sharing.policy;
 
 import java.util.Date;
 
+import org.backmeup.index.model.User;
+
 public class SharingPolicy {
 
     private Long fromUserID;
@@ -11,9 +13,9 @@ public class SharingPolicy {
     private String sharedElementID; //e.g. indexdocumentUUID or backupJobID dependent on policy
     private Date policyCreationDate;
 
-    public SharingPolicy(Long fromUserID, Long withUserID, SharingPolicies policy) {
-        this.fromUserID = fromUserID;
-        this.withUserID = withUserID;
+    public SharingPolicy(User fromUser, User withUser, SharingPolicies policy) {
+        this.fromUserID = fromUser.id();
+        this.withUserID = withUser.id();
         this.policy = policy;
         this.policyCreationDate = new Date(System.currentTimeMillis());
     }

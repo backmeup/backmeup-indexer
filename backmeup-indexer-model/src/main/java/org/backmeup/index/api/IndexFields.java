@@ -24,8 +24,9 @@ public class IndexFields {
     public static final String FIELD_FULLTEXT = "fulltext";
     public static final String FIELD_SINK_DOWNLOAD_BASE = "sink_download_base";
 
-    /*----Fields manipulated by the Index-Core or Storage components----*/
+    /*----Fields manipulated by the sharing / persistence components----*/
     public static final String FIELD_INDEX_DOCUMENT_UUID = "indexrecord_uuid";
+    public static final String FIELD_SHARED_BY_USER_ID = "shared_by_userId";
 
     /*----Fields which are provided by Tika and are used to build up the ojbect's metadata-----*/
     //currently for doxc, pdf and jpeg (exif)

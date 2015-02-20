@@ -30,7 +30,7 @@ public class QueuedIndexDocumentDaoTest extends IndexDocumentTestingUtils {
 
     @Test
     public void shouldStoreDocumentAndReadAllFromDB() {
-        QueuedIndexDocument queuedDoc = createConfig(1L);
+        QueuedIndexDocument queuedDoc = createQueuedIndexDocument(1L);
         persistInTransaction(queuedDoc);
 
         List<QueuedIndexDocument> found = this.queuedIndexDocsDao.getAllQueuedIndexDocuments();
