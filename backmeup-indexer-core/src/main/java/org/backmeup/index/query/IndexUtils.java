@@ -49,7 +49,7 @@ class IndexUtils {
             if (source.get(IndexFields.FIELD_SINK_DOWNLOAD_BASE) != null) {
                 if (source.get(IndexFields.FIELD_THUMBNAIL_PATH) != null) {
                     String sinkDownloadBaseURL = (String) source.get(IndexFields.FIELD_SINK_DOWNLOAD_BASE);
-                    fileItem.setThumbnailURL(sinkDownloadBaseURL
+                    fileItem.setThumbnailURL(sinkDownloadBaseURL + "###TOKEN###/"
                             + source.get(IndexFields.FIELD_THUMBNAIL_PATH).toString());
                 }
             }
@@ -170,11 +170,11 @@ class IndexUtils {
                     String sinkDownloadBaseURL = (String) source.get(IndexFields.FIELD_SINK_DOWNLOAD_BASE);
                     //e.g. BMU_filegenerator_492_22_01_2015_21_14/folder1/text01.txt
                     String relPathOnSink = entry.getProperty(IndexFields.FIELD_PATH);
-                    entry.setDownloadUrl(sinkDownloadBaseURL + relPathOnSink);
+                    entry.setDownloadUrl(sinkDownloadBaseURL + "###TOKEN###/" + relPathOnSink);
 
                     //check if a thumbnail is available and attach
                     if (source.get(IndexFields.FIELD_THUMBNAIL_PATH) != null) {
-                        entry.setThumbnailUrl(sinkDownloadBaseURL
+                        entry.setThumbnailUrl(sinkDownloadBaseURL + "###TOKEN###/"
                                 + source.get(IndexFields.FIELD_THUMBNAIL_PATH).toString());
                     }
                 }
