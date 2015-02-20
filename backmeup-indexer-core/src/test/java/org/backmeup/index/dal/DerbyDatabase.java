@@ -5,6 +5,7 @@ import java.util.Properties;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
+import org.backmeup.index.dal.jpa.IndexFragmentEntryStatusDaoImpl;
 import org.backmeup.index.dal.jpa.JPAEntityManagerFactoryProducer;
 import org.backmeup.index.dal.jpa.QueuedIndexDocumentDaoImpl;
 import org.backmeup.index.dal.jpa.RunningIndexUserConfigDaoImpl;
@@ -19,6 +20,8 @@ public class DerbyDatabase extends ExternalResource {
     public RunningIndexUserConfigDao indexManagerDao;
     //for indexdocument drop off queue
     public QueuedIndexDocumentDao queuedIndexDocsDao;
+    //for status of imported/deleted todelete/toimport operations
+    public IndexFragmentEntryStatusDao statusDao;
 
     @Override
     protected void before() {
@@ -30,6 +33,9 @@ public class DerbyDatabase extends ExternalResource {
 
         this.queuedIndexDocsDao = new QueuedIndexDocumentDaoImpl();
         Whitebox.setInternalState(this.queuedIndexDocsDao, "entityManager", this.entityManager);
+
+        this.statusDao = new IndexFragmentEntryStatusDaoImpl();
+        Whitebox.setInternalState(this.statusDao, "entityManager", this.entityManager);
     }
 
     private Properties overwrittenJPAProps() {
