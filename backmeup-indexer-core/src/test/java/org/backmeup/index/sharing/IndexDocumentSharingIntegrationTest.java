@@ -1,6 +1,7 @@
 package org.backmeup.index.sharing;
 
 import org.backmeup.index.model.IndexDocument;
+import org.backmeup.index.model.User;
 import org.backmeup.index.sharing.execution.IndexDocumentDropOffQueue;
 import org.backmeup.index.sharing.policy.SharingPolicies;
 import org.backmeup.index.sharing.policy.SharingPolicy;
@@ -23,7 +24,8 @@ public class IndexDocumentSharingIntegrationTest extends IndexDocumentTestingUti
 
     public void testDistributionAccordingToSharingPolicyTest() {
         //create policy user 99991L shares all content with user 888881L
-        SharingPolicy p = this.policyManager.createSharingRule(99991L, 888881L, SharingPolicies.SHARE_ALL);
+        SharingPolicy p = this.policyManager.createSharingRule(new User(99991L), new User(888881L),
+                SharingPolicies.SHARE_ALL);
 
         IndexDocument doc1 = createIndexDocument(99991L);
         this.queue.addIndexDocument(doc1);

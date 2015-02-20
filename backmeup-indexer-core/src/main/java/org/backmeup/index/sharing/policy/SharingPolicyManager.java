@@ -72,6 +72,19 @@ public class SharingPolicyManager {
         removeSharingRule(p.getPolicyID());
     }
 
+    public void removeAllSharingPoliciesForUser(User owner) {
+        for (SharingPolicy policy : this.getAllPoliciesForUser(owner)) {
+            this.removeSharingPolicy(policy);
+        }
+    }
+
+    @Deprecated
+    public void removeAllSharingPolicies() {
+        //TODO need to fix when rolling out DB
+        this.policyIDToUserIDMapping = new HashMap<String, Long>();
+        this.sharingPolicies = new HashMap<Long, ActiveSharingPoliciesForUser>();
+    }
+
     private void addPolicy(SharingPolicy p) {
         if (!this.sharingPolicies.containsKey(p.getFromUserID())) {
             ActiveSharingPoliciesForUser userPolicies = new ActiveSharingPoliciesForUser(p.getFromUserID());

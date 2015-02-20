@@ -49,6 +49,7 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
     public void after() {
         this.distributor.shutdownSharingPolicyDistribution();
         cleanupTestData();
+        this.policyManager.removeAllSharingPolicies();
     }
 
     @Test
