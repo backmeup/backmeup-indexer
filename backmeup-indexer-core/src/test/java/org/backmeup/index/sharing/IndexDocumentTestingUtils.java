@@ -12,7 +12,7 @@ import org.backmeup.index.serializer.Json;
 
 public class IndexDocumentTestingUtils {
 
-    public IndexDocument createIndexDocument(Long userID) {
+    public static IndexDocument createIndexDocument(Long userID) {
         try {
             File fIndexDocument = new File("src/test/resources/sampleIndexDocument.serindexdocument");
             String sampleFragment = FileUtils.readFileToString(fIndexDocument, "UTF-8");

@@ -1,6 +1,7 @@
 package org.backmeup.index.dal;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.backmeup.index.core.model.IndexFragmentEntryStatus;
 import org.backmeup.index.model.User;
@@ -46,7 +47,7 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
      * @param documentUUID
      * @return
      */
-    List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(String documentUUID);
+    List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(UUID documentUUID);
 
     /**
      * Find all Status objects over all users that match a certain condition e.g. waiting_for_import.

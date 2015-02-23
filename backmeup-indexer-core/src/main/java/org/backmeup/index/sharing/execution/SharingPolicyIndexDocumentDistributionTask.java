@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 @ApplicationScoped
-public class SharingPolicyIndexDocumentDistributor {
+public class SharingPolicyIndexDocumentDistributionTask {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);

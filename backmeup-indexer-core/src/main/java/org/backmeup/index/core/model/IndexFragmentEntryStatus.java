@@ -1,6 +1,7 @@
 package org.backmeup.index.core.model;
 
 import java.util.Date;
+import java.util.UUID;
 
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -29,20 +30,22 @@ public class IndexFragmentEntryStatus {
     private Long Id;
     @Enumerated(EnumType.STRING)
     private StatusType statusType;
-    private String documentUUID;
+    private UUID documentUUID;
     private Long userID;
     // Timestamp created and last updated
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
+    private boolean userOwned;
 
     public IndexFragmentEntryStatus() {
         this.timestamp = new Date();
     }
 
-    public IndexFragmentEntryStatus(StatusType statusType, String documentUUID, Long userID) {
+    public IndexFragmentEntryStatus(StatusType statusType, UUID documentUUID, boolean userOwned, Long userID) {
         this.statusType = statusType;
         this.documentUUID = documentUUID;
         this.userID = userID;
+        this.userOwned = userOwned;
         this.timestamp = new Date();
     }
 
@@ -55,11 +58,11 @@ public class IndexFragmentEntryStatus {
         this.timestamp = new Date();
     }
 
-    public String getDocumentUUID() {
+    public UUID getDocumentUUID() {
         return this.documentUUID;
     }
 
-    public void setDocumentUUID(String documentUUID) {
+    public void setDocumentUUID(UUID documentUUID) {
         this.documentUUID = documentUUID;
         this.timestamp = new Date();
     }
@@ -87,6 +90,19 @@ public class IndexFragmentEntryStatus {
     public void setUserID(Long userID) {
         this.userID = userID;
         this.timestamp = new Date();
+    }
+
+    /**
+     * Indicates if this document is owned by the user himself or if the document is provided by a sharing partner
+     * 
+     * @return
+     */
+    public boolean isUserOwned() {
+        return this.userOwned;
+    }
+
+    public void setUserOwned(boolean userOwned) {
+        this.userOwned = userOwned;
     }
 
 }

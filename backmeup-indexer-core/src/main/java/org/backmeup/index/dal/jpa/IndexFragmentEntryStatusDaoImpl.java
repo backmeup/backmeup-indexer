@@ -2,6 +2,7 @@ package org.backmeup.index.dal.jpa;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.enterprise.context.RequestScoped;
 import javax.persistence.TypedQuery;
@@ -62,7 +63,7 @@ public class IndexFragmentEntryStatusDaoImpl extends BaseDaoImpl<IndexFragmentEn
     }
 
     @Override
-    public List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(String documentUUID) {
+    public List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(UUID documentUUID) {
         TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM " + TABLENAME
                 + " u WHERE u.documentUUID = :documentUUID ORDER BY u.id ASC");
         q.setParameter("documentUUID", documentUUID);

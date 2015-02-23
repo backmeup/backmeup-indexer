@@ -3,22 +3,18 @@ package org.backmeup.index.sharing.execution;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.apache.commons.io.FileUtils;
 import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.core.model.QueuedIndexDocument;
 import org.backmeup.index.dal.DerbyDatabase;
 import org.backmeup.index.dal.QueuedIndexDocumentDao;
 import org.backmeup.index.model.IndexDocument;
-import org.backmeup.index.serializer.Json;
+import org.backmeup.index.sharing.IndexDocumentTestingUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.internal.util.reflection.Whitebox;
 
-public class IndexDocumentDropOffTest {
+public class IndexDocumentDropOffTest extends IndexDocumentTestingUtils {
 
     private IndexDocumentDropOffQueue queue;
     private QueuedIndexDocumentDao queuedIndexDocsDao;
@@ -78,22 +74,10 @@ public class IndexDocumentDropOffTest {
         this.queuedIndexDocsDao.save(new QueuedIndexDocument(createIndexDocument(6L)));
         this.database.entityManager.getTransaction().commit();
         //now call sync
-        this.queue.syncQueueAfterStartupFromDBRecords4JUnitTests();
+        this.queue.startupDroOffQueue();
         assertEquals(2, this.queue.size());
         IndexDocument doc = getNextInTransaction();
         assertEquals(5L, doc.getFields().get(IndexFields.FIELD_OWNER_ID));
         assertEquals(1, this.queue.size());
-    }
-
-    private IndexDocument createIndexDocument(Long userID) {
-        try {
-            File fIndexDocument = new File("src/test/resources/sampleIndexDocument.serindexdocument");
-            String sampleFragment = FileUtils.readFileToString(fIndexDocument, "UTF-8");
-            IndexDocument doc = Json.deserialize(sampleFragment, IndexDocument.class);
-            doc.field(IndexFields.FIELD_OWNER_ID, userID);
-            return doc;
-        } catch (IOException e) {
-            return new IndexDocument();
-        }
     }
 }

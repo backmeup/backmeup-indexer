@@ -86,11 +86,4 @@ public class IndexDocumentDropOffQueue {
         this.log.debug("found " + this.sortedQueue.size() + " queued index document records from DB");
     }
 
-    /**
-     * A protected method, just for JUnit Testing the queue
-     */
-    protected void syncQueueAfterStartupFromDBRecords4JUnitTests() {
-        this.syncQueueAfterStartupFromDBRecords();
-    }
-
 }

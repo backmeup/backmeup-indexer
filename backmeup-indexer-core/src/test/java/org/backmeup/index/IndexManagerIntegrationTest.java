@@ -32,16 +32,16 @@ import org.elasticsearch.common.xcontent.XContentFactory;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class IndexManagerIntegrationTest extends IndexManagerSetup {
+public class IndexManagerIntegrationTest extends IndexManagerIntegrationTestSetup {
 
-    private static final User _999991L = new User(999991L); // TODO what is special about the user? better name!
-    private static final User _999992L = new User(999992L); // TODO what is special about the user? better name!
-    
+    private static final User _999991L = new User(999991L);
+    private static final User _999992L = new User(999992L);
+
     @Test
     public void testESandTCLaunchTest() throws IOException {
         this.indexManager.startupInstance(_999992L);
 
-        RunningIndexUserConfig conf = this.dao.findConfigByUser(_999992L);
+        RunningIndexUserConfig conf = this.runningInstancesdao.findConfigByUser(_999992L);
         int httpPort = conf.getHttpPort();
         String drive = conf.getMountedTCDriveLetter();
         Assert.assertNotNull("mounting TC data drive for user should not fail", drive);
@@ -81,7 +81,7 @@ public class IndexManagerIntegrationTest extends IndexManagerSetup {
         this.indexManager.startupInstance(_999992L);
 
         // check instance up and running
-        RunningIndexUserConfig conf = this.dao.findConfigByUser(_999992L);
+        RunningIndexUserConfig conf = this.runningInstancesdao.findConfigByUser(_999992L);
         int httpPort = conf.getHttpPort();
         String drive = conf.getMountedTCDriveLetter();
         assertNotNull("mounting TC data drive for user should not fail", drive);
@@ -97,17 +97,18 @@ public class IndexManagerIntegrationTest extends IndexManagerSetup {
         try (Client client = new TransportClient(settings).addTransportAddress(new InetSocketTransportAddress(conf
                 .getHostAddress().getHost(), conf.getTcpPort()))) {
             IndexResponse response = null;
-            
+
             response = client
                     .prepareIndex("twitter", "tweet", "1")
                     .setSource(
-                            XContentFactory.jsonBuilder().startObject().field("user", "john").field("postDate", new Date())
-                            .field("message", "who dont it work").endObject()).execute().actionGet();
-            
+                            XContentFactory.jsonBuilder().startObject().field("user", "john")
+                                    .field("postDate", new Date()).field("message", "who dont it work").endObject())
+                    .execute().actionGet();
+
             assertTrue("Contains Index", response.getIndex().equals("twitter"));
-            
+
             assertTrue("Contains Type", response.getType().equals("tweet"));
-            
+
             DeleteResponse delresponse = client.prepareDelete("twitter", "tweet", "1").execute().actionGet();
             System.out.println("Deleted Index: " + delresponse.getIndex());
             assertTrue(delresponse.getIndex().equals("twitter"));
@@ -120,7 +121,7 @@ public class IndexManagerIntegrationTest extends IndexManagerSetup {
         this.indexManager.startupInstance(_999991L);
         System.out.println("startup done");
 
-        RunningIndexUserConfig conf = this.dao.findConfigByUser(_999991L);
+        RunningIndexUserConfig conf = this.runningInstancesdao.findConfigByUser(_999991L);
 
         int httpPort = conf.getHttpPort();
         URL host = conf.getHostAddress();

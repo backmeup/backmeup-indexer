@@ -1,35 +1,96 @@
 package org.backmeup.index.sharing;
 
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+import java.util.UUID;
+
+import org.backmeup.data.dummy.ThemisDataSink;
+import org.backmeup.index.IndexManagerIntegrationTestSetup;
+import org.backmeup.index.api.IndexFields;
+import org.backmeup.index.core.model.IndexFragmentEntryStatus;
+import org.backmeup.index.core.model.IndexFragmentEntryStatus.StatusType;
+import org.backmeup.index.dal.QueuedIndexDocumentDao;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
+import org.backmeup.index.sharing.execution.IndexDocumentCheckForImportsTask;
 import org.backmeup.index.sharing.execution.IndexDocumentDropOffQueue;
+import org.backmeup.index.sharing.execution.SharingPolicyIndexDocumentDistributionTask;
 import org.backmeup.index.sharing.policy.SharingPolicies;
-import org.backmeup.index.sharing.policy.SharingPolicy;
 import org.backmeup.index.sharing.policy.SharingPolicyManager;
+import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.mockito.internal.util.reflection.Whitebox;
 
-public class IndexDocumentSharingIntegrationTest extends IndexDocumentTestingUtils {
+public class IndexDocumentSharingIntegrationTest extends IndexManagerIntegrationTestSetup {
 
     private SharingPolicyManager policyManager;
-    private IndexDocumentDropOffQueue queue;
+    private IndexDocumentDropOffQueue droppOffqueue;
+    private QueuedIndexDocumentDao queuedIndexDocsDao;
+    private SharingPolicyIndexDocumentDistributionTask distributor;
+    private IndexDocumentCheckForImportsTask checkImports;
 
-    //TODO get Derby into this. Persist Sharing Policies, test distribution;
+    private static final User userOwner = new User(999991L);
+    private static final User userSharingP = new User(999992L);
 
-    @Before
-    public void before() {
-        this.policyManager = SharingPolicyManager.getInstance();
-        //this.queue = IndexDocumentDropOffQueue.getInstance();
+    @Ignore("Setup to get this scenario working within a UnitTest is too complex")
+    @Test
+    public void testSharingContentBetweenUsers() throws InterruptedException {
+        //create sharing policy between two users
+        this.policyManager.createSharingRule(userOwner, userSharingP, SharingPolicies.SHARE_ALL);
 
+        IndexDocument doc1 = IndexDocumentTestingUtils.createIndexDocument(userOwner.id());
+        doc1.field(IndexFields.FIELD_INDEX_DOCUMENT_UUID, UUID.randomUUID().toString());
+        // need manual transaction in test because transactional interceptor is not installed in tests
+        this.database.entityManager.getTransaction().begin();
+        this.droppOffqueue.addIndexDocument(doc1);
+        this.database.entityManager.getTransaction().commit();
+
+        //give the document distribution a chance to kick-off, the checkImport tasks will trigger ES import 
+        Thread.sleep(4000);
+        List<IndexFragmentEntryStatus> status = this.contentStatusDao.getAllIndexFragmentEntryStatus(userOwner,
+                StatusType.WAITING_FOR_IMPORT);
+        status = this.contentStatusDao.getAllIndexFragmentEntryStatus(userSharingP, StatusType.WAITING_FOR_IMPORT);
+        assertTrue(status.size() > 0);
+
+        //TODO need to overwrite the getActive users to make ContentManager Import work
     }
 
-    public void testDistributionAccordingToSharingPolicyTest() {
-        //create policy user 99991L shares all content with user 888881L
-        SharingPolicy p = this.policyManager.createSharingRule(new User(99991L), new User(888881L),
-                SharingPolicies.SHARE_ALL);
+    @Before
+    public void beforeTest() {
+        setupWhiteboxTest();
+        //start the components
+        this.droppOffqueue.startupDroOffQueue();
+        this.checkImports.setCheckingFrequency(1);
+        this.checkImports.startupCheckingForContentUpdates();
+    }
 
-        IndexDocument doc1 = createIndexDocument(99991L);
-        this.queue.addIndexDocument(doc1);
+    @After
+    public void afterTest() {
+        this.checkImports.shutdownCheckingForContentUpdates();
+        this.distributor.shutdownSharingPolicyDistribution();
+        cleanupTestData();
+        this.policyManager.removeAllSharingPolicies();
+    }
 
+    private void setupWhiteboxTest() {
+        this.policyManager = SharingPolicyManager.getInstance();
+        this.droppOffqueue = new IndexDocumentDropOffQueue();
+        this.distributor = new SharingPolicyIndexDocumentDistributionTask();
+        this.checkImports = new IndexDocumentCheckForImportsTask();
+        this.queuedIndexDocsDao = this.database.queuedIndexDocsDao;
+        Whitebox.setInternalState(this.droppOffqueue, "dao", this.queuedIndexDocsDao);
+        Whitebox.setInternalState(this.distributor, "queue", this.droppOffqueue);
+    }
+
+    private void cleanupTestData() {
+        try {
+            ThemisDataSink.deleteDataSinkHome(userOwner);
+            ThemisDataSink.deleteDataSinkHome(userSharingP);
+        } catch (IllegalArgumentException e) {
+        }
     }
 
 }

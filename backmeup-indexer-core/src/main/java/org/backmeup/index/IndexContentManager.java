@@ -2,19 +2,21 @@ package org.backmeup.index;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.backmeup.data.dummy.ThemisDataSink;
-import org.backmeup.data.dummy.ThemisDataSink.IndexFragmentType;
 import org.backmeup.index.api.IndexClient;
 import org.backmeup.index.core.elasticsearch.SearchInstanceException;
+import org.backmeup.index.core.model.IndexFragmentEntryStatus;
+import org.backmeup.index.core.model.IndexFragmentEntryStatus.StatusType;
+import org.backmeup.index.dal.IndexFragmentEntryStatusDao;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
 import org.backmeup.index.query.ElasticSearchIndexClient;
 import org.backmeup.index.serializer.Json;
+import org.backmeup.index.sharing.execution.ContentUpdateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,88 +29,126 @@ import org.slf4j.LoggerFactory;
 public class IndexContentManager {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     @Inject
     private IndexManager indexManager;
+    @Inject
+    private IndexFragmentEntryStatusDao dao;
 
     /**
-     * User A grants permission to user B on a specific indexDocument This is copied into user B's public drop off area
-     * and gets ingested into elasticsearch when the user logs into the system. The object must have already been stored
-     * in the data sink and is references via UUID Shared objects will have the same UUID for two different users
+     * The ES index gets dropped. Iterate over all import, deletion operations of IndexDocuments (shared and user owned)
+     * from the DB (IndexFragmentEntryStatus) and rebuild the The IndexDocuments within the user's fragment directory +
+     * the shared fragments from ES Index from scratch.
+     */
+    public static void rebuildESIndexFromScratch(User user) {
+        // TODO AL drop ES index, take all fragments on disk an rebuild it
+    }
+
+    /**
+     * Checks on index fragments (user owned and shared) which have not yet been imported into the index and executes ES
+     * import/deletion
+     */
+    private void importIndexFragment(User user, IndexFragmentEntryStatus importTask) {
+        try {
+            //fetch the document
+            IndexDocument doc = getDocumentFromStorage(importTask);
+            //import to ElasticSearch
+            this.importToESIndex(doc, user);
+            //update status in database
+            importTask.setStatusType(StatusType.IMPORTED);
+            this.dao.merge(importTask);
+
+        } catch (ContentUpdateException | SearchInstanceException e) {
+            this.log.debug("Failed to execute content import task", e);
+        }
+
+    }
+
+    private void deleteIndexFragment(User user, IndexFragmentEntryStatus importTask) {
+        //TODO 
+    }
+
+    /**
+     * Takes care of pending content update tasks (e.g. elements waiting for import or deletion in ES) It queries the db
+     * to check on pending items, calls ES to execute the operation and finally updates the status within the DB
      * 
-     * @return the UUID of the object for userB
+     * @param user
      */
-    public static UUID shareIndexFragment(User fromUserID, User withUserID, UUID objectID) throws IOException {
-        // TODO
-        return null;
-    }
+    public void executeContentUpdates(User user) {
+        List<IndexFragmentEntryStatus> lToImport = this.dao.getAllIndexFragmentEntryStatus(user,
+                StatusType.WAITING_FOR_IMPORT);
+        for (IndexFragmentEntryStatus toImport : lToImport) {
+            //execute the import task
+            importIndexFragment(user, toImport);
+        }
 
-    public static void revokeIndexFragmentSharing(User fromUserID, User withUserID, UUID objectID) throws IOException {
-        // TODO
-    }
-
-    public void importSharedIndexFragmentInES(UUID objectID, User userID) {
-        // TODO
-    }
-
-    public void removeSharedIndexFragmentFromES(UUID objectID, User userID) {
-        // TODO
-    }
-
-    public void importAllSharedIndexFragmentsInES(User userID) {
-
-    }
-
-    /**
-     * The ES index gets dropped. The IndexDocuments within the user's fragment directory + the shared fragments from
-     * other users are taken to rebuild the index from scratch
-     */
-    public static void rebuildESIndexFromFileBasis(User userID) {
-        // TODO drop ES index, take all fragments on disk an rebuild it
-    }
-
-    /**
-     * Imports all user owned index fragments into ES which have not yet been imported into the index
-     */
-    public void importOwnedIndexFragmentInES(User userID) {
-
-        List<UUID> uuids = ThemisDataSink.getAllIndexFragmentUUIDs(userID, IndexFragmentType.TO_IMPORT_USER_OWNED);
-        for (UUID uuid : uuids) {
-            try {
-                // get the file
-                IndexDocument doc = ThemisDataSink.getIndexFragment(uuid, userID,
-                        IndexFragmentType.TO_IMPORT_USER_OWNED);
-                // import it in elasticsearch
-                importIndexFragmentInES(doc, userID);
-                // create record in imported, delete record in to_import
-                ThemisDataSink.saveIndexFragment(doc, userID, IndexFragmentType.IMPORTED_USER_OWNED);
-                ThemisDataSink.deleteIndexFragment(uuid, userID, IndexFragmentType.TO_IMPORT_USER_OWNED);
-                // TODO keep a ImportedIndexFragment history in the database
-
-            } catch (IOException e) {
-                log.error("Failed to fetch or import IndexFragment " + uuid + " of type "
-                        + IndexFragmentType.TO_IMPORT_USER_OWNED + " " + e);
-                // TODO ADD PROPER EXCEPTION
-            }
+        List<IndexFragmentEntryStatus> lToDelete = this.dao.getAllIndexFragmentEntryStatus(user,
+                StatusType.WAITING_FOR_DELETION);
+        for (IndexFragmentEntryStatus toDelete : lToDelete) {
+            //execute the deletion task
+            deleteIndexFragment(user, toDelete);
         }
     }
 
-    private void importIndexFragmentInES(IndexDocument doc, User userID) {
+    /**
+     * Uses the Elastic Search IndexClient to execute the index operation which imports the IndexDocument to ES
+     * 
+     * @param doc
+     * @param user
+     */
+    private void importToESIndex(IndexDocument doc, User user) {
         try {
-            try (IndexClient indexClient = new ElasticSearchIndexClient(userID, indexManager.getESTransportClient(userID))) {
+            try (IndexClient indexClient = new ElasticSearchIndexClient(user,
+                    this.indexManager.initAndCreateAndDoEverthing(user))) {
                 indexClient.index(doc);
             }
 
         } catch (SearchInstanceException e) {
-            log.error("failed to add IndexDocument " + Json.serialize(doc) + " for userID: " + userID + " " + e);
+            this.log.error("failed to add IndexDocument " + Json.serialize(doc) + " for userID: " + user.id() + " " + e);
             throw e;
         } catch (IOException e) {
-            log.error("failed to add IndexDocument " + Json.serialize(doc) + " for userID: " + userID + " " + e);
-            throw new SearchInstanceException("failed to add IndexDocument for userID: " + userID, e);
+            this.log.error("failed to add IndexDocument " + Json.serialize(doc) + " for userID: " + user.id() + " " + e);
+            throw new SearchInstanceException("failed to add IndexDocument for userID: " + user.id(), e);
         }
     }
 
-    public void removeOwnedIndexFragmentInES(UUID objectID, Long userID) {
-
+    /**
+     * Uses the Elastic Search IndexClient to execute the index operation which imports the IndexDocument to ES
+     * 
+     * @param doc
+     * @param user
+     */
+    private void deleteFromESIndex(IndexDocument doc, User user) {
+        //TODO still need to implement the indexClient.delete(doc) operation
     }
+
+    private IndexDocument getDocumentFromStorage(IndexFragmentEntryStatus importTask) {
+        IndexDocument doc = null;
+        //check where to fetch the IndexDocument from
+        if (importTask.isUserOwned()) {
+            try {
+                doc = ThemisDataSink.getIndexFragment(importTask.getDocumentUUID(), new User(importTask.getUserID()),
+                        ThemisDataSink.IndexFragmentType.TO_IMPORT_USER_OWNED);
+
+            } catch (IOException e) {
+                String s = "Error fetching document for import; documentUUID: " + importTask.getDocumentUUID()
+                        + " userOwned?: " + importTask.isUserOwned() + " for user: " + importTask.getUserID();
+                this.log.error(s, e);
+                throw new ContentUpdateException(s, e);
+            }
+        } else {
+            try {
+                doc = ThemisDataSink.getIndexFragment(importTask.getDocumentUUID(), new User(importTask.getUserID()),
+                        ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
+
+            } catch (IOException e) {
+                String s = "Error fetching document for import; documentUUID: " + importTask.getDocumentUUID()
+                        + " userOwned?: " + importTask.isUserOwned() + " for user: " + importTask.getUserID();
+                this.log.error(s, e);
+                throw new ContentUpdateException(s, e);
+            }
+        }
+        return doc;
+    }
+
 }

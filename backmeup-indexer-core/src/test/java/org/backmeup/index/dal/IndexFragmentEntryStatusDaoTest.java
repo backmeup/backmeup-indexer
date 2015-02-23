@@ -65,7 +65,7 @@ public class IndexFragmentEntryStatusDaoTest {
     @Test
     public void shouldStoreDocumentAndReadAllFromDBByDocumentUUID() {
         persistTestData();
-        List<IndexFragmentEntryStatus> found = this.statusDao.getAllIndexFragmentEntryStatus(this.uuid2.toString());
+        List<IndexFragmentEntryStatus> found = this.statusDao.getAllIndexFragmentEntryStatus(this.uuid2);
         assertTrue(found.size() == 2);
         assertTrue(found.get(0).getId() < found.get(1).getId());
     }
@@ -75,7 +75,7 @@ public class IndexFragmentEntryStatusDaoTest {
         persistTestData();
         IndexFragmentEntryStatus found = this.statusDao.findById(this.status1.getId());
         assertNotNull(found);
-        assertTrue(found.getDocumentUUID().equals(this.uuid1.toString()));
+        assertTrue(found.getDocumentUUID().equals(this.uuid1));
         found = this.statusDao.findById(66L);
         assertNull(found);
     }
@@ -88,17 +88,13 @@ public class IndexFragmentEntryStatusDaoTest {
         this.uuid2 = UUID.randomUUID();
         this.uuid3 = UUID.randomUUID();
 
-        this.status1 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_IMPORT, this.uuid1.toString(),
-                this.user1.id());
+        this.status1 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_IMPORT, this.uuid1, true, this.user1.id());
 
-        this.status2 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_DELETION, this.uuid2.toString(),
-                this.user1.id());
+        this.status2 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_DELETION, this.uuid2, true, this.user1.id());
 
-        this.status3 = new IndexFragmentEntryStatus(StatusType.DELETED, this.uuid3.toString(), this.user2.id());
+        this.status3 = new IndexFragmentEntryStatus(StatusType.DELETED, this.uuid3, true, this.user2.id());
 
-        this.status4 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_DELETION, this.uuid2.toString(),
-                this.user2.id());
-
+        this.status4 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_DELETION, this.uuid2, true, this.user2.id());
     }
 
     private void persistTestData() {

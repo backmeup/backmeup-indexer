@@ -8,9 +8,14 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class TCMountHandlerTest {
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     // The Password for the TestTCVol1.tc file is 12345
 
@@ -33,20 +38,16 @@ public class TCMountHandlerTest {
     }
 
     @Test
-    public void mountAndUnmountTestContainerWindows() {
+    public void mountAndUnmountTestContainerWindows() throws IOException, InterruptedException {
         Assume.assumeTrue(SystemUtils.IS_OS_WINDOWS);
         File tcTestFile = new File("src/test/resources/tests/TestTCVol1.tc");
-        try {
-            String drive = TCMountHandler.mount(tcTestFile, "12345", "J");
-            Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true, TCMountHandler.isDriveMounted("J"));
-            TCMountHandler.unmount(drive);
-            Assert.assertEquals("TrueCrypt Testvolume did not get unmounted properly", false,
-                    TCMountHandler.isDriveMounted(drive));
-        } catch (Exception e) {
-            System.out.println(e);
-            // should not happen in this test case
-            Assert.fail("should never fail mounting this scenario");
-        }
+
+        String drive = TCMountHandler.mount(tcTestFile, "12345", "J");
+        Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true, TCMountHandler.isDriveMounted("J"));
+        TCMountHandler.unmount(drive);
+        Assert.assertEquals("TrueCrypt Testvolume did not get unmounted properly", false,
+                TCMountHandler.isDriveMounted(drive));
+
     }
 
     @Test
@@ -96,46 +97,33 @@ public class TCMountHandlerTest {
     }
 
     @Test
-    public void mountVolumeTwiceAtSameTimeWindows() {
+    public void mountVolumeTwiceAtSameTimeWindows() throws IOException, InterruptedException {
         Assume.assumeTrue(SystemUtils.IS_OS_WINDOWS);
         // mounting the same TrueCrypt Volume file twice at the same time is not
         // possible
         File tcTestFile = new File("src/test/resources/tests/TestTCVol1.tc");
-        try {
-            String drive1 = "J";
-            drive1 = TCMountHandler.mount(tcTestFile, "12345", drive1);
-            Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true, TCMountHandler.isDriveMounted(drive1));
+        String drive1 = "J";
+        drive1 = TCMountHandler.mount(tcTestFile, "12345", drive1);
+        Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true, TCMountHandler.isDriveMounted(drive1));
 
-            String drive2 = "K";
-            TCMountHandler.mount(tcTestFile, "12345", drive2);
-            Assert.fail("IOException should have been thrown. TestFile " + tcTestFile.getAbsolutePath());
-
-        } catch (IOException e) {
-            // in this case we should have gotten an IOException and no other
-            Assert.assertTrue(true);
-        } catch (Exception e) {
-            // should not happen in this test case
-            Assert.fail("should never fail mounting this scenario");
-        }
+        String drive2 = "K";
+        this.thrown.expect(IOException.class); //expecting IOException to be thrown by mount
+        TCMountHandler.mount(tcTestFile, "12345", drive2);
+        Assert.fail("IOException should have been thrown. TestFile " + tcTestFile.getAbsolutePath());
     }
 
     @Test
-    public void mountTwiceOnSameDrive() {
+    public void mountTwiceOnSameDrive() throws IOException, InterruptedException {
         Assume.assumeTrue(SystemUtils.IS_OS_WINDOWS);
         File tcTestFile = new File("src/test/resources/tests/TestTCVol1.tc");
         File tcTestFile2 = new File("src/test/resources/tests/TestTCVol2.tc");
-        try {
-            String drive1 = "J";
-            drive1 = TCMountHandler.mount(tcTestFile, "12345", drive1);
-            Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true, TCMountHandler.isDriveMounted(drive1));
+        String drive1 = "J";
+        drive1 = TCMountHandler.mount(tcTestFile, "12345", drive1);
+        Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true, TCMountHandler.isDriveMounted(drive1));
 
-            String drive2 = TCMountHandler.mount(tcTestFile2, "12345", drive1);
-            Assert.assertFalse("Volume can't get mounted twice on the same drive", drive1.equals(drive2));
-            Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true, TCMountHandler.isDriveMounted(drive2));
-        } catch (Exception e) {
-            // should not happen in this test case
-            Assert.fail("should never fail mounting this scenario");
-        }
+        String drive2 = TCMountHandler.mount(tcTestFile2, "12345", drive1);
+        Assert.assertFalse("Volume can't get mounted twice on the same drive", drive1.equals(drive2));
+        Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true, TCMountHandler.isDriveMounted(drive2));
     }
 
     @Test
