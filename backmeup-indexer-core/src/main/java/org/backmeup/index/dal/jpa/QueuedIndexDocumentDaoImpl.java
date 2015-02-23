@@ -55,4 +55,9 @@ public class QueuedIndexDocumentDaoImpl extends BaseDaoImpl<QueuedIndexDocument>
         return executeQuerySelectFirst(q);
     }
 
+    @Override
+    public QueuedIndexDocument findById(long entityId) {
+        return this.findQueuedIndexDocumentByEntityId(entityId);
+    }
+
 }

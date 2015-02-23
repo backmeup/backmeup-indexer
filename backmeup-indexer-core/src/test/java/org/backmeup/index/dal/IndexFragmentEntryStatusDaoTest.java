@@ -1,12 +1,14 @@
 package org.backmeup.index.dal;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.UUID;
 
 import org.backmeup.index.core.model.IndexFragmentEntryStatus;
+import org.backmeup.index.core.model.IndexFragmentEntryStatus.StatusType;
 import org.backmeup.index.model.User;
 import org.junit.Before;
 import org.junit.Rule;
@@ -25,29 +27,57 @@ public class IndexFragmentEntryStatusDaoTest {
 
     private User user1, user2;
     private UUID uuid1, uuid2, uuid3;
-    private IndexFragmentEntryStatus status1, status2, status3;
-
-    @Before
-    public void getDaoFromDb() {
-        this.statusDao = this.database.statusDao;
-    }
+    private IndexFragmentEntryStatus status1, status2, status3, status4;
 
     @Before
     public void before() {
+        this.statusDao = this.database.statusDao;
         createTestData();
     }
 
     @Test
-    public void shouldStoreDocumentAndReadAllFromDBForUser() {
-
-        persistInTransaction(this.status1);
-        persistInTransaction(this.status2);
-        persistInTransaction(this.status3);
+    public void shouldStoreDocumentAndReadAllFromDBByUser() {
+        persistTestData();
         List<IndexFragmentEntryStatus> found = this.statusDao.getAllIndexFragmentEntryStatus(this.user1);
-        assertNotNull(found);
         assertTrue(found.size() == 2);
+        //assert on sort order, first in first out
+        assertTrue(found.get(0).getId() < found.get(1).getId());
 
-        //TODO AL continue here and cover all testcases
+        found = this.statusDao.getAllIndexFragmentEntryStatus(this.user1, StatusType.IMPORTED);
+        assertNotNull(found);
+        assertTrue(found.size() == 0);
+        found = this.statusDao.getAllIndexFragmentEntryStatus(this.user1, StatusType.WAITING_FOR_IMPORT);
+        assertTrue(found.size() == 1);
+    }
+
+    @Test
+    public void shouldStoreDocumentAndReadAllFromDBByStatus() {
+        persistTestData();
+        List<IndexFragmentEntryStatus> found = this.statusDao.getAllIndexFragmentEntryStatus(StatusType.DELETED);
+        assertTrue(found.size() == 1);
+        found = this.statusDao.getAllIndexFragmentEntryStatus(StatusType.WAITING_FOR_IMPORT);
+        assertTrue(found.size() == 1);
+        found = this.statusDao.getAllIndexFragmentEntryStatus(StatusType.IMPORTED);
+        assertNotNull(found);
+        assertTrue(found.size() == 0);
+    }
+
+    @Test
+    public void shouldStoreDocumentAndReadAllFromDBByDocumentUUID() {
+        persistTestData();
+        List<IndexFragmentEntryStatus> found = this.statusDao.getAllIndexFragmentEntryStatus(this.uuid2.toString());
+        assertTrue(found.size() == 2);
+        assertTrue(found.get(0).getId() < found.get(1).getId());
+    }
+
+    @Test
+    public void shouldStoreDocumentAndQueryByEntityID() {
+        persistTestData();
+        IndexFragmentEntryStatus found = this.statusDao.findById(this.status1.getId());
+        assertNotNull(found);
+        assertTrue(found.getDocumentUUID().equals(this.uuid1.toString()));
+        found = this.statusDao.findById(66L);
+        assertNull(found);
     }
 
     private void createTestData() {
@@ -58,22 +88,32 @@ public class IndexFragmentEntryStatusDaoTest {
         this.uuid2 = UUID.randomUUID();
         this.uuid3 = UUID.randomUUID();
 
-        this.status1 = new IndexFragmentEntryStatus(IndexFragmentEntryStatus.StatusType.WAITING_FOR_IMPORT,
-                this.uuid1.toString(), this.user1.id());
+        this.status1 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_IMPORT, this.uuid1.toString(),
+                this.user1.id());
 
-        this.status2 = new IndexFragmentEntryStatus(IndexFragmentEntryStatus.StatusType.WAITING_FOR_IMPORT,
-                this.uuid2.toString(), this.user1.id());
+        this.status2 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_DELETION, this.uuid2.toString(),
+                this.user1.id());
 
-        this.status3 = new IndexFragmentEntryStatus(IndexFragmentEntryStatus.StatusType.DELETED, this.uuid3.toString(),
+        this.status3 = new IndexFragmentEntryStatus(StatusType.DELETED, this.uuid3.toString(), this.user2.id());
+
+        this.status4 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_DELETION, this.uuid2.toString(),
                 this.user2.id());
 
     }
 
-    private void persistInTransaction(IndexFragmentEntryStatus entryStatus) {
+    private void persistTestData() {
+        this.status1 = persistInTransaction(this.status1);
+        this.status2 = persistInTransaction(this.status2);
+        this.status3 = persistInTransaction(this.status3);
+        this.status4 = persistInTransaction(this.status4);
+    }
+
+    private IndexFragmentEntryStatus persistInTransaction(IndexFragmentEntryStatus entryStatus) {
         // need manual transaction in test because transactional interceptor is not installed in tests
         this.database.entityManager.getTransaction().begin();
-        this.statusDao.save(entryStatus);
+        entryStatus = this.statusDao.save(entryStatus);
         this.database.entityManager.getTransaction().commit();
+        return entryStatus;
     }
 
 }

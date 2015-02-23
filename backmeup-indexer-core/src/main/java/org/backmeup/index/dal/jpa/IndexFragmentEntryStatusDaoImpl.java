@@ -45,18 +45,18 @@ public class IndexFragmentEntryStatusDaoImpl extends BaseDaoImpl<IndexFragmentEn
     }
 
     @Override
-    public List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(User userID) {
+    public List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(User user) {
         TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM " + TABLENAME
-                + " u WHERE u.userID = :userId ORDER BY u.timestamp ASC");
-        q.setParameter("userId", userID);
+                + " u WHERE u.userID = :userId ORDER BY u.id ASC");
+        q.setParameter("userId", user.id());
         return executeQuery(q);
     }
 
     @Override
-    public List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(User userID, StatusType type) {
+    public List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(User user, StatusType type) {
         TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM " + TABLENAME
-                + " u WHERE u.userID = :userId and u.statusType = :statusType ORDER BY u.timestamp ASC");
-        q.setParameter("userId", userID);
+                + " u WHERE u.userID = :userId and u.statusType = :statusType ORDER BY u.id ASC");
+        q.setParameter("userId", user.id());
         q.setParameter("statusType", type);
         return executeQuery(q);
     }
@@ -64,7 +64,7 @@ public class IndexFragmentEntryStatusDaoImpl extends BaseDaoImpl<IndexFragmentEn
     @Override
     public List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(String documentUUID) {
         TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM " + TABLENAME
-                + " u WHERE u.documentUUID = :documentUUID ORDER BY u.timestamp ASC");
+                + " u WHERE u.documentUUID = :documentUUID ORDER BY u.id ASC");
         q.setParameter("documentUUID", documentUUID);
         return executeQuery(q);
     }
@@ -72,7 +72,7 @@ public class IndexFragmentEntryStatusDaoImpl extends BaseDaoImpl<IndexFragmentEn
     @Override
     public List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(StatusType type) {
         TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM " + TABLENAME
-                + " u WHERE u.statusType = :statusType ORDER BY u.timestamp ASC");
+                + " u WHERE u.statusType = :statusType ORDER BY u.id ASC");
         q.setParameter("statusType", type);
         return executeQuery(q);
     }
@@ -83,6 +83,11 @@ public class IndexFragmentEntryStatusDaoImpl extends BaseDaoImpl<IndexFragmentEn
                 + " u WHERE u.Id = :entityId");
         q.setParameter("entityId", entityId);
         return executeQuerySelectFirst(q);
+    }
+
+    @Override
+    public IndexFragmentEntryStatus findById(long entityId) {
+        return this.findIndexFragmentEntryStatustByEntityId(entityId);
     }
 
 }
