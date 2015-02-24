@@ -1,0 +1,18 @@
+#! /bin/sh
+
+set -e
+
+PKG=x-tika
+
+if [ $# -ge 1 ]; then
+
+	if [ $1 = "remove" ]; then
+
+		if [ -n "$(status ${PKG} | grep "running")" ]; then
+			# stop x-tika
+			service ${PKG} stop
+		fi
+	fi
+fi
+
+exit 0

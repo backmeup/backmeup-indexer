@@ -1,0 +1,3 @@
+/etc/logrotate.d/x-tika
+/etc/x-tika/x-tika.conf
+/etc/init/x-tika.conf
