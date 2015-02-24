@@ -10,6 +10,7 @@ import java.io.Writer;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.SystemUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -115,10 +116,9 @@ public class ESConfigurationHandler {
     /**
      * Starts an elastic search instance for an existing configuration
      */
-    public static void startElasticSearch(User userID) throws IOException, InterruptedException {
+    public static int startElasticSearch(User userID) throws IOException, InterruptedException {
 
-        // TODO add -server to the command line to not use the client vm (better
-        // performance)
+        // TODO add -server to the command line to not use the client vm (better performance)
         String command = null;
         if (SystemUtils.IS_OS_LINUX) {
             command = "sudo " + getElasticSearchExecutable() + " " + "-Des.config=" + UserDataWorkingDir.getDir(userID)
@@ -131,13 +131,12 @@ public class ESConfigurationHandler {
         log.debug(command);
 
         try {
-            // TODO use ProcessBuilder instead and assign a dedicated amount of
-            // memory
-            Runtime.getRuntime().exec(command);
-            // give ES a chance to startup before returning - wait 10 seconds
+            // TODO use ProcessBuilder instead and assign a dedicated amount of memory
+            Process p = Runtime.getRuntime().exec(command);
+            //give ES a chance to startup before returning - wait 10 seconds
             Thread.sleep(10000);
             // p.waitFor();
-
+            return CommandLineUtils.getExecPID(p);
         } catch (IOException e) {
             log.error("Error executing: " + command + " " + e.toString());
             throw e;
@@ -148,6 +147,13 @@ public class ESConfigurationHandler {
         if (config != null) {
             HttpPost shutdownRequest = new HttpPost(config.getHostAddress() + ":" + config.getHttpPort() + "/_shutdown");
             shutdownElasticSearch(shutdownRequest);
+            //check if Process has terminated, if not kill it
+            if (config.getEsPID() != -1) {
+                boolean isPIDrunning = CommandLineUtils.isProcessRunning(config.getEsPID(), 2, TimeUnit.SECONDS);
+                if (isPIDrunning) {
+                    CommandLineUtils.killProcess(config.getEsPID(), 2, TimeUnit.SECONDS);
+                }
+            }
         } else {
             log.debug("stopElasticSearch for userID " + userID + " failed due to missing RunningIndexUserConfig");
             throw new IOException("stopElasticSearch for userID " + userID

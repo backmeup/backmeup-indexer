@@ -22,8 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Search provider handles the index related operation but delegates to a low
- * level handler for the real work.
+ * Search provider handles the index related operation but delegates to a low level handler for the real work.
  * 
  * @author <a href="http://www.code-cop.org/">Peter Kofler</a>
  */
@@ -34,18 +33,17 @@ public class SearchInstances {
 
     // TODO @see ESConfigurationHandler.checkPortRangeAccepted - these values
     // are currently hard coded there
-    
+
     private final Map<URL, AvailableESInstanceState> availableESInstances = new HashMap<>();
     private URL defaultHost;
 
     public URL getDefaultHost() {
-        return defaultHost;
+        return this.defaultHost;
     }
 
     /**
-     * For now this information is static and only synced with running records
-     * stored within the DB. TODO - add the option for cluster configuration in
-     * property file - central connection to all cluster instances - lightweight
+     * For now this information is static and only synced with running records stored within the DB. TODO - add the
+     * option for cluster configuration in property file - central connection to all cluster instances - lightweight
      * module to start/stop instances on each cluster instance
      */
     @PostConstruct
@@ -56,7 +54,7 @@ public class SearchInstances {
             throw new IllegalArgumentException("InetAddress.getLocalHost().getHostAddress()", e);
         }
 
-        availableESInstances.clear();
+        this.availableESInstances.clear();
         this.availableESInstances.put(this.defaultHost, portsForDefaultIndexNode());
     }
 
@@ -87,8 +85,8 @@ public class SearchInstances {
             // TODO currently only one host machine for ES supported: localhost
             URI uri = new URI("http", InetAddress.getLocalHost().getHostAddress() + "", "", "");
             // keep a database record of this configuration
-            return new RunningIndexUserConfig(userID, uri.toURL(), tcpPort, httpPort, "user" + userID, tcMountedDriveLetter,
-                    fTCContainer.getAbsolutePath());
+            return new RunningIndexUserConfig(userID, uri.toURL(), tcpPort, httpPort, "user" + userID,
+                    tcMountedDriveLetter, fTCContainer.getAbsolutePath());
 
         } catch (URISyntaxException | UnknownHostException | MalformedURLException e1) {
             throw new SearchInstanceException("startupInstance for userID: " + userID + " step5 - failed", e1);
@@ -117,23 +115,22 @@ public class SearchInstances {
     public void createIndexStartFile(RunningIndexUserConfig runningConfig) {
         User userID = runningConfig.getUser();
         try {
-            ESConfigurationHandler.createUserYMLStartupFile(userID, this.defaultHost, runningConfig.getTcpPort(), runningConfig.getHttpPort(),
-                    runningConfig.getMountedTCDriveLetter());
+            ESConfigurationHandler.createUserYMLStartupFile(userID, this.defaultHost, runningConfig.getTcpPort(),
+                    runningConfig.getHttpPort(), runningConfig.getMountedTCDriveLetter());
             this.log.debug("startupInstance for userID: " + userID + " step4 - ok");
         } catch (NumberFormatException | ExceptionInInitializerError | IOException e1) {
             throw new SearchInstanceException("startupInstance for userID: " + userID + " step4 - failed", e1);
         }
     }
 
-    public void startIndexNode(RunningIndexUserConfig runningConfig) {
+    public int startIndexNode(RunningIndexUserConfig runningConfig) {
         User userID = runningConfig.getUser();
         try {
-            ESConfigurationHandler.startElasticSearch(userID);
+            int pid = ESConfigurationHandler.startElasticSearch(userID);
             this.log.debug("startupInstance for userID: " + userID + " step6 - ok");
             this.log.info("started ES Instance " + runningConfig.getClusterName() + " on host: "
-                    + runningConfig.getHostAddress().getHost() + ":"
-                    + runningConfig.getHttpPort());
-
+                    + runningConfig.getHostAddress().getHost() + ":" + runningConfig.getHttpPort());
+            return pid;
         } catch (IOException | InterruptedException e1) {
             throw new SearchInstanceException("startupInstance for userID: " + userID + " step6 - failed", e1);
         }
@@ -150,14 +147,13 @@ public class SearchInstances {
     }
 
     /**
-     * Cleans up the available and used port mapping. This method does not stop running ES and
-     * TC instances
+     * Cleans up the available and used port mapping. This method does not stop running ES and TC instances
      */
     public void releaseHostPorts(RunningIndexUserConfig config) {
         this.availableESInstances.get(this.defaultHost).addAvailableHTTPPort(config.getHttpPort());
         this.availableESInstances.get(this.defaultHost).addAvailableTCPPort(config.getTcpPort());
     }
-    
+
     public void shutdownAllIndexNodes() {
         this.log.debug("cleanupRude: started stopping all ES instances");
         // shutdown all elastic search instances

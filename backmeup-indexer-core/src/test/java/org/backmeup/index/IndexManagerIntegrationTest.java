@@ -1,6 +1,7 @@
 package org.backmeup.index;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -10,12 +11,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.backmeup.index.core.elasticsearch.CommandLineUtils;
 import org.backmeup.index.core.elasticsearch.ESConfigurationHandler;
 import org.backmeup.index.core.model.RunningIndexUserConfig;
 import org.backmeup.index.model.User;
@@ -84,8 +87,10 @@ public class IndexManagerIntegrationTest extends IndexManagerIntegrationTestSetu
         RunningIndexUserConfig conf = this.runningInstancesdao.findConfigByUser(_999992L);
         int httpPort = conf.getHttpPort();
         String drive = conf.getMountedTCDriveLetter();
+        int esPID = conf.getEsPID();
         assertNotNull("mounting TC data drive for user should not fail", drive);
         assertTrue("ES http portnumber should have been assigned", httpPort > -1);
+        assertTrue("Not Process PID has been captured", esPID > -1);
         System.out.println("user 999992 on port: " + httpPort + " and TC volume: " + drive);
 
         assertTrue("ES Instance is not running ",
@@ -160,4 +165,23 @@ public class IndexManagerIntegrationTest extends IndexManagerIntegrationTestSetu
         }
     }
 
+    @Test
+    public void testShutdownInstanceAndProcessesViaCommandLineUtils() throws IOException {
+        this.indexManager.startupInstance(_999991L);
+        // check instance up and running
+        RunningIndexUserConfig conf = this.runningInstancesdao.findConfigByUser(_999991L);
+        int esPID = conf.getEsPID();
+        int httpPort = conf.getHttpPort();
+        String drive = conf.getMountedTCDriveLetter();
+        assertNotNull("mounting TC data drive for user should not fail", drive);
+        assertTrue("ES http portnumber should have been assigned", httpPort > -1);
+        assertTrue("Not Process PID has been captured", esPID > -1);
+
+        boolean b = CommandLineUtils.isProcessRunning(conf.getEsPID(), 2, TimeUnit.SECONDS);
+        assertTrue("ElasticSearch Process for user is not running", b);
+
+        CommandLineUtils.killProcess(conf.getEsPID(), 2, TimeUnit.SECONDS);
+        b = CommandLineUtils.isProcessRunning(conf.getEsPID(), 2, TimeUnit.SECONDS);
+        assertFalse("ElasticSearch Process for user is not running", b);
+    }
 }

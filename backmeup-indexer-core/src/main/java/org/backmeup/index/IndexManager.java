@@ -189,7 +189,12 @@ public class IndexManager {
         this.log.debug("startupInstance for userID: " + userID + " step5 - ok");
 
         // 6) now power on elasticsearch
-        this.searchInstance.startIndexNode(runningConfig);
+        int pid = this.searchInstance.startIndexNode(runningConfig);
+        if (pid != -1) {
+            //set the Linux/Windows PID of the ElasticSearch process
+            runningConfig.setEsPID(pid);
+            runningConfig = this.dao.merge(runningConfig);
+        }
         this.log.debug("startupInstance for userID: " + userID + " step6 - ok");
 
         // 7) check instance up and running
