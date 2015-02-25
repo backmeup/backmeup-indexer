@@ -109,8 +109,8 @@ class IndexUtils {
             //TODO workaround for now
             if (source.get(IndexFields.FIELD_FULLTEXT) != null) {
                 String fulltext = source.get(IndexFields.FIELD_FULLTEXT).toString();
-                preview = new StringBuilder("... ");
-                preview.append(fulltext.replace("\n", " ").trim() + " ... ");
+                //return 250 chars from the fulltext entry within the search results
+                preview = createPreview(fulltext);
             }
             // END workaround
 
@@ -519,5 +519,15 @@ class IndexUtils {
         }
 
         return jobmatches;
+    }
+
+    private static StringBuilder createPreview(String s) {
+        s = s.replace("\n", " ").trim();
+        if (s.length() > 250) {
+            s = s.substring(0, 250);
+        }
+        StringBuilder sb = new StringBuilder("... ");
+        sb.append(s + " ...");
+        return sb;
     }
 }
