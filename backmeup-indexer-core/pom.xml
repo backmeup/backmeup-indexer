@@ -61,17 +61,16 @@
             <version>${version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api}</version>
         </dependency>
         
-        <!-- TODO extract versions numbers and add short comments what libs are used for: PID -->
+        <!-- used for shell and process (PID) interaction -->
         <dependency>
 			<groupId>net.java.dev.jna</groupId>
 			<artifactId>jna-platform</artifactId>
-			<version>4.0.0</version>
+			<version>${version.net.java.dev.jna.jna-platform}</version>
 		</dependency>
-		
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-exec</artifactId>
-			<version>1.3</version>
+			<version>${version.org.apache.commons.commons-exec}</version>
 		</dependency>
 		
 
