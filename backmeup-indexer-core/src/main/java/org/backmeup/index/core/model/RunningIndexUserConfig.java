@@ -49,6 +49,7 @@ public class RunningIndexUserConfig {
         this.setMountedDriveLetter(mountedDrive);
         this.setMountedContainerLocation(mountedContainerLocation);
         this.setHostAddress(hostaddress);
+        this.esPID = -1;
         this.timestamp = new Date();
     }
 
