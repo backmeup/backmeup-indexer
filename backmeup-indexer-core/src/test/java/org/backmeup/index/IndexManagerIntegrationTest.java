@@ -167,9 +167,11 @@ public class IndexManagerIntegrationTest extends IndexManagerIntegrationTestSetu
 
     @Test
     public void testShutdownInstanceAndProcessesViaCommandLineUtils() throws IOException {
-        this.indexManager.startupInstance(_999991L);
+        Client client = this.indexManager.initAndCreateAndDoEverthing(_999991L);
+        assertNotNull(client);
         // check instance up and running
         RunningIndexUserConfig conf = this.runningInstancesdao.findConfigByUser(_999991L);
+        assertNotNull(conf);
         int esPID = conf.getEsPID();
         int httpPort = conf.getHttpPort();
         String drive = conf.getMountedTCDriveLetter();

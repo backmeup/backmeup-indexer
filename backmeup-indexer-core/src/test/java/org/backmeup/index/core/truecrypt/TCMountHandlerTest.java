@@ -43,7 +43,7 @@ public class TCMountHandlerTest {
         File tcTestFile = new File("src/test/resources/tests/TestTCVol1.tc");
 
         String drive = TCMountHandler.mount(tcTestFile, "12345", "J");
-        Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true, TCMountHandler.isDriveMounted("J"));
+        Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true, TCMountHandler.isDriveMounted(drive));
         TCMountHandler.unmount(drive);
         Assert.assertEquals("TrueCrypt Testvolume did not get unmounted properly", false,
                 TCMountHandler.isDriveMounted(drive));

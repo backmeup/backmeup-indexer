@@ -51,17 +51,20 @@ public class IndexManagerIntegrationTestSetup {
 
     private void createIndexManager() {
         this.indexManager = new IndexManager();
+        SearchInstances searchInstance = new SearchInstances();
+        searchInstance.initAvailableInstances();
         Whitebox.setInternalState(this.indexManager, "dao", this.runningInstancesdao);
         Whitebox.setInternalState(this.indexManager, "es", new ES());
         Whitebox.setInternalState(this.indexManager, "dataContainer", new UserDataStorage());
         Whitebox.setInternalState(this.indexManager, "encryptionProvider", new EncryptionProvider());
-        Whitebox.setInternalState(this.indexManager, "searchInstance", new SearchInstances());
+        Whitebox.setInternalState(this.indexManager, "searchInstance", searchInstance);
         Whitebox.setInternalState(this.indexManager, "indexKeepAliveTimer", new IndexKeepAliveTimer());
     }
 
     private void createIndexContentManager() {
         this.contentManager = new IndexContentManager();
-        Whitebox.setInternalState(this.contentManager, "dao", this.contentStatusDao);
+        Whitebox.setInternalState(this.contentManager, "entryStatusDao", this.contentStatusDao);
+        Whitebox.setInternalState(this.contentManager, "runninInstancesDao", this.runningInstancesdao);
         Whitebox.setInternalState(this.contentManager, "indexManager", this.indexManager);
     }
 
