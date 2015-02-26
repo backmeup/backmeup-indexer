@@ -67,10 +67,12 @@ public class CommandLineUtils {
             line = "sudo kill -9 " + pid;
         }
         int exitValue = executeCommandLine(line, timeout, timeunit);
+        System.out.println("executing command: " + line + " returned exitValue: " + exitValue);
         return exitValue;
     }
 
     public static int executeCommandLine(String command, int timeout, TimeUnit timeunit) throws IOException {
+        log.debug("executing: " + command);
         CommandLine cmdLine = CommandLine.parse(command);
         DefaultExecutor executor = new DefaultExecutor();
         // disable logging of stdout/strderr

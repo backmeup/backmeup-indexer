@@ -143,34 +143,52 @@ public class ESConfigurationHandler {
         }
     }
 
-    public static void stopElasticSearch(User userID, RunningIndexUserConfig config) throws IOException {
+    public static void stopElasticSearch(User user, RunningIndexUserConfig config) throws IOException {
         if (config != null) {
             HttpPost shutdownRequest = new HttpPost(config.getHostAddress() + ":" + config.getHttpPort() + "/_shutdown");
             shutdownElasticSearch(shutdownRequest);
+            try {
+                //Give ES a chance to properly terminate
+                Thread.sleep(3000);
+            } catch (InterruptedException e1) {
+            }
+
             //check if Process has terminated, if not kill it
             if (config.getEsPID() != -1) {
                 boolean isPIDrunning = CommandLineUtils.isProcessRunning(config.getEsPID(), 2, TimeUnit.SECONDS);
+                log.debug("checking ES process for userID: " + user.id() + " still running?: " + isPIDrunning);
                 if (isPIDrunning) {
-                    CommandLineUtils.killProcess(config.getEsPID(), 2, TimeUnit.SECONDS);
+                    try {
+                        CommandLineUtils.killProcess(config.getEsPID(), 2, TimeUnit.SECONDS);
+                        //recheck if process was properly terminated
+                        if (CommandLineUtils.isProcessRunning(config.getEsPID(), 2, TimeUnit.SECONDS)) {
+                            log.warn("unable to terminate ES PID: " + config.getEsPID() + " for userID: " + user.id());
+                        }
+                    } catch (Exception e) {
+                        String s = "stopElasticSearch for userID " + user.id() + " could not killProcess PID: "
+                                + config.getEsPID() + " due to" + e.toString();
+                        log.debug(s);
+                        throw new IOException(s, e);
+                    }
                 }
             }
         } else {
-            log.debug("stopElasticSearch for userID " + userID + " failed due to missing RunningIndexUserConfig");
-            throw new IOException("stopElasticSearch for userID " + userID
-                    + " failed due to missing RunningIndexUserConfig");
+            String s = "stopElasticSearch for userID " + user.id() + " failed due to missing RunningIndexUserConfig";
+            log.debug(s);
+            throw new IOException(s);
         }
     }
 
     private static void shutdownElasticSearch(HttpPost shutdownRequest) throws IOException {
         try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
-            log.debug("Issuing shutdown request: " + shutdownRequest);
+            log.debug("Issuing shutdown request: " + shutdownRequest + " to ES");
             try (CloseableHttpResponse response = httpClient.execute(shutdownRequest)) {
                 if (response.getStatusLine().getStatusCode() == 200) {
-                    log.debug("shutdown down ok - status code 200");
+                    log.debug("shutdown ES properly initialized - status code 200");
                     httpClient.close();
                 } else {
                     httpClient.close();
-                    log.debug("shutdown down failed with statuscode: " + response.getStatusLine().getStatusCode());
+                    log.debug("shutdown ES failed with statuscode: " + response.getStatusLine().getStatusCode());
                     throw new IOException("ES shutdown command failed, statuscode:"
                             + response.getStatusLine().getStatusCode());
                 }

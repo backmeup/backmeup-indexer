@@ -31,8 +31,7 @@ public class SearchInstances {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    // TODO @see ESConfigurationHandler.checkPortRangeAccepted - these values
-    // are currently hard coded there
+    // TODO @see ESConfigurationHandler.checkPortRangeAccepted - these values are currently hard coded there
 
     private final Map<URL, AvailableESInstanceState> availableESInstances = new HashMap<>();
     private URL defaultHost;
@@ -129,7 +128,7 @@ public class SearchInstances {
             int pid = ESConfigurationHandler.startElasticSearch(userID);
             this.log.debug("startupInstance for userID: " + userID + " step6 - ok");
             this.log.info("started ES Instance " + runningConfig.getClusterName() + " on host: "
-                    + runningConfig.getHostAddress().getHost() + ":" + runningConfig.getHttpPort());
+                    + runningConfig.getHostAddress().getHost() + ":" + runningConfig.getHttpPort() + " and PID: " + pid);
             return pid;
         } catch (IOException | InterruptedException e1) {
             throw new SearchInstanceException("startupInstance for userID: " + userID + " step6 - failed", e1);
