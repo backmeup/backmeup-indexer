@@ -1,4 +1,4 @@
-package org.backmeup.data.dummy;
+package org.backmeup.index.storage;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,7 +28,7 @@ public class ThemisDataSink {
 
     public enum IndexFragmentType {
         TO_IMPORT_USER_OWNED("to-import/userowned/"), IMPORTED_USER_OWNED("imported/userowned/"), TO_IMPORT_SHARED_WITH_USER(
-                "to-import/sharedwithuser/");
+                "to-import/sharedwithuser/"), IMPORTED_SHARED_WITH_USER("imported/sharedwithuser/");
 
         private String storage_location;
 
@@ -44,13 +44,13 @@ public class ThemisDataSink {
     /**
      * Fetches the user specific TrueCrypt container file which is stored within the user space
      */
-    public static File getIndexTrueCryptContainer(User userID) throws IOException {
-        String s = getDataSinkHome(userID) + "/index/elasticsearch_userdata_TC_150MB.tc";
+    public static File getIndexTrueCryptContainer(User user) throws IOException {
+        String s = getDataSinkHome(user) + "/index/elasticsearch_userdata_TC_150MB.tc";
         File f = new File(s);
         if (f.exists() && f.canRead()) {
             return f;
         }
-        throw new IOException("Truecrypt Data Container for user " + userID + " not found");
+        throw new IOException("Truecrypt Data Container for user " + user.id() + " not found");
     }
 
     /**
@@ -62,41 +62,41 @@ public class ThemisDataSink {
      */
     @SuppressWarnings("resource")
     // new FileInputStream(f) is closed inside FileUtils.copyInputStreamToFile
-    public static void saveIndexTrueCryptContainer(File f, User userID) throws IOException {
+    public static void saveIndexTrueCryptContainer(File f, User user) throws IOException {
         if (f == null) {
             throw new IOException("file f is null");
         }
 
-        if (userID.id() > -1 && (f.exists() && f.canRead())) {
-            saveIndexTrueCryptContainer(new FileInputStream(f), userID);
+        if (user.id() > -1 && (f.exists() && f.canRead())) {
+            saveIndexTrueCryptContainer(new FileInputStream(f), user);
         } else {
             throw new IOException("Error storing Index TrueCrypt Container file " + f.getAbsolutePath() + ": userID: "
-                    + userID + ", file exists? " + f.exists() + ", file is readable? " + f.canRead());
+                    + user.id() + ", file exists? " + f.exists() + ", file is readable? " + f.canRead());
         }
     }
 
-    public static void saveIndexTrueCryptContainer(InputStream in, User userID) throws IOException {
+    public static void saveIndexTrueCryptContainer(InputStream in, User user) throws IOException {
         if (in == null) {
             throw new IOException("file is null");
         }
 
-        FileUtils.copyInputStreamToFile(in, new File(getDataSinkHome(userID)
+        FileUtils.copyInputStreamToFile(in, new File(getDataSinkHome(user)
                 + "/index/elasticsearch_userdata_TC_150MB.tc"));
     }
 
     /**
      * Removes the user specific TrueCrypt volume from the users file space
      */
-    public static void deleteIndexTrueCryptContainer(User userID) throws IOException {
-        File f = getIndexTrueCryptContainer(userID);
+    public static void deleteIndexTrueCryptContainer(User user) throws IOException {
+        File f = getIndexTrueCryptContainer(user);
         f.delete();
     }
 
     /**
      * Persists an IndexDocument within the user's public dropoffzone for index fragments in the DataSink. Distinguishes
-     * between imported, shared or already indexed IndexDocuments
+     * IndexDocuments that are user owned and shared by other users
      */
-    public static UUID saveIndexFragment(IndexDocument indexFragment, User userID, IndexFragmentType type)
+    public static UUID saveIndexFragment(IndexDocument indexFragment, User user, IndexFragmentType type)
             throws IOException {
 
         if (indexFragment == null) {
@@ -122,22 +122,22 @@ public class ThemisDataSink {
         String serializedIndexDoc = Json.serialize(indexFragment);
         if (serializedIndexDoc != null) {
 
-            FileUtils.writeStringToFile(new File(getDataSinkHome(userID) + "/dropoffzone/" + type.getStorageLocation()
+            FileUtils.writeStringToFile(new File(getDataSinkHome(user) + "/dropoffzone/" + type.getStorageLocation()
                     + uuid + ".serindexdocument"), serializedIndexDoc);
             return uuid;
 
         }
 
-        throw new IOException("Error persisting serialized IndexDocument in user space" + getDataSinkHome(userID)
-                + "/user" + userID + "/dropoffzone/" + type.getStorageLocation() + uuid + ".serindexdocument"
-                + " for userID: " + userID);
+        throw new IOException("Error persisting serialized IndexDocument in user space" + getDataSinkHome(user)
+                + "/user" + user.id() + "/dropoffzone/" + type.getStorageLocation() + uuid + ".serindexdocument"
+                + " for userID: " + user.id());
 
     }
 
-    public static IndexDocument getIndexFragment(UUID objectID, User userID, IndexFragmentType type) throws IOException {
-        File f = getIndexFragmentFile(objectID, userID, type);
+    public static IndexDocument getIndexFragment(UUID objectID, User user, IndexFragmentType type) throws IOException {
+        File f = getIndexFragmentFile(objectID, user, type);
 
-        if (userID.id() > -1 && (f.exists() && f.canRead())) {
+        if (user.id() > -1 && (f.exists() && f.canRead())) {
             List<String> lines = FileUtils.readLines(f, "UTF-8");
 
             String serObject = "";
@@ -150,22 +150,22 @@ public class ThemisDataSink {
             return indexDoc;
         }
 
-        throw new IOException("Error getting index fragment: " + getDataSinkHome(userID) + "/dropoffzone/"
+        throw new IOException("Error getting index fragment: " + getDataSinkHome(user) + "/dropoffzone/"
                 + type.getStorageLocation() + objectID + ".serindexdocument" + ", file exists? " + f.exists()
                 + ", file is readable? " + f.canRead());
     }
 
-    private static File getIndexFragmentFile(UUID objectID, User userID, IndexFragmentType type) {
-        return new File(getDataSinkHome(userID) + "/dropoffzone/" + type.getStorageLocation() + objectID
+    private static File getIndexFragmentFile(UUID objectID, User user, IndexFragmentType type) {
+        return new File(getDataSinkHome(user) + "/dropoffzone/" + type.getStorageLocation() + objectID
                 + ".serindexdocument");
     }
 
     /**
      * Returns a list of all index-fragment UUIDs the user currently has stored within his data source repository
      */
-    public static List<UUID> getAllIndexFragmentUUIDs(User userID, IndexFragmentType type) {
+    public static List<UUID> getAllIndexFragmentUUIDs(User user, IndexFragmentType type) {
         List<UUID> ret = new ArrayList<>();
-        File f = new File(getDataSinkHome(userID) + "/dropoffzone/" + type.getStorageLocation());
+        File f = new File(getDataSinkHome(user) + "/dropoffzone/" + type.getStorageLocation());
 
         FilenameFilter textFilter = new FilenameFilter() {
             @Override
@@ -189,21 +189,21 @@ public class ThemisDataSink {
         return ret;
     }
 
-    public static void deleteIndexFragment(UUID objectID, User userID, IndexFragmentType type) throws IOException {
-        File f = getIndexFragmentFile(objectID, userID, type);
+    public static void deleteIndexFragment(UUID objectID, User user, IndexFragmentType type) throws IOException {
+        File f = getIndexFragmentFile(objectID, user, type);
 
-        if (userID.id() > -1 && (f.exists() && f.canRead())) {
+        if (user.id() > -1 && (f.exists() && f.canRead())) {
             f.delete();
         } else {
-            throw new IOException("error deleting fragment: " + getDataSinkHome(userID) + "/dropoffzone/"
+            throw new IOException("error deleting fragment: " + getDataSinkHome(user) + "/dropoffzone/"
                     + type.getStorageLocation() + objectID + ".serindexdocument" + ", file exists? " + f.exists()
                     + ", file is readable? " + f.canRead());
         }
     }
 
-    public static void deleteAllIndexFragments(User userID, IndexFragmentType type) throws IOException {
-        for (UUID uuid : getAllIndexFragmentUUIDs(userID, type)) {
-            deleteIndexFragment(uuid, userID, type);
+    public static void deleteAllIndexFragments(User user, IndexFragmentType type) throws IOException {
+        for (UUID uuid : getAllIndexFragmentUUIDs(user, type)) {
+            deleteIndexFragment(uuid, user, type);
         }
     }
 
@@ -212,9 +212,9 @@ public class ThemisDataSink {
      * 
      * @param userID
      */
-    public static void deleteDataSinkHome(User userID) {
+    public static void deleteDataSinkHome(User user) {
         try {
-            FileUtils.deleteDirectory(new File(getDataSinkHome(userID)));
+            FileUtils.deleteDirectory(new File(getDataSinkHome(user)));
         } catch (IOException e) {
             throw new IllegalArgumentException("user home dir does not exist or is not accessible to system", e);
         }

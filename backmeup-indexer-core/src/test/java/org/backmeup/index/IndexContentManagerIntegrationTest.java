@@ -7,8 +7,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
-import org.backmeup.data.dummy.ThemisDataSink;
-import org.backmeup.data.dummy.ThemisDataSink.IndexFragmentType;
 import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.core.model.IndexFragmentEntryStatus;
 import org.backmeup.index.core.model.IndexFragmentEntryStatus.StatusType;
@@ -16,6 +14,8 @@ import org.backmeup.index.core.model.RunningIndexUserConfig;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
 import org.backmeup.index.sharing.IndexDocumentTestingUtils;
+import org.backmeup.index.storage.ThemisDataSink;
+import org.backmeup.index.storage.ThemisDataSink.IndexFragmentType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

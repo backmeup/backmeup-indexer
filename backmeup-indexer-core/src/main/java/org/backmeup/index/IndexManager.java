@@ -153,12 +153,7 @@ public class IndexManager {
      * truecrypt container, create user specific ES launch configuration (yml file), start ES instance for user
      * elasticsearch -Des.config="C:\Program Files\elasticsearch-1.2.0\config\elasticsearch.user0.yml"
      * 
-     * @throws NumberFormatException
-     *             when the available range of supported ports on ES is used up
-     * @throws ExceptionInInitializerError
-     *             when issuing the call to TrueCrypt failed
-     * @throws IllegalArgumentException
-     *             when the TrueCrypt instance was not configured properly
+     * @throws SearchInstanceException
      */
     synchronized Client startupInstance(User userID) {
 

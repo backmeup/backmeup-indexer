@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
-import org.backmeup.data.dummy.ThemisDataSink;
 import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.core.model.QueuedIndexDocument;
 import org.backmeup.index.dal.DerbyDatabase;
@@ -19,6 +18,7 @@ import org.backmeup.index.sharing.IndexDocumentTestingUtils;
 import org.backmeup.index.sharing.policy.SharingPolicies;
 import org.backmeup.index.sharing.policy.SharingPolicy;
 import org.backmeup.index.sharing.policy.SharingPolicyManager;
+import org.backmeup.index.storage.ThemisDataSink;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;

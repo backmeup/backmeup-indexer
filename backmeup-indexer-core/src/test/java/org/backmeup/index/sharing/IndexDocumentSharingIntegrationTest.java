@@ -5,7 +5,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 import java.util.UUID;
 
-import org.backmeup.data.dummy.ThemisDataSink;
 import org.backmeup.index.IndexManagerIntegrationTestSetup;
 import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.core.model.IndexFragmentEntryStatus;
@@ -18,6 +17,7 @@ import org.backmeup.index.sharing.execution.IndexDocumentDropOffQueue;
 import org.backmeup.index.sharing.execution.SharingPolicyIndexDocumentDistributionTask;
 import org.backmeup.index.sharing.policy.SharingPolicies;
 import org.backmeup.index.sharing.policy.SharingPolicyManager;
+import org.backmeup.index.storage.ThemisDataSink;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;

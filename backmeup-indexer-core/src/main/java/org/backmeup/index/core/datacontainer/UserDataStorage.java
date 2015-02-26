@@ -8,10 +8,10 @@ import java.nio.channels.FileChannel;
 
 import javax.enterprise.context.ApplicationScoped;
 
-import org.backmeup.data.dummy.ThemisDataSink;
 import org.backmeup.index.UserDataWorkingDir;
 import org.backmeup.index.core.model.RunningIndexUserConfig;
 import org.backmeup.index.model.User;
+import org.backmeup.index.storage.ThemisDataSink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

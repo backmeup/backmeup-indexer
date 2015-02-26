@@ -11,11 +11,12 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
-import org.backmeup.data.dummy.ThemisDataSink.IndexFragmentType;
 import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
 import org.backmeup.index.serializer.Json;
+import org.backmeup.index.storage.ThemisDataSink;
+import org.backmeup.index.storage.ThemisDataSink.IndexFragmentType;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;

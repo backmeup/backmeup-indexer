@@ -2,21 +2,27 @@ package org.backmeup.index;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 
-import org.backmeup.data.dummy.ThemisDataSink;
 import org.backmeup.index.api.IndexClient;
+import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.core.elasticsearch.SearchInstanceException;
 import org.backmeup.index.core.model.IndexFragmentEntryStatus;
 import org.backmeup.index.core.model.IndexFragmentEntryStatus.StatusType;
+import org.backmeup.index.core.model.RunningIndexUserConfig;
 import org.backmeup.index.dal.IndexFragmentEntryStatusDao;
+import org.backmeup.index.dal.RunningIndexUserConfigDao;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
 import org.backmeup.index.query.ElasticSearchIndexClient;
 import org.backmeup.index.serializer.Json;
 import org.backmeup.index.sharing.execution.ContentUpdateException;
+import org.backmeup.index.storage.ThemisDataSink;
+import org.backmeup.index.storage.ThemisEncryptedPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +39,9 @@ public class IndexContentManager {
     @Inject
     private IndexManager indexManager;
     @Inject
-    private IndexFragmentEntryStatusDao dao;
+    private IndexFragmentEntryStatusDao entryStatusDao;
+    @Inject
+    private RunningIndexUserConfigDao runninInstancesDao;
 
     /**
      * The ES index gets dropped. Iterate over all import, deletion operations of IndexDocuments (shared and user owned)
@@ -50,13 +58,15 @@ public class IndexContentManager {
      */
     private void importIndexFragment(User user, IndexFragmentEntryStatus importTask) {
         try {
-            //fetch the document
+            //1. fetch the document
             IndexDocument doc = getDocumentFromStorage(importTask);
-            //import to ElasticSearch
+            //2. import to ElasticSearch
             this.importToESIndex(doc, user);
-            //update status in database
+            //3. update status in database
             importTask.setStatusType(StatusType.IMPORTED);
-            this.dao.merge(importTask);
+            this.entryStatusDao.merge(importTask);
+            //4. finally move the serialized Index Document to the encrypted partition
+            moveFragmentToEncryptedUserStorage(doc, user, importTask.isUserOwned());
 
         } catch (ContentUpdateException | SearchInstanceException e) {
             this.log.debug("Failed to execute content import task", e);
@@ -65,7 +75,7 @@ public class IndexContentManager {
     }
 
     private void deleteIndexFragment(User user, IndexFragmentEntryStatus importTask) {
-        //TODO 
+        //TODO AL
     }
 
     /**
@@ -75,14 +85,14 @@ public class IndexContentManager {
      * @param user
      */
     public void executeContentUpdates(User user) {
-        List<IndexFragmentEntryStatus> lToImport = this.dao.getAllIndexFragmentEntryStatus(user,
+        List<IndexFragmentEntryStatus> lToImport = this.entryStatusDao.getAllIndexFragmentEntryStatus(user,
                 StatusType.WAITING_FOR_IMPORT);
         for (IndexFragmentEntryStatus toImport : lToImport) {
             //execute the import task
             importIndexFragment(user, toImport);
         }
 
-        List<IndexFragmentEntryStatus> lToDelete = this.dao.getAllIndexFragmentEntryStatus(user,
+        List<IndexFragmentEntryStatus> lToDelete = this.entryStatusDao.getAllIndexFragmentEntryStatus(user,
                 StatusType.WAITING_FOR_DELETION);
         for (IndexFragmentEntryStatus toDelete : lToDelete) {
             //execute the deletion task
@@ -122,6 +132,35 @@ public class IndexContentManager {
         //TODO still need to implement the indexClient.delete(doc) operation
     }
 
+    private String getMountedTCDriveLetter(User user) {
+        RunningIndexUserConfig config = this.runninInstancesDao.findConfigByUser(user);
+        if (config != null) {
+            return config.getMountedTCDriveLetter();
+        }
+        throw new ContentUpdateException("No encrypted user space mounted");
+    }
+
+    private void moveFragmentToEncryptedUserStorage(IndexDocument doc, User user, boolean userOwned) {
+        try {
+            if (userOwned) {
+                ThemisEncryptedPartition.saveIndexFragment(doc, user,
+                        ThemisEncryptedPartition.IndexFragmentType.IMPORTED_USER_OWNED, getMountedTCDriveLetter(user));
+                ThemisDataSink.deleteIndexFragment(
+                        UUID.fromString(doc.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString()), user,
+                        ThemisDataSink.IndexFragmentType.TO_IMPORT_USER_OWNED);
+            } else {
+                ThemisEncryptedPartition.saveIndexFragment(doc, user,
+                        ThemisEncryptedPartition.IndexFragmentType.IMPORTED_SHARED_WITH_USER,
+                        getMountedTCDriveLetter(user));
+                ThemisDataSink.deleteIndexFragment(
+                        UUID.fromString(doc.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString()), user,
+                        ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
+            }
+        } catch (Exception e) {
+            throw new ContentUpdateException("Copying index fragment to encrypted user partition failed", e);
+        }
+    }
+
     private IndexDocument getDocumentFromStorage(IndexFragmentEntryStatus importTask) {
         IndexDocument doc = null;
         //check where to fetch the IndexDocument from
@@ -149,6 +188,16 @@ public class IndexContentManager {
             }
         }
         return doc;
+    }
+
+    @RequestScoped
+    public void startupIndexContentManager() {
+        this.log.debug("startup() IndexContentManager (ApplicationScoped) completed");
+    }
+
+    @RequestScoped
+    public void shutdownIndexContentManager() {
+        this.log.debug("shutdown() IndexContentManager (ApplicationScoped) completed");
     }
 
 }
