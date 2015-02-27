@@ -261,7 +261,10 @@ public class ThemisDataSink {
         if (SystemUtils.IS_OS_LINUX) {
             String command = "sudo mkdir -p " + f.getAbsolutePath();
             try {
-                CommandLineUtils.executeCommandLine(command, 2, TimeUnit.SECONDS);
+                int exitVal = CommandLineUtils.executeCommandLine(command, 2, TimeUnit.SECONDS);
+                if (exitVal != 0) {
+                    throw new IllegalArgumentException("error executing command " + command + " exit value: " + exitVal);
+                }
             } catch (IOException e) {
                 throw new IllegalArgumentException("error executing command " + command, e);
             }
