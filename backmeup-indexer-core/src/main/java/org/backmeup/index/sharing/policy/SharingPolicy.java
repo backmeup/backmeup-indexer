@@ -17,7 +17,7 @@ public class SharingPolicy {
         this.fromUserID = fromUser.id();
         this.withUserID = withUser.id();
         this.policy = policy;
-        this.policyCreationDate = new Date(System.currentTimeMillis());
+        this.policyCreationDate = new Date();
     }
 
     public Long getFromUserID() {
@@ -69,6 +69,12 @@ public class SharingPolicy {
 
     public void setPolicyCreationDate(Date policyCreationDate) {
         this.policyCreationDate = policyCreationDate;
+    }
+
+    @Override
+    public String toString() {
+        return "policyID: '" + this.policyID + "', fromUserID: '" + this.fromUserID + "', withUserID: '"
+                + this.withUserID + "', policy: '" + this.policy + "', sharedElement: '" + this.sharedElementID + "'";
     }
 
 }

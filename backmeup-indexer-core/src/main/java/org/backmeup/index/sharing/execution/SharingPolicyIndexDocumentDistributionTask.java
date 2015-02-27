@@ -1,6 +1,7 @@
 package org.backmeup.index.sharing.execution;
 
 import java.io.IOException;
+import java.sql.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -64,12 +65,12 @@ public class SharingPolicyIndexDocumentDistributionTask {
     }
 
     /**
-     * Fetches all elements from the queue and distributes them
+     * Fetches all elements from the queue and distributes them to the user drop off space
      */
     private void distribute() {
         while (this.queue.size() > 0) {
             this.log.debug("Found" + this.queue.size() + " IndexDocument(s) in the queue to distribute");
-            System.out.println("Found" + this.queue.size() + " IndexDocument(s) in the queue to distribute");
+            //get next element from the drop off queue 
             IndexDocument doc = this.queue.getNext();
 
             try {//distribute to owner
@@ -92,7 +93,10 @@ public class SharingPolicyIndexDocumentDistributionTask {
      */
     private void distributeToOwner(IndexDocument doc) throws IOException {
         long ownerID = Long.parseLong(doc.getFields().get(IndexFields.FIELD_OWNER_ID).toString());
+        String uuid = doc.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString();
         ThemisDataSink.saveIndexFragment(doc, new User(ownerID), ThemisDataSink.IndexFragmentType.TO_IMPORT_USER_OWNED);
+        this.log.debug("distributed and stored IndexFragment: " + uuid + " for userID: " + ownerID
+                + " TO_IMPORT_USER_OWNED drop-off");
     }
 
     /**
@@ -103,21 +107,40 @@ public class SharingPolicyIndexDocumentDistributionTask {
     private void distributeToSharingPartners(IndexDocument doc) throws IOException {
         //user that submitted this document within a themis workflow
         long ownerID = Long.parseLong(doc.getFields().get(IndexFields.FIELD_OWNER_ID).toString());
+        String uuid = doc.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString();
 
         //iterate over all sharing policies that a given user has defined
         List<SharingPolicy> policies = this.manager.getAllPoliciesForUser(new User(ownerID));
         for (SharingPolicy policy : policies) {
 
+            //add additional entries for sharing within the IndexDocument
             doc.field(IndexFields.FIELD_SHARED_BY_USER_ID, ownerID);
             //active user is always the document owner - reset the flag
             doc.field(IndexFields.FIELD_OWNER_ID, policy.getWithUserID());
 
-            //1. check sharing all with this user
-            if (policy.getPolicy().equals(SharingPolicies.SHARE_ALL)) {
+            //1a. check sharing_all including old jobs
+            if (policy.getPolicy().equals(SharingPolicies.SHARE_ALL_INKLUDING_OLD)) {
                 ThemisDataSink.saveIndexFragment(doc, new User(policy.getWithUserID()),
                         ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
-
+                this.log.debug("distributed and stored IndexFragment: " + uuid + " for userID: " + ownerID
+                        + " TO_IMPORT_SHARED_WITH_USER drop-off; policy: " + policy.toString());
             }
+
+            //1b. checking share_all but just the ones after a given timestamp
+            if (policy.getPolicy().equals(SharingPolicies.SHARE_ALL_AFTER_NOW)) {
+                //check the timestamp if this is newer than the policy timestamp
+                if ((policy.getPolicyCreationDate() != null)) {
+                    Long timestampBackup = (Long) doc.getFields().get(IndexFields.FIELD_BACKUP_AT);
+                    Date dateBackup = new Date(timestampBackup);
+                    if (policy.getPolicyCreationDate().before(dateBackup)) {
+                        ThemisDataSink.saveIndexFragment(doc, new User(policy.getWithUserID()),
+                                ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
+                        this.log.debug("distributed and stored IndexFragment: " + uuid + " for userID: " + ownerID
+                                + " TO_IMPORT_SHARED_WITH_USER drop-off; policy: " + policy.toString());
+                    }
+                }
+            }
+
             //2. check if we're sharing this backup
             else if (policy.getPolicy().equals(SharingPolicies.SHARE_BACKUP)) {
                 //check if we're sharing this specific backupjob
@@ -125,6 +148,8 @@ public class SharingPolicyIndexDocumentDistributionTask {
                         && (policy.getSharedElementID().equals(doc.getFields().get(IndexFields.FIELD_JOB_ID)))) {
                     ThemisDataSink.saveIndexFragment(doc, new User(policy.getWithUserID()),
                             ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
+                    this.log.debug("distributed and stored IndexFragment: " + uuid + " for userID: " + ownerID
+                            + " TO_IMPORT_SHARED_WITH_USER drop-off; policy: " + policy.toString());
                 }
             }
             //3. check if we're sharing this specific element/file
@@ -135,6 +160,8 @@ public class SharingPolicyIndexDocumentDistributionTask {
                                 IndexFields.FIELD_INDEX_DOCUMENT_UUID)))) {
                     ThemisDataSink.saveIndexFragment(doc, new User(policy.getWithUserID()),
                             ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
+                    this.log.debug("distributed and stored IndexFragment: " + uuid + " for userID: " + ownerID
+                            + " TO_IMPORT_SHARED_WITH_USER drop-off; policy: " + policy.toString());
                 }
             }
         }

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Date;
 import java.util.List;
 
 import org.backmeup.index.model.User;
@@ -23,20 +24,25 @@ public class SharingPolicyCreationTest {
     }
 
     @Test
-    public void createShareAllPolicy() {
+    public void createShareAllPolicy() throws InterruptedException {
 
-        SharingPolicy p = this.shManager.createSharingRule(this.owner, this.sharedWith, SharingPolicies.SHARE_ALL);
+        SharingPolicy p = this.shManager.createSharingRule(this.owner, this.sharedWith,
+                SharingPolicies.SHARE_ALL_AFTER_NOW);
 
         assertEquals(this.owner.id(), p.getFromUserID());
         assertEquals(this.sharedWith.id(), p.getWithUserID());
         assertNotNull(p.getPolicyID());
-        assertEquals(SharingPolicies.SHARE_ALL, p.getPolicy());
+        assertEquals(SharingPolicies.SHARE_ALL_AFTER_NOW, p.getPolicy());
+        //need to sleep as Date does not capture millis but just seconds
+        Thread.sleep(1200);
+        assertTrue(p.getPolicyCreationDate().before(new Date(System.currentTimeMillis())));
     }
 
     @Test
     public void addShareAllPolicyAndRemoveIt() {
 
-        SharingPolicy p = this.shManager.createSharingRule(this.owner, this.sharedWith, SharingPolicies.SHARE_ALL);
+        SharingPolicy p = this.shManager.createSharingRule(this.owner, this.sharedWith,
+                SharingPolicies.SHARE_ALL_AFTER_NOW);
         List<SharingPolicy> ps = this.shManager.getAllPoliciesForUser(this.owner);
         assertTrue(ps.contains(p));
 

@@ -39,7 +39,7 @@ public class IndexDocumentSharingIntegrationTest extends IndexManagerIntegration
     @Test
     public void testSharingContentBetweenUsers() throws InterruptedException {
         //create sharing policy between two users
-        this.policyManager.createSharingRule(userOwner, userSharingP, SharingPolicies.SHARE_ALL);
+        this.policyManager.createSharingRule(userOwner, userSharingP, SharingPolicies.SHARE_ALL_AFTER_NOW);
 
         IndexDocument doc1 = IndexDocumentTestingUtils.createIndexDocument(userOwner.id());
         doc1.field(IndexFields.FIELD_INDEX_DOCUMENT_UUID, UUID.randomUUID().toString());

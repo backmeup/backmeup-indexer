@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,8 +36,11 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
     private SharingPolicyManager policyManager = SharingPolicyManager.getInstance();
 
     //fixed test set on sharing policies
-    private SharingPolicy pol12, pol17, pol34, pol56;
-    User user1, user2, user3, user4, user5, user6, user7;
+    private SharingPolicy pol1w2, pol1w7, pol3w4, pol5w6, pol1w8, pol1w9;
+    private User user1, user2, user3, user4, user5, user6, user7, user8, user9;
+    private Date dateAfterBackup, dateBeforeBackup;
+
+    Long currentTime = new Date().getTime();
 
     @Before
     public void before() {
@@ -65,6 +69,34 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
     public void testLoadTestDataInQueue() {
         assertTrue(this.queue.size() > 0);
         assertTrue(this.queue.size() == this.queuedIndexDocsDao.getAllQueuedIndexDocuments().size());
+    }
+
+    @Test
+    public void testDistributionOfSerializedIndexDocsToDropOffUserSpaceWithSharingRuleShareAllNewer()
+            throws IOException {
+        //start the distribution thread
+        activateQueueAndSleepJUnitThread4TwoSecs();
+        //check if a serialized document ends up in the user's drop off space
+        User owner1 = this.user1;
+        User sharingp1 = this.user8;
+        List<UUID> lUUIDs = ThemisDataSink.getAllIndexFragmentUUIDs(sharingp1,
+                ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
+        //case1a: where policy was created after the actual backup job execution
+        assertTrue(lUUIDs.size() == 0);
+
+        sharingp1 = this.user9;
+        lUUIDs = ThemisDataSink.getAllIndexFragmentUUIDs(sharingp1,
+                ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
+        //case1b: where policy was created after the actual backup job execution
+        assertTrue(lUUIDs.size() == 1);
+        UUID uuid = lUUIDs.get(0);
+        IndexDocument docSharingp1 = ThemisDataSink.getIndexFragment(uuid, sharingp1,
+                ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
+        assertNotNull(docSharingp1);
+        assertEquals(sharingp1.id() + "", docSharingp1.getFields().get(IndexFields.FIELD_OWNER_ID).toString());
+        assertEquals(uuid.toString(), docSharingp1.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString());
+        assertEquals(owner1.id().toString(), docSharingp1.getFields().get(IndexFields.FIELD_SHARED_BY_USER_ID)
+                .toString());
     }
 
     @Test
@@ -141,22 +173,36 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
     }
 
     private void createSharingPolicyData() {
+        //policy 1a -> share all data inkluding the ones before the policy was created
         this.user1 = new User(1L);
         this.user2 = new User(2L);
         this.user7 = new User(7L);
-        this.pol12 = this.policyManager.createSharingRule(this.user1, this.user2, SharingPolicies.SHARE_ALL);
-        this.pol17 = this.policyManager.createSharingRule(this.user1, this.user7, SharingPolicies.SHARE_ALL);
+        this.pol1w2 = this.policyManager.createSharingRule(this.user1, this.user2,
+                SharingPolicies.SHARE_ALL_INKLUDING_OLD);
+        this.pol1w7 = this.policyManager.createSharingRule(this.user1, this.user7,
+                SharingPolicies.SHARE_ALL_INKLUDING_OLD);
+
+        //policy 1b -> share all data but only data that has been created after the policy
+        this.user8 = new User(8L);
+        this.user9 = new User(9L);
+        this.pol1w8 = this.policyManager.createSharingRule(this.user1, this.user8, SharingPolicies.SHARE_ALL_AFTER_NOW);
+        this.pol1w9 = this.policyManager.createSharingRule(this.user1, this.user9, SharingPolicies.SHARE_ALL_AFTER_NOW);
+        int hours = 2; //create a date in history 
+        this.dateAfterBackup = new Date(this.currentTime + hours * 60 * 60 * 1000);
+        this.dateBeforeBackup = new Date(this.currentTime - hours * 60 * 60 * 1000);
+        this.pol1w9.setPolicyCreationDate(this.dateBeforeBackup);
+        this.pol1w8.setPolicyCreationDate(this.dateAfterBackup);
 
         //policy 2 -> share all elements of a specific backup job 53
         this.user3 = new User(3L);
         this.user4 = new User(4L);
-        this.pol34 = this.policyManager.createSharingRule(this.user3, this.user4, SharingPolicies.SHARE_BACKUP, "53");
+        this.pol3w4 = this.policyManager.createSharingRule(this.user3, this.user4, SharingPolicies.SHARE_BACKUP, "53");
 
         //policy 3 -> share a specific index-document, which however is not reflected in our testdata
         this.user5 = new User(5L);
         this.user6 = new User(6L);
-        this.pol56 = new SharingPolicy(this.user5, this.user6, SharingPolicies.SHARE_INDEX_DOCUMENT);
-        this.pol56.setSharedElementID(UUID.randomUUID().toString());
+        this.pol5w6 = new SharingPolicy(this.user5, this.user6, SharingPolicies.SHARE_INDEX_DOCUMENT);
+        this.pol5w6.setSharedElementID(UUID.randomUUID().toString());
 
     }
 
@@ -164,6 +210,7 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
         for (int i = 1; i <= 15; i++) {
             IndexDocument doc = createIndexDocument(new Long(i));
             doc.field(IndexFields.FIELD_JOB_ID, i + 50 + "");
+            doc.field(IndexFields.FIELD_BACKUP_AT, this.currentTime);
             persistInTransaction(createQueuedIndexDocument(doc));
         }
     }
