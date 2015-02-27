@@ -8,10 +8,13 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.SystemUtils;
 import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.config.Configuration;
+import org.backmeup.index.core.elasticsearch.CommandLineUtils;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
 import org.backmeup.index.serializer.Json;
@@ -60,7 +63,6 @@ public class ThemisDataSink {
      * @param f
      *            the user specific yml ES startup file
      */
-    @SuppressWarnings("resource")
     // new FileInputStream(f) is closed inside FileUtils.copyInputStreamToFile
     public static void saveIndexTrueCryptContainer(File f, User user) throws IOException {
         if (f == null) {
@@ -221,11 +223,21 @@ public class ThemisDataSink {
     }
 
     private static String getDataSinkHome(User user) {
-        return getDataSinkHome() + "/user" + user.id();
+        String s = getDataSinkHome() + "/user" + user.id();
+        File f = new File(s);
+        if (f.isDirectory() && f.exists()) {
+            return f.getAbsolutePath();
+        }
+        mkDir(f);
+        if (f.isDirectory() && f.exists()) {
+            return f.getAbsolutePath();
+        }
+        throw new IllegalArgumentException("user home dir does not exist or is not accessible to system "
+                + f.getAbsolutePath());
     }
 
     /**
-     * Returns the root directory for the Themis datasink implementation used by index-core
+     * Returns the root directory for the Themis data storage used by index-core
      */
     private static String getDataSinkHome() {
         String s = Configuration.getProperty("themis-datasink.home.dir");
@@ -234,13 +246,27 @@ public class ThemisDataSink {
             if (f.isDirectory() && f.exists()) {
                 return f.getAbsolutePath();
             }
-            f.mkdirs();
+            mkDir(f);
             if (f.isDirectory() && f.exists()) {
                 return f.getAbsolutePath();
             }
-            throw new IllegalArgumentException("user home dir does not exist or is not accessible to system");
+            throw new IllegalArgumentException("datasink home dir does not exist or is not accessible to system "
+                    + f.getAbsolutePath());
         }
-        throw new IllegalArgumentException("User Home dir not properly configured within backmeup-indexer.properties");
+        throw new IllegalArgumentException(
+                "datasink home dir not properly configured within backmeup-indexer.properties");
+    }
+
+    private static void mkDir(File f) {
+        if (SystemUtils.IS_OS_LINUX) {
+            String command = "sudo mkdir -p " + f.getAbsolutePath();
+            try {
+                CommandLineUtils.executeCommandLine(command, 2, TimeUnit.SECONDS);
+            } catch (IOException e) {
+                throw new IllegalArgumentException("error executing command " + command, e);
+            }
+        }
+        f.mkdirs();
     }
 
 }

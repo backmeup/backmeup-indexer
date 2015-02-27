@@ -71,7 +71,7 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
     public void testDistributionOfSerializedIndexDocsToDropOffUserSpaceWithSharingRules() {
         //start the distribution thread
         activateQueueAndSleepJUnitThread4TwoSecs();
-        //check if a serealized document ends up in the user's drop off space
+        //check if a serialized document ends up in the user's drop off space
         User owner = this.user1;
         User sharingp1 = this.user2;
         User sharingp2 = this.user7;
