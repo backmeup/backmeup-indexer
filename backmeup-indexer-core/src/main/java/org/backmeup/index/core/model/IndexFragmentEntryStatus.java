@@ -11,6 +11,8 @@ import javax.persistence.Id;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.backmeup.index.model.User;
+
 /**
  * A DB record on the status of a specific IndexDocument regarding its status in ElasticSearch e.g. if it is waiting for
  * import or if it has been imported/deleted, waiting for import/deletion
@@ -41,10 +43,10 @@ public class IndexFragmentEntryStatus {
         this.timestamp = new Date();
     }
 
-    public IndexFragmentEntryStatus(StatusType statusType, UUID documentUUID, boolean userOwned, Long userID) {
+    public IndexFragmentEntryStatus(StatusType statusType, UUID documentUUID, boolean userOwned, User user) {
         this.statusType = statusType;
         this.documentUUID = documentUUID;
-        this.userID = userID;
+        this.userID = user.id();
         this.userOwned = userOwned;
         this.timestamp = new Date();
     }

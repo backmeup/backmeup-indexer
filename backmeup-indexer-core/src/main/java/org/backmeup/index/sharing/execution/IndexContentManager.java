@@ -1,4 +1,4 @@
-package org.backmeup.index;
+package org.backmeup.index.sharing.execution;
 
 import java.io.IOException;
 import java.util.List;
@@ -8,6 +8,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 
+import org.backmeup.index.IndexManager;
 import org.backmeup.index.api.IndexClient;
 import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.core.elasticsearch.SearchInstanceException;
@@ -20,7 +21,6 @@ import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
 import org.backmeup.index.query.ElasticSearchIndexClient;
 import org.backmeup.index.serializer.Json;
-import org.backmeup.index.sharing.execution.ContentUpdateException;
 import org.backmeup.index.storage.ThemisDataSink;
 import org.backmeup.index.storage.ThemisEncryptedPartition;
 import org.slf4j.Logger;

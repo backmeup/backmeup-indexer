@@ -8,6 +8,7 @@ import org.backmeup.index.dal.IndexFragmentEntryStatusDao;
 import org.backmeup.index.dal.RunningIndexUserConfigDao;
 import org.backmeup.index.model.User;
 import org.backmeup.index.query.ES;
+import org.backmeup.index.sharing.execution.IndexContentManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;

@@ -12,9 +12,9 @@ import org.backmeup.index.core.model.IndexFragmentEntryStatus.StatusType;
 import org.backmeup.index.dal.QueuedIndexDocumentDao;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
-import org.backmeup.index.sharing.execution.IndexDocumentCheckForImportsTask;
+import org.backmeup.index.sharing.execution.IndexContentUpdateTask;
 import org.backmeup.index.sharing.execution.IndexDocumentDropOffQueue;
-import org.backmeup.index.sharing.execution.SharingPolicyIndexDocumentDistributionTask;
+import org.backmeup.index.sharing.execution.SharingPolicyExecutionTask;
 import org.backmeup.index.sharing.policy.SharingPolicies;
 import org.backmeup.index.sharing.policy.SharingPolicyManager;
 import org.backmeup.index.storage.ThemisDataSink;
@@ -29,8 +29,8 @@ public class IndexDocumentSharingIntegrationTest extends IndexManagerIntegration
     private SharingPolicyManager policyManager;
     private IndexDocumentDropOffQueue droppOffqueue;
     private QueuedIndexDocumentDao queuedIndexDocsDao;
-    private SharingPolicyIndexDocumentDistributionTask distributor;
-    private IndexDocumentCheckForImportsTask checkImports;
+    private SharingPolicyExecutionTask distributor;
+    private IndexContentUpdateTask checkImports;
 
     private static final User userOwner = new User(999991L);
     private static final User userSharingP = new User(999992L);
@@ -70,7 +70,7 @@ public class IndexDocumentSharingIntegrationTest extends IndexManagerIntegration
     @After
     public void afterTest() {
         this.checkImports.shutdownCheckingForContentUpdates();
-        this.distributor.shutdownSharingPolicyDistribution();
+        this.distributor.shutdownSharingPolicyExecution();
         cleanupTestData();
         this.policyManager.removeAllSharingPolicies();
     }
@@ -78,8 +78,8 @@ public class IndexDocumentSharingIntegrationTest extends IndexManagerIntegration
     private void setupWhiteboxTest() {
         this.policyManager = SharingPolicyManager.getInstance();
         this.droppOffqueue = new IndexDocumentDropOffQueue();
-        this.distributor = new SharingPolicyIndexDocumentDistributionTask();
-        this.checkImports = new IndexDocumentCheckForImportsTask();
+        this.distributor = new SharingPolicyExecutionTask();
+        this.checkImports = new IndexContentUpdateTask();
         this.queuedIndexDocsDao = this.database.queuedIndexDocsDao;
         Whitebox.setInternalState(this.droppOffqueue, "dao", this.queuedIndexDocsDao);
         Whitebox.setInternalState(this.distributor, "queue", this.droppOffqueue);

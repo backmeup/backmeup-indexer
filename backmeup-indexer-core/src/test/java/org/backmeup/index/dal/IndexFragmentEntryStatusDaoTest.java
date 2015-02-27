@@ -48,6 +48,11 @@ public class IndexFragmentEntryStatusDaoTest {
         assertTrue(found.size() == 0);
         found = this.statusDao.getAllIndexFragmentEntryStatus(this.user1, StatusType.WAITING_FOR_IMPORT);
         assertTrue(found.size() == 1);
+
+        IndexFragmentEntryStatus status = this.statusDao.getIndexFragmentEntryStatus(this.user1, this.uuid1);
+        assertNotNull(status);
+        status = this.statusDao.getIndexFragmentEntryStatus(this.user1, this.uuid3);
+        assertNull(status);
     }
 
     @Test
@@ -88,13 +93,13 @@ public class IndexFragmentEntryStatusDaoTest {
         this.uuid2 = UUID.randomUUID();
         this.uuid3 = UUID.randomUUID();
 
-        this.status1 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_IMPORT, this.uuid1, true, this.user1.id());
+        this.status1 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_IMPORT, this.uuid1, true, this.user1);
 
-        this.status2 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_DELETION, this.uuid2, true, this.user1.id());
+        this.status2 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_DELETION, this.uuid2, true, this.user1);
 
-        this.status3 = new IndexFragmentEntryStatus(StatusType.DELETED, this.uuid3, true, this.user2.id());
+        this.status3 = new IndexFragmentEntryStatus(StatusType.DELETED, this.uuid3, true, this.user2);
 
-        this.status4 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_DELETION, this.uuid2, true, this.user2.id());
+        this.status4 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_DELETION, this.uuid2, true, this.user2);
     }
 
     private void persistTestData() {

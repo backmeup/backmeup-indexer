@@ -19,16 +19,16 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
      * @param entityId
      * @return
      */
-    IndexFragmentEntryStatus findIndexFragmentEntryStatustByEntityId(Long entityId);
+    IndexFragmentEntryStatus getIndexFragmentEntryStatustByEntityId(Long entityId);
 
     /**
-     * Find all status objects on an IndexFragment Entry for a given user The summary of all status objects reflects the
-     * ElasticSearch content a user is able to see
+     * Find all status objects on an IndexFragment Entry for a given user. The summary of all status objects reflects
+     * the ElasticSearch content a user is able to see
      * 
      * @param userID
      * @return
      */
-    List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(User userID);
+    public List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(User user);
 
     /**
      * Find Status on an IndexFragment Entry on a specific type as e.g. waiting_for_import filtered by an underlying
@@ -38,7 +38,7 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
      * @param type
      * @return
      */
-    List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(User userID, IndexFragmentEntryStatus.StatusType type);
+    List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(User user, IndexFragmentEntryStatus.StatusType type);
 
     /**
      * Find Status on an IndexFragment Entry on a specific IndexDocument UUID over all users on. Shared documents
@@ -48,6 +48,22 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
      * @return
      */
     List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(UUID documentUUID);
+
+    /**
+     * Find Status on an IndexFragment Entry on a specific IndexDocument UUID for a given user.
+     * 
+     * @param documentUUID
+     * @return
+     */
+    IndexFragmentEntryStatus getIndexFragmentEntryStatus(User user, UUID documentUUID);
+
+    /**
+     * Is status on an IndexFragment Entry on a specific IndexDocument UUID for a given user existing in DB?
+     * 
+     * @param documentUUID
+     * @return
+     */
+    boolean isIndexFragmentEntryStatusExisting(User user, UUID documentUUID);
 
     /**
      * Find all Status objects over all users that match a certain condition e.g. waiting_for_import.

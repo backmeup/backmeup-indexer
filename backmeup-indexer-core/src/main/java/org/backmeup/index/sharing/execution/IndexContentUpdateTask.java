@@ -7,13 +7,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import javax.inject.Inject;
 
 import org.backmeup.index.ActiveUsers;
-import org.backmeup.index.IndexContentManager;
 import org.backmeup.index.model.User;
 import org.backmeup.index.utils.cdi.RunRequestScoped;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class IndexDocumentCheckForImportsTask {
+public class IndexContentUpdateTask {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);

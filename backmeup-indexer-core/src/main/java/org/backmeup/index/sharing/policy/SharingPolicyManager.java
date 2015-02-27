@@ -13,6 +13,9 @@ import org.backmeup.index.model.User;
  */
 public class SharingPolicyManager {
 
+    //TODO persist SharingPolicy within Database
+    //TODO only allow sharing policy creation if the EntryStatus matches imported?
+
     private Map<Long, ActiveSharingPoliciesForUser> sharingPolicies = new HashMap<Long, ActiveSharingPoliciesForUser>();
     private Map<String, Long> policyIDToUserIDMapping = new HashMap<String, Long>();
 

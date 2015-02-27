@@ -1,7 +1,6 @@
 package org.backmeup.index.sharing.execution;
 
 import java.io.IOException;
-import java.sql.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -12,7 +11,6 @@ import javax.inject.Inject;
 import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
-import org.backmeup.index.sharing.policy.SharingPolicies;
 import org.backmeup.index.sharing.policy.SharingPolicy;
 import org.backmeup.index.sharing.policy.SharingPolicyManager;
 import org.backmeup.index.storage.ThemisDataSink;
@@ -21,12 +19,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Fetches the IndexDocuments from the queue and takes care of their distribution into the user's drop-off-for-inport
- * zones according to the defined SharingPolicies
+ * Takes care of
+ * 
+ * a) IndexDocument distribution. Fetches the IndexDocuments from the queue as they are handed over by the indexing
+ * plugin and takes care of their distribution into the user's drop-off-for-inport zones according to the defined
+ * SharingPolicies
+ * 
+ * b) Enforcing SharingPolicies Checks if policies have changed and updates status entries to_import / to_delete
  *
  */
 @ApplicationScoped
-public class SharingPolicyIndexDocumentDistributionTask {
+public class SharingPolicyExecutionTask {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
@@ -35,39 +38,41 @@ public class SharingPolicyIndexDocumentDistributionTask {
     @Inject
     private IndexDocumentDropOffQueue queue;
     @Inject
+    private SharingPolicyExecution policyExecution;
+    @Inject
     private SharingPolicyManager manager = SharingPolicyManager.getInstance(); //TODO need to add bean and init methods in lifecycle
 
     @RunRequestScoped
-    public void startupSharingPolicyDistribution() {
-        startDistribution();
-        this.log.debug("startup() SharingPolicyDistribution (ApplicationScoped) completed");
+    public void startupSharingPolicyExecution() {
+        startPolicyExecution();
+        this.log.debug("startup() SharingPolicyExecution (ApplicationScoped) completed");
     }
 
     @RunRequestScoped
-    public void shutdownSharingPolicyDistribution() {
-        stopDistribution();
+    public void shutdownSharingPolicyExecution() {
+        stopPolicyExecution();
         this.log.debug("shutdown() SharingPolicyDistribution (ApplicationScoped) completed");
     }
 
-    private void startDistribution() {
+    private void startPolicyExecution() {
 
         this.exec.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                distribute();
+                fetchDataFromQueue();
             }
         }, this.SECONDS_BETWEEN_RECHECKING, this.SECONDS_BETWEEN_RECHECKING, java.util.concurrent.TimeUnit.SECONDS);
     }
 
-    public void stopDistribution() {
-        this.log.debug("SharingPolicyIndexDistribution stopping distribution thread");
+    public void stopPolicyExecution() {
+        this.log.debug("SharingPolicyExecutionTask stopping distribution thread");
         this.exec.shutdownNow();
     }
 
     /**
      * Fetches all elements from the queue and distributes them to the user drop off space
      */
-    private void distribute() {
+    private void fetchDataFromQueue() {
         while (this.queue.size() > 0) {
             this.log.debug("Found" + this.queue.size() + " IndexDocument(s) in the queue to distribute");
             //get next element from the drop off queue 
@@ -80,7 +85,6 @@ public class SharingPolicyIndexDocumentDistributionTask {
             } catch (IOException e) {
                 //TODO cleanup if one of the two operations failed?
                 this.log.info("Exception distributing IndexDocument to user dropoffzone ", e);
-                System.out.println(e.toString());
             }
         }
         //this.log.debug("Did not find an IndexDocument in the queue to distribute");
@@ -92,15 +96,18 @@ public class SharingPolicyIndexDocumentDistributionTask {
      * @param doc
      */
     private void distributeToOwner(IndexDocument doc) throws IOException {
+        //TODO AL need to check if we already know this document
         long ownerID = Long.parseLong(doc.getFields().get(IndexFields.FIELD_OWNER_ID).toString());
         String uuid = doc.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString();
         ThemisDataSink.saveIndexFragment(doc, new User(ownerID), ThemisDataSink.IndexFragmentType.TO_IMPORT_USER_OWNED);
+
         this.log.debug("distributed and stored IndexFragment: " + uuid + " for userID: " + ownerID
-                + " TO_IMPORT_USER_OWNED drop-off");
+                + " TO_IMPORT_USER_OWNED drop-off;  added status: toImport to DB");
     }
 
     /**
-     * Takes an IndexDocument, analyzes its fields and distributes them according to policy
+     * Takes an IndexDocument, analyzes its fields, distributes them to storage according to sharing policy, adds
+     * toImport status records to DB
      * 
      * @param doc
      */
@@ -118,54 +125,9 @@ public class SharingPolicyIndexDocumentDistributionTask {
             //active user is always the document owner - reset the flag
             doc.field(IndexFields.FIELD_OWNER_ID, policy.getWithUserID());
 
-            //1a. check sharing_all including old jobs
-            if (policy.getPolicy().equals(SharingPolicies.SHARE_ALL_INKLUDING_OLD)) {
-                ThemisDataSink.saveIndexFragment(doc, new User(policy.getWithUserID()),
-                        ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
-                this.log.debug("distributed and stored IndexFragment: " + uuid + " for userID: " + ownerID
-                        + " TO_IMPORT_SHARED_WITH_USER drop-off; policy: " + policy.toString());
-            }
-
-            //1b. checking share_all but just the ones after a given timestamp
-            if (policy.getPolicy().equals(SharingPolicies.SHARE_ALL_AFTER_NOW)) {
-                //check the timestamp if this is newer than the policy timestamp
-                if ((policy.getPolicyCreationDate() != null)) {
-                    Long timestampBackup = (Long) doc.getFields().get(IndexFields.FIELD_BACKUP_AT);
-                    Date dateBackup = new Date(timestampBackup);
-                    if (policy.getPolicyCreationDate().before(dateBackup)) {
-                        ThemisDataSink.saveIndexFragment(doc, new User(policy.getWithUserID()),
-                                ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
-                        this.log.debug("distributed and stored IndexFragment: " + uuid + " for userID: " + ownerID
-                                + " TO_IMPORT_SHARED_WITH_USER drop-off; policy: " + policy.toString());
-                    }
-                }
-            }
-
-            //2. check if we're sharing this backup
-            else if (policy.getPolicy().equals(SharingPolicies.SHARE_BACKUP)) {
-                //check if we're sharing this specific backupjob
-                if ((policy.getSharedElementID() != null)
-                        && (policy.getSharedElementID().equals(doc.getFields().get(IndexFields.FIELD_JOB_ID)))) {
-                    ThemisDataSink.saveIndexFragment(doc, new User(policy.getWithUserID()),
-                            ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
-                    this.log.debug("distributed and stored IndexFragment: " + uuid + " for userID: " + ownerID
-                            + " TO_IMPORT_SHARED_WITH_USER drop-off; policy: " + policy.toString());
-                }
-            }
-            //3. check if we're sharing this specific element/file
-            else if (policy.getPolicy().equals(SharingPolicies.SHARE_INDEX_DOCUMENT)) {
-                //check if we're sharing this specific element
-                if ((policy.getSharedElementID() != null)
-                        && (policy.getSharedElementID().equals(doc.getFields().get(
-                                IndexFields.FIELD_INDEX_DOCUMENT_UUID)))) {
-                    ThemisDataSink.saveIndexFragment(doc, new User(policy.getWithUserID()),
-                            ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
-                    this.log.debug("distributed and stored IndexFragment: " + uuid + " for userID: " + ownerID
-                            + " TO_IMPORT_SHARED_WITH_USER drop-off; policy: " + policy.toString());
-                }
-            }
+            //check the different sharing policies and create according import tasks for doc
+            this.policyExecution.executeImport(policy, doc);
         }
-
     }
 
     /**

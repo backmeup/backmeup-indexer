@@ -79,7 +79,7 @@ public class IndexFragmentEntryStatusDaoImpl extends BaseDaoImpl<IndexFragmentEn
     }
 
     @Override
-    public IndexFragmentEntryStatus findIndexFragmentEntryStatustByEntityId(Long entityId) {
+    public IndexFragmentEntryStatus getIndexFragmentEntryStatustByEntityId(Long entityId) {
         TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM " + TABLENAME
                 + " u WHERE u.Id = :entityId");
         q.setParameter("entityId", entityId);
@@ -88,7 +88,24 @@ public class IndexFragmentEntryStatusDaoImpl extends BaseDaoImpl<IndexFragmentEn
 
     @Override
     public IndexFragmentEntryStatus findById(long entityId) {
-        return this.findIndexFragmentEntryStatustByEntityId(entityId);
+        return this.getIndexFragmentEntryStatustByEntityId(entityId);
+    }
+
+    @Override
+    public IndexFragmentEntryStatus getIndexFragmentEntryStatus(User user, UUID documentUUID) {
+        TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM " + TABLENAME
+                + " u WHERE u.userID = :userId and u.documentUUID = :documentUUID ORDER BY u.id ASC");
+        q.setParameter("documentUUID", documentUUID);
+        q.setParameter("userId", user.id());
+        return executeQuerySelectFirst(q);
+    }
+
+    @Override
+    public boolean isIndexFragmentEntryStatusExisting(User user, UUID documentUUID) {
+        if (this.getIndexFragmentEntryStatus(user, documentUUID) == null) {
+            return false;
+        }
+        return true;
     }
 
 }

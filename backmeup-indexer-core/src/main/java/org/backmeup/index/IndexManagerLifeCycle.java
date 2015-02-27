@@ -2,9 +2,10 @@ package org.backmeup.index;
 
 import javax.inject.Inject;
 
-import org.backmeup.index.sharing.execution.IndexDocumentCheckForImportsTask;
+import org.backmeup.index.sharing.execution.IndexContentManager;
+import org.backmeup.index.sharing.execution.IndexContentUpdateTask;
 import org.backmeup.index.sharing.execution.IndexDocumentDropOffQueue;
-import org.backmeup.index.sharing.execution.SharingPolicyIndexDocumentDistributionTask;
+import org.backmeup.index.sharing.execution.SharingPolicyExecutionTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,11 +26,11 @@ public class IndexManagerLifeCycle {
     @Inject
     private IndexDocumentDropOffQueue queue;
     @Inject
-    private SharingPolicyIndexDocumentDistributionTask distributor;
+    private SharingPolicyExecutionTask distributor;
     @Inject
     private IndexContentManager contentManager;
     @Inject
-    private IndexDocumentCheckForImportsTask importTask;
+    private IndexContentUpdateTask importTask;
 
     public void initialized() {
         this.log.debug(">>>>> Startup IndexManager >>>>>");
@@ -40,7 +41,7 @@ public class IndexManagerLifeCycle {
 
         this.queue.startupDroOffQueue();
 
-        this.distributor.startupSharingPolicyDistribution();
+        this.distributor.startupSharingPolicyExecution();
 
         this.importTask.startupCheckingForContentUpdates();
 
@@ -56,7 +57,7 @@ public class IndexManagerLifeCycle {
 
         this.importTask.shutdownCheckingForContentUpdates();
 
-        this.distributor.shutdownSharingPolicyDistribution();
+        this.distributor.shutdownSharingPolicyExecution();
 
         this.queue.shutdownDroOffQueue();
 
