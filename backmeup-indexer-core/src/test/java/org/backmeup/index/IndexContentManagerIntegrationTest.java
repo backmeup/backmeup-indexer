@@ -58,7 +58,7 @@ public class IndexContentManagerIntegrationTest extends IndexManagerIntegrationT
 
         //Create an entry for it within the Database
         IndexFragmentEntryStatus status1 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_IMPORT, documentUUID,
-                true, this.testUser1.id());
+                true, this.testUser1);
         persistInTransaction(status1);
     }
 

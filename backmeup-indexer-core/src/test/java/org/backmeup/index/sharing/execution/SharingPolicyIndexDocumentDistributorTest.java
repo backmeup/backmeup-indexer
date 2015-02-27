@@ -32,7 +32,8 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
     public final DerbyDatabase database = new DerbyDatabase();
     private QueuedIndexDocumentDao queuedIndexDocsDao;
     private IndexDocumentDropOffQueue queue;
-    private SharingPolicyExecutionTask distributor;
+    private SharingPolicyExecutionTask policyExecutionTask;
+    private SharingPolicyExecution policyExecution;
     private SharingPolicyManager policyManager = SharingPolicyManager.getInstance();
 
     //fixed test set on sharing policies
@@ -44,14 +45,14 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
 
     @Before
     public void before() {
-        this.distributor = new SharingPolicyExecutionTask();
-        this.distributor.setFrequency(1);
+        this.policyExecutionTask = new SharingPolicyExecutionTask();
+        this.policyExecutionTask.setFrequency(1);
         setupWhiteboxTest();
     }
 
     @After
     public void after() {
-        this.distributor.shutdownSharingPolicyExecution();
+        this.policyExecutionTask.shutdownSharingPolicyExecution();
         cleanupTestData();
         this.policyManager.removeAllSharingPolicies();
     }
@@ -154,7 +155,7 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
         //start the distribution thread
         try {
             this.database.entityManager.getTransaction().begin();
-            this.distributor.startupSharingPolicyExecution();
+            this.policyExecutionTask.startupSharingPolicyExecution();
             Thread.sleep(2000);
             this.database.entityManager.getTransaction().commit();
         } catch (InterruptedException e) {
@@ -165,8 +166,11 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
     private void setupWhiteboxTest() {
         this.queuedIndexDocsDao = this.database.queuedIndexDocsDao;
         this.queue = new IndexDocumentDropOffQueue();
+        this.policyExecution = new SharingPolicyExecution();
         Whitebox.setInternalState(this.queue, "dao", this.queuedIndexDocsDao);
-        Whitebox.setInternalState(this.distributor, "queue", this.queue);
+        Whitebox.setInternalState(this.policyExecutionTask, "queue", this.queue);
+        Whitebox.setInternalState(this.policyExecution, "entryStatusDao", this.database.statusDao);
+        Whitebox.setInternalState(this.policyExecutionTask, "policyExecution", this.policyExecution);
         createQueueInputData();
         createSharingPolicyData();
         this.queue.startupDroOffQueue();
