@@ -1,0 +1,9 @@
+Package: x-tika
+Version: 0.0.16
+Architecture: all
+Maintainer: Frank Treichl <ft@x-net.at>
+Installed-Size: 108476
+Pre-Depends: openjdk-7-jre
+Section: misc
+Priority: optional
+Description: Installs apache tika in server mode.

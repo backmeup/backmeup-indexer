@@ -1,0 +1,31 @@
+#! /bin/sh
+
+set -e
+
+PKG=x-tika
+
+if [ $# -ge 1 ]; then
+
+	if [ $1 = "configure" ]; then
+
+		# create x-tika use if not already exist
+		if ! getent group "${PKG}" > /dev/null 2>&1 ; then
+			# create x-tika user
+			useradd --home /usr/share/${PKG} --create-home --system --shell /bin/false ${PKG}
+		fi
+		
+		# reload upstart
+		initctl reload-configuration
+
+		# create dhcpd log-file
+		mkdir -p /var/log/${PKG}
+		touch /var/log/${PKG}/${PKG}.log
+		chmod 0640 /var/log/${PKG}/${PKG}.log
+		chown -R ${PKG}:${PKG} /var/log/${PKG}
+
+		# restart rsyslog to reload its new config
+		service ${PKG} restart
+	fi
+fi
+
+exit 0

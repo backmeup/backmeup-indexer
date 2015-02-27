@@ -1,0 +1,21 @@
+#! /bin/sh
+
+set -e
+
+PKG=x-tika
+
+if [ $# -ge 1 ]; then
+
+	if [ $1 = "remove" ]; then
+
+		if [ -d /var/log/${PKG} ]; then
+			rm -r /var/log/${PKG}
+		fi
+
+		userdel -r ${PKG}
+
+		initctl reload-configuration
+	fi
+fi
+
+exit 0
