@@ -4,6 +4,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,6 +29,9 @@ public class IndexFragmentEntryStatusDaoTest {
     private User user1, user2;
     private UUID uuid1, uuid2, uuid3;
     private IndexFragmentEntryStatus status1, status2, status3, status4;
+    private Long backupJobID1, backupJobID2;
+    private Date dateAfterBackup, dateBeforeBackup, dateNow;
+    private Long currentTime = new Date().getTime();
 
     @Before
     public void before() {
@@ -76,6 +80,40 @@ public class IndexFragmentEntryStatusDaoTest {
     }
 
     @Test
+    public void shouldStoreDocumentAndReadAllFromDBByBackupJobID() {
+        persistTestData();
+        List<IndexFragmentEntryStatus> found = this.statusDao.getAllIndexFragmentEntryStatus(this.user1,
+                this.backupJobID1);
+        assertTrue(found.size() == 1);
+
+        found = this.statusDao.getAllIndexFragmentEntryStatus(this.user2, this.backupJobID2);
+        assertTrue(found.size() == 0);
+
+    }
+
+    @Test
+    public void shouldStoreDocumentAndReadAllFromDBByBeforeBackupDate() {
+        persistTestData();
+        List<IndexFragmentEntryStatus> found = this.statusDao.getAllIndexFragmentEntryStatusBeforeBackupDate(
+                this.user1, this.dateNow);
+        //contains elements with the query timestamp, expecting <= operation
+        assertTrue(found.size() == 2);
+        assertTrue(found.get(0).getId() < found.get(1).getId());
+    }
+
+    @Test
+    public void shouldStoreDocumentAndReadAllFromDBByAfterBackupDate() {
+        persistTestData();
+        List<IndexFragmentEntryStatus> found = this.statusDao.getAllIndexFragmentEntryStatusAfterBackupDate(this.user1,
+                this.dateNow);
+        //contains elements with the query timestamp, expecting <= operation
+        assertTrue(found.size() == 0);
+
+        found = this.statusDao.getAllIndexFragmentEntryStatusAfterBackupDate(this.user2, this.dateNow);
+        assertTrue(found.size() == 1);
+    }
+
+    @Test
     public void shouldStoreDocumentAndQueryByEntityID() {
         persistTestData();
         IndexFragmentEntryStatus found = this.statusDao.findById(this.status1.getId());
@@ -93,13 +131,25 @@ public class IndexFragmentEntryStatusDaoTest {
         this.uuid2 = UUID.randomUUID();
         this.uuid3 = UUID.randomUUID();
 
-        this.status1 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_IMPORT, this.uuid1, true, this.user1);
+        this.backupJobID1 = 98L;
+        this.backupJobID2 = 99L;
 
-        this.status2 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_DELETION, this.uuid2, true, this.user1);
+        int hours = 2; //create a date in history and future
+        this.dateAfterBackup = new Date(this.currentTime + hours * 60 * 60 * 1000);
+        this.dateBeforeBackup = new Date(this.currentTime - hours * 60 * 60 * 1000);
+        this.dateNow = new Date(this.currentTime);
 
-        this.status3 = new IndexFragmentEntryStatus(StatusType.DELETED, this.uuid3, true, this.user2);
+        this.status1 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_IMPORT, this.uuid1, true, this.user1,
+                this.backupJobID1, this.dateNow);
 
-        this.status4 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_DELETION, this.uuid2, true, this.user2);
+        this.status2 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_DELETION, this.uuid2, true, this.user1,
+                this.backupJobID2, this.dateBeforeBackup);
+
+        this.status3 = new IndexFragmentEntryStatus(StatusType.DELETED, this.uuid3, true, this.user2,
+                this.backupJobID1, this.dateNow);
+
+        this.status4 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_DELETION, this.uuid2, true, this.user2,
+                this.backupJobID1, this.dateAfterBackup);
     }
 
     private void persistTestData() {

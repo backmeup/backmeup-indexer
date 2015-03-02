@@ -4,6 +4,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -57,8 +58,10 @@ public class IndexContentManagerIntegrationTest extends IndexManagerIntegrationT
         ThemisDataSink.saveIndexFragment(doc, this.testUser1, IndexFragmentType.TO_IMPORT_USER_OWNED);
 
         //Create an entry for it within the Database
+        long backupJobID = 50 + this.testUser1.id();
+        Date backupedAt = new Date();
         IndexFragmentEntryStatus status1 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_IMPORT, documentUUID,
-                true, this.testUser1);
+                true, this.testUser1, backupJobID, backupedAt);
         persistInTransaction(status1);
     }
 

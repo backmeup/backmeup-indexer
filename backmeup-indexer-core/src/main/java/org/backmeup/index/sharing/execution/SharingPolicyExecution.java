@@ -62,7 +62,7 @@ public class SharingPolicyExecution {
         //drop off document in public user drop off zone
         ThemisDataSink.saveIndexFragment(doc, shareWithUser, IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
         //create a status object
-        createWaitingForImportEntry(docUUID, shareWithUser);
+        createWaitingForImportEntry(doc, shareWithUser);
         this.log.debug("distributed and stored shared IndexFragment: " + docUUID.toString() + " for userID: "
                 + shareWithUser.id() + " policy: " + policy.toString());
     }
@@ -77,7 +77,7 @@ public class SharingPolicyExecution {
                 //drop off document in public user drop off zone
                 ThemisDataSink.saveIndexFragment(doc, shareWithUser, IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
                 //create a status object
-                createWaitingForImportEntry(docUUID, shareWithUser);
+                createWaitingForImportEntry(doc, shareWithUser);
                 this.log.debug("distributed and stored shared IndexFragment: " + docUUID.toString() + " for userID: "
                         + shareWithUser.id() + " policy: " + policy.toString());
             }
@@ -92,7 +92,7 @@ public class SharingPolicyExecution {
             //drop off document in public user drop off zone
             ThemisDataSink.saveIndexFragment(doc, shareWithUser, IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
             //create a status object
-            createWaitingForImportEntry(docUUID, shareWithUser);
+            createWaitingForImportEntry(doc, shareWithUser);
             this.log.debug("distributed and stored shared IndexFragment: " + docUUID.toString() + " for userID: "
                     + shareWithUser.id() + " policy: " + policy.toString());
         }
@@ -105,15 +105,20 @@ public class SharingPolicyExecution {
                 && (policy.getSharedElementID().equals(doc.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID)))) {
             ThemisDataSink.saveIndexFragment(doc, shareWithUser, IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
             //create a status object
-            createWaitingForImportEntry(docUUID, shareWithUser);
+            createWaitingForImportEntry(doc, shareWithUser);
             this.log.debug("distributed and stored shared IndexFragment: " + docUUID.toString() + " for userID: "
                     + shareWithUser.id() + " policy: " + policy.toString());
         }
     }
 
-    private void createWaitingForImportEntry(UUID docUUID, User shareWithUser) {
+    private void createWaitingForImportEntry(IndexDocument doc, User shareWithUser) {
+        UUID docUUID = UUID.fromString(doc.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString());
+        int backupJobID = Integer.valueOf(doc.getFields().get(IndexFields.FIELD_JOB_ID).toString());
+        Long timestampBackup = (Long) doc.getFields().get(IndexFields.FIELD_BACKUP_AT);
+        Date dateBackupAt = new Date(timestampBackup);
+        //create the status entry and persist it in db
         IndexFragmentEntryStatus status = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_IMPORT, docUUID, false,
-                shareWithUser);
+                shareWithUser, backupJobID, dateBackupAt);
         this.entryStatusDao.save(status);
     }
 

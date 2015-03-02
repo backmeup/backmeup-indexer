@@ -1,5 +1,6 @@
 package org.backmeup.index.dal;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -64,6 +65,33 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
      * @return
      */
     boolean isIndexFragmentEntryStatusExisting(User user, UUID documentUUID);
+
+    /**
+     * Finds Entry status objects for a given user from a certain backupJobId
+     * 
+     * @param user
+     * @param backupJobId
+     * @return
+     */
+    List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(User user, long backupJobId);
+
+    /**
+     * Returns Entry status objects for a given user with backupedAtDate before the given querytimestamp
+     * 
+     * @param user
+     * @param timestamp
+     * @return
+     */
+    List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatusBeforeBackupDate(User user, Date backupDate);
+
+    /**
+     * Returns Entry status objects for a given user with backupedAtDate after the given querytimestamp
+     * 
+     * @param user
+     * @param timestamp
+     * @return
+     */
+    List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatusAfterBackupDate(User user, Date backupDate);
 
     /**
      * Find all Status objects over all users that match a certain condition e.g. waiting_for_import.

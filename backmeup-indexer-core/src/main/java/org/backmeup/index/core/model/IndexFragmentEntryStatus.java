@@ -34,6 +34,8 @@ public class IndexFragmentEntryStatus {
     private StatusType statusType;
     private UUID documentUUID;
     private Long userID;
+    private Long jobID;
+    private Date backupedAt;
     // Timestamp created and last updated
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
@@ -43,12 +45,15 @@ public class IndexFragmentEntryStatus {
         this.timestamp = new Date();
     }
 
-    public IndexFragmentEntryStatus(StatusType statusType, UUID documentUUID, boolean userOwned, User user) {
+    public IndexFragmentEntryStatus(StatusType statusType, UUID documentUUID, boolean userOwned, User user,
+            long backupJobID, Date backupedAt) {
         this.statusType = statusType;
         this.documentUUID = documentUUID;
         this.userID = user.id();
         this.userOwned = userOwned;
         this.timestamp = new Date();
+        this.jobID = backupJobID;
+        this.backupedAt = backupedAt;
     }
 
     public StatusType getStatusType() {
@@ -105,6 +110,22 @@ public class IndexFragmentEntryStatus {
 
     public void setUserOwned(boolean userOwned) {
         this.userOwned = userOwned;
+    }
+
+    public long getJobID() {
+        return this.jobID;
+    }
+
+    public void setJobID(long jobID) {
+        this.jobID = jobID;
+    }
+
+    public Date getBackupedAt() {
+        return this.backupedAt;
+    }
+
+    public void setBackupedAt(Date backupedAt) {
+        this.backupedAt = backupedAt;
     }
 
 }

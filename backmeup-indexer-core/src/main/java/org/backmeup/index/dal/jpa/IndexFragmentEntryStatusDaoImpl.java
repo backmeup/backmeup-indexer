@@ -1,6 +1,7 @@
 package org.backmeup.index.dal.jpa;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -106,6 +107,33 @@ public class IndexFragmentEntryStatusDaoImpl extends BaseDaoImpl<IndexFragmentEn
             return false;
         }
         return true;
+    }
+
+    @Override
+    public List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(User user, long backupJobId) {
+        TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM " + TABLENAME
+                + " u WHERE u.userID = :userId and u.jobID = :backupJobId ORDER BY u.id ASC");
+        q.setParameter("userId", user.id());
+        q.setParameter("backupJobId", backupJobId);
+        return executeQuery(q);
+    }
+
+    @Override
+    public List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatusBeforeBackupDate(User user, Date backupDate) {
+        TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM " + TABLENAME
+                + " u WHERE u.userID = :userId and u.backupedAt <= :backupDate ORDER BY u.id ASC");
+        q.setParameter("userId", user.id());
+        q.setParameter("backupDate", backupDate);
+        return executeQuery(q);
+    }
+
+    @Override
+    public List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatusAfterBackupDate(User user, Date backupDate) {
+        TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM " + TABLENAME
+                + " u WHERE u.userID = :userId and u.backupedAt > :backupDate ORDER BY u.id ASC");
+        q.setParameter("userId", user.id());
+        q.setParameter("backupDate", backupDate);
+        return executeQuery(q);
     }
 
 }
