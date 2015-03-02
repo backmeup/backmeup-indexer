@@ -8,13 +8,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.SystemUtils;
 import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.config.Configuration;
-import org.backmeup.index.core.elasticsearch.CommandLineUtils;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
 import org.backmeup.index.serializer.Json;
@@ -81,9 +78,11 @@ public class ThemisDataSink {
         if (in == null) {
             throw new IOException("file is null");
         }
-
-        FileUtils.copyInputStreamToFile(in, new File(getDataSinkHome(user)
-                + "/index/elasticsearch_userdata_TC_150MB.tc"));
+        File f = new File(getDataSinkHome(user) + "/index/elasticsearch_userdata_TC_150MB.tc");
+        if (!f.getParentFile().exists()) {
+            mkDirs(f.getParentFile());
+        }
+        FileUtils.copyInputStreamToFile(in, f);
     }
 
     /**
@@ -123,9 +122,12 @@ public class ThemisDataSink {
         // serialize the IndexDocument to JSON
         String serializedIndexDoc = Json.serialize(indexFragment);
         if (serializedIndexDoc != null) {
-
-            FileUtils.writeStringToFile(new File(getDataSinkHome(user) + "/dropoffzone/" + type.getStorageLocation()
-                    + uuid + ".serindexdocument"), serializedIndexDoc);
+            File f = new File(getDataSinkHome(user) + "/dropoffzone/" + type.getStorageLocation() + uuid
+                    + ".serindexdocument");
+            if (!f.getParentFile().exists()) {
+                mkDirs(f.getParentFile());
+            }
+            FileUtils.writeStringToFile(f, serializedIndexDoc);
             return uuid;
 
         }
@@ -168,6 +170,9 @@ public class ThemisDataSink {
     public static List<UUID> getAllIndexFragmentUUIDs(User user, IndexFragmentType type) {
         List<UUID> ret = new ArrayList<>();
         File f = new File(getDataSinkHome(user) + "/dropoffzone/" + type.getStorageLocation());
+        if (!f.exists()) {
+            mkDirs(f);
+        }
 
         FilenameFilter textFilter = new FilenameFilter() {
             @Override
@@ -228,7 +233,7 @@ public class ThemisDataSink {
         if (f.isDirectory() && f.exists()) {
             return f.getAbsolutePath();
         }
-        mkDir(f);
+        mkDirs(f);
         if (f.isDirectory() && f.exists()) {
             return f.getAbsolutePath();
         }
@@ -246,7 +251,7 @@ public class ThemisDataSink {
             if (f.isDirectory() && f.exists()) {
                 return f.getAbsolutePath();
             }
-            mkDir(f);
+            mkDirs(f);
             if (f.isDirectory() && f.exists()) {
                 return f.getAbsolutePath();
             }
@@ -257,8 +262,8 @@ public class ThemisDataSink {
                 "datasink home dir not properly configured within backmeup-indexer.properties");
     }
 
-    private static void mkDir(File f) {
-        if (SystemUtils.IS_OS_LINUX) {
+    private static void mkDirs(File f) {
+        /*if (SystemUtils.IS_OS_LINUX) {
             String command = "sudo mkdir -p " + f.getAbsolutePath();
             try {
                 int exitVal = CommandLineUtils.executeCommandLine(command, 2, TimeUnit.SECONDS);
@@ -268,7 +273,7 @@ public class ThemisDataSink {
             } catch (IOException e) {
                 throw new IllegalArgumentException("error executing command " + command, e);
             }
-        }
+        }*/
         f.mkdirs();
     }
 
