@@ -13,7 +13,6 @@ import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
 import org.backmeup.index.sharing.policy.SharingPolicy;
 import org.backmeup.index.sharing.policy.SharingPolicyManager;
-import org.backmeup.index.storage.ThemisDataSink;
 import org.backmeup.index.utils.cdi.RunRequestScoped;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,13 +95,7 @@ public class SharingPolicyExecutionTask {
      * @param doc
      */
     private void distributeToOwner(IndexDocument doc) throws IOException {
-        //TODO AL need to check if we already know this document
-        long ownerID = Long.parseLong(doc.getFields().get(IndexFields.FIELD_OWNER_ID).toString());
-        String uuid = doc.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString();
-        ThemisDataSink.saveIndexFragment(doc, new User(ownerID), ThemisDataSink.IndexFragmentType.TO_IMPORT_USER_OWNED);
-
-        this.log.debug("distributed and stored IndexFragment: " + uuid + " for userID: " + ownerID
-                + " TO_IMPORT_USER_OWNED drop-off;  added status: toImport to DB");
+        this.policyExecution.executeImportOwner(doc);
     }
 
     /**
@@ -126,7 +119,7 @@ public class SharingPolicyExecutionTask {
             doc.field(IndexFields.FIELD_OWNER_ID, policy.getWithUserID());
 
             //check the different sharing policies and create according import tasks for doc
-            this.policyExecution.executeImport(policy, doc);
+            this.policyExecution.executeImportSharingParnter(policy, doc);
         }
     }
 

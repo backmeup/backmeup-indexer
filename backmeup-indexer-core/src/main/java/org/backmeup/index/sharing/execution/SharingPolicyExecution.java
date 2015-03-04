@@ -28,12 +28,31 @@ public class SharingPolicyExecution {
     @Inject
     private IndexFragmentEntryStatusDao entryStatusDao;
 
-    public void executeImport(SharingPolicy policy, IndexDocument doc) throws IOException {
+    public void executeImportOwner(IndexDocument doc) throws IOException {
+        User owner = new User(Long.parseLong(doc.getFields().get(IndexFields.FIELD_OWNER_ID).toString()));
+        UUID docUUID = UUID.fromString(doc.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString());
+        int backupJobID = Integer.valueOf(doc.getFields().get(IndexFields.FIELD_JOB_ID).toString());
+        Long timestampBackup = (Long) doc.getFields().get(IndexFields.FIELD_BACKUP_AT);
+        Date dateBackupAt = new Date(timestampBackup);
+
+        if (isElementToImport(owner, docUUID)) {
+            //distribute to owner
+            ThemisDataSink.saveIndexFragment(doc, owner, ThemisDataSink.IndexFragmentType.TO_IMPORT_USER_OWNED);
+            //create the status entry and persist it in db
+            IndexFragmentEntryStatus status = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_IMPORT, docUUID,
+                    true, owner, backupJobID, dateBackupAt);
+            this.entryStatusDao.save(status);
+            this.log.debug("distributed and stored owned IndexFragment: " + docUUID.toString() + " for userID: "
+                    + owner.id());
+        }
+    }
+
+    public void executeImportSharingParnter(SharingPolicy policy, IndexDocument doc) throws IOException {
         User shareWithUser = new User(policy.getWithUserID());
         UUID docUUID = UUID.fromString(doc.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString());
 
-        //check if we don't already know this document for this user
-        if (!this.entryStatusDao.isIndexFragmentEntryStatusExisting(shareWithUser, docUUID)) {
+        //check if we actually need to import this document for this user
+        if (isElementToImport(shareWithUser, docUUID)) {
 
             //1a. check sharing_all including old jobs
             if (policy.getPolicy().equals(SharingPolicies.SHARE_ALL_INKLUDING_OLD)) {
@@ -55,6 +74,21 @@ public class SharingPolicyExecution {
                 this.executeImportShareDocument(policy, doc, docUUID, shareWithUser);
             }
         }
+    }
+
+    private boolean isElementToImport(User user, UUID docUUID) {
+        IndexFragmentEntryStatus status = this.entryStatusDao.getIndexFragmentEntryStatus(user, docUUID);
+        if (status == null) {
+            //if element does not exist for user -> it is to import
+            return true;
+        } else if (status.getStatusType() == StatusType.WAITING_FOR_IMPORT) {
+            //we've already have a waiting for import statement for this element for this user, don't need to import again
+            return false;
+        } else if (status.getStatusType() == StatusType.IMPORTED) {
+            //we've already an imported element for this user
+            return false;
+        }
+        return true;
     }
 
     private void executeImportShareAllInklOld(SharingPolicy policy, IndexDocument doc, UUID docUUID, User shareWithUser)
@@ -122,18 +156,6 @@ public class SharingPolicyExecution {
         this.entryStatusDao.save(status);
     }
 
-    public void executeDeleteShareAll() {
-
-    }
-
-    public void executeDeleteShareBackupJob() {
-
-    }
-
-    public void executeImportShareBackupJob() {
-
-    }
-
-    //etc
+    //TODO AL continue with deletion of elements
 
 }
