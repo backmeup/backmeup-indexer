@@ -43,11 +43,11 @@ public class SharingPolicyCreationTest {
 
         SharingPolicy p = this.shManager.createSharingRule(this.owner, this.sharedWith,
                 SharingPolicies.SHARE_ALL_AFTER_NOW);
-        List<SharingPolicy> ps = this.shManager.getAllPoliciesForUser(this.owner);
+        List<SharingPolicy> ps = this.shManager.getAllActivePoliciesForUser(this.owner);
         assertTrue(ps.contains(p));
 
         this.shManager.removeSharingRule(p.getPolicyID());
-        ps = this.shManager.getAllPoliciesForUser(this.owner);
+        ps = this.shManager.getAllActivePoliciesForUser(this.owner);
         assertTrue(ps.size() == 0);
     }
 
@@ -56,7 +56,7 @@ public class SharingPolicyCreationTest {
         SharingPolicy p = this.shManager.createSharingRule(this.owner, this.sharedWith, SharingPolicies.SHARE_BACKUP);
         //share all elements of backupJobID 1
         p.setSharedElementID("1");
-        List<SharingPolicy> ps = this.shManager.getAllPoliciesForUser(this.owner);
+        List<SharingPolicy> ps = this.shManager.getAllActivePoliciesForUser(this.owner);
         assertTrue(ps.contains(p));
         assertTrue(ps.get(0).getSharedElementID().equals("1"));
     }

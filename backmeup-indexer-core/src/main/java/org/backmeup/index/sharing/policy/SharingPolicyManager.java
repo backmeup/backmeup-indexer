@@ -34,12 +34,17 @@ public class SharingPolicyManager {
         //
     }
 
-    public List<SharingPolicy> getAllPoliciesForUser(User user) {
+    public List<SharingPolicy> getAllActivePoliciesForUser(User user) {
         if (this.sharingPolicies.containsKey(user.id())) {
             return this.sharingPolicies.get(user.id()).getPolicies();
         } else {
             return new ArrayList<SharingPolicy>();
         }
+    }
+
+    public List<SharingPolicy> getAllDeletedPoliciesForUser(User user) {
+        //TODO implement need to keep a list of deleted policies so that we can perform content updates
+        return null;
     }
 
     public SharingPolicy createSharingRule(User owner, User sharingWith, SharingPolicies policy) {
@@ -76,7 +81,7 @@ public class SharingPolicyManager {
     }
 
     public void removeAllSharingPoliciesForUser(User owner) {
-        for (SharingPolicy policy : this.getAllPoliciesForUser(owner)) {
+        for (SharingPolicy policy : this.getAllActivePoliciesForUser(owner)) {
             this.removeSharingPolicy(policy);
         }
     }

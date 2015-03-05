@@ -38,6 +38,15 @@ public class ActiveUsers {
         return ret;
     }
 
+    public String getMountedDrive(User user) {
+        RunningIndexUserConfig config = this.dao.findConfigByUser(user);
+        if (config != null) {
+            return config.getMountedTCDriveLetter();
+        } else {
+            return null;
+        }
+    }
+
     protected void setDaoForTesting(RunningIndexUserConfigDao dao) {
         this.dao = dao;
     }

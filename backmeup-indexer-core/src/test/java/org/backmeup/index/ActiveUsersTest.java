@@ -1,5 +1,8 @@
 package org.backmeup.index;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
@@ -15,7 +18,6 @@ import org.backmeup.index.core.model.RunningIndexUserConfig;
 import org.backmeup.index.dal.DerbyDatabase;
 import org.backmeup.index.dal.RunningIndexUserConfigDao;
 import org.backmeup.index.model.User;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,27 +52,37 @@ public class ActiveUsersTest {
     @Test
     public void testGetActiveUsers() throws IOException {
         List<User> active = this.activeUsers.getActiveUsers();
-        Assert.assertTrue(active.size() == 0);
-        Assert.assertFalse(this.activeUsers.isUserActive(this.testUser1));
+        assertTrue(active.size() == 0);
+        assertFalse(this.activeUsers.isUserActive(this.testUser1));
 
         //now when an ES instance was powered up this results in a db record like this
         markUserAsActiveInDB(this.testUser1);
 
         //now recheck the activeUsers
         active = this.activeUsers.getActiveUsers();
-        Assert.assertTrue(active.size() == 1);
-        Assert.assertTrue(active.contains(this.testUser1));
-        Assert.assertTrue(this.activeUsers.isUserActive(this.testUser1));
+        assertTrue(active.size() == 1);
+        assertTrue(active.contains(this.testUser1));
+        assertTrue(this.activeUsers.isUserActive(this.testUser1));
 
         markUserAsActiveInDB(this.testUser2);
         markUserAsActiveInDB(this.testUser3);
         markUserAsInactiveInDB(this.testUser1);
 
         active = this.activeUsers.getActiveUsers();
-        Assert.assertTrue(active.size() == 2);
-        Assert.assertFalse(active.contains(this.testUser1));
-        Assert.assertFalse(this.activeUsers.isUserActive(this.testUser1));
+        assertTrue(active.size() == 2);
+        assertFalse(active.contains(this.testUser1));
+        assertFalse(this.activeUsers.isUserActive(this.testUser1));
+    }
 
+    @Test
+    public void testGetActiveUserDriveLetter() throws IOException {
+        markUserAsActiveInDB(this.testUser1);
+        List<User> active = this.activeUsers.getActiveUsers();
+        assertTrue(active.size() == 1);
+        assertTrue(active.contains(this.testUser1));
+        User user = active.get(0);
+        String mountedDrive = this.activeUsers.getMountedDrive(user);
+        assertTrue(mountedDrive.contains("/media/test" + user.id()));
     }
 
     private void markUserAsActiveInDB(User user) {

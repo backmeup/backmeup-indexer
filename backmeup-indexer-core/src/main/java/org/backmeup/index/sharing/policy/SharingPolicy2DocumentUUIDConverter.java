@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.backmeup.index.core.model.IndexFragmentEntryStatus;
@@ -16,6 +17,7 @@ import org.backmeup.index.model.User;
  * user1 are currently imported/scheduled for import and therefore need to be shared with user2.
  *
  */
+@ApplicationScoped
 public class SharingPolicy2DocumentUUIDConverter {
 
     @Inject

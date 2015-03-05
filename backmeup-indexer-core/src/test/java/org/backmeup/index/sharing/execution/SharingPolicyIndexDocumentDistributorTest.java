@@ -32,7 +32,7 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
     public final DerbyDatabase database = new DerbyDatabase();
     private QueuedIndexDocumentDao queuedIndexDocsDao;
     private IndexDocumentDropOffQueue queue;
-    private SharingPolicyExecutionTask policyExecutionTask;
+    private SharingPolicyImportNewPluginDataTask policyExecutionTask;
     private SharingPolicyExecution policyExecution;
     private SharingPolicyManager policyManager = SharingPolicyManager.getInstance();
 
@@ -45,7 +45,7 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
 
     @Before
     public void before() {
-        this.policyExecutionTask = new SharingPolicyExecutionTask();
+        this.policyExecutionTask = new SharingPolicyImportNewPluginDataTask();
         this.policyExecutionTask.setFrequency(1);
         setupWhiteboxTest();
     }

@@ -18,17 +18,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Takes care of
+ * Takes care of distributing newly created data coming from the queue, handed over by the indexing plugin
  * 
- * a) IndexDocument distribution. Fetches the IndexDocuments from the queue as they are handed over by the indexing
- * plugin and takes care of their distribution into the user's drop-off-for-inport zones according to the defined
- * SharingPolicies
+ * IndexDocument distribution. Fetches the IndexDocuments from the queue as they are handed over by the indexing plugin
+ * and takes care of their distribution into the user's drop-off-for-inport zones according to the defined
+ * SharingPolicies and triggers their to_import/to_delete process
  * 
- * b) Enforcing SharingPolicies Checks if policies have changed and updates status entries to_import / to_delete
- *
  */
 @ApplicationScoped
-public class SharingPolicyExecutionTask {
+public class SharingPolicyImportNewPluginDataTask {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
@@ -43,17 +41,17 @@ public class SharingPolicyExecutionTask {
 
     @RunRequestScoped
     public void startupSharingPolicyExecution() {
-        startPolicyExecution();
-        this.log.debug("startup() SharingPolicyExecution (ApplicationScoped) completed");
+        startPolicyExecutionFromQueueData();
+        this.log.debug("startup() SharingPolicyImportNewPluginDataTask (ApplicationScoped) completed");
     }
 
     @RunRequestScoped
     public void shutdownSharingPolicyExecution() {
-        stopPolicyExecution();
-        this.log.debug("shutdown() SharingPolicyDistribution (ApplicationScoped) completed");
+        stopPolicyExecutionFromQueueData();
+        this.log.debug("shutdown() SharingPolicyImportNewPluginDataTask (ApplicationScoped) completed");
     }
 
-    private void startPolicyExecution() {
+    private void startPolicyExecutionFromQueueData() {
 
         this.exec.scheduleAtFixedRate(new Runnable() {
             @Override
@@ -63,8 +61,8 @@ public class SharingPolicyExecutionTask {
         }, this.SECONDS_BETWEEN_RECHECKING, this.SECONDS_BETWEEN_RECHECKING, java.util.concurrent.TimeUnit.SECONDS);
     }
 
-    public void stopPolicyExecution() {
-        this.log.debug("SharingPolicyExecutionTask stopping distribution thread");
+    public void stopPolicyExecutionFromQueueData() {
+        this.log.debug("SharingPolicyImportNewPluginDataTask stopping index-plugin data distribution thread");
         this.exec.shutdownNow();
     }
 
@@ -107,10 +105,9 @@ public class SharingPolicyExecutionTask {
     private void distributeToSharingPartners(IndexDocument doc) throws IOException {
         //user that submitted this document within a themis workflow
         long ownerID = Long.parseLong(doc.getFields().get(IndexFields.FIELD_OWNER_ID).toString());
-        String uuid = doc.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString();
 
         //iterate over all sharing policies that a given user has defined
-        List<SharingPolicy> policies = this.manager.getAllPoliciesForUser(new User(ownerID));
+        List<SharingPolicy> policies = this.manager.getAllActivePoliciesForUser(new User(ownerID));
         for (SharingPolicy policy : policies) {
 
             //add additional entries for sharing within the IndexDocument

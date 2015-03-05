@@ -2,6 +2,7 @@ package org.backmeup.index.storage;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
@@ -67,6 +68,44 @@ public class ThemisEncryptedPartition {
         throw new IOException("Error persisting serialized IndexDocument in encrypted partition"
                 + getIndexFragmentStorageZone(mountedDrive) + "/" + type.getStorageLocation() + uuid
                 + ".serindexdocument" + " for userID: " + user.id());
+    }
+
+    /**
+     * Retrieves an IndexDocument within the user's mounted storage partition. Distinguishes between owned and shared
+     * IndexDocuments
+     * 
+     * @param objectID
+     * @param user
+     * @param type
+     * @return
+     * @throws IOException
+     */
+    public static IndexDocument getIndexFragment(UUID objectID, User user, IndexFragmentType type, String mountedDrive)
+            throws IOException {
+        File f = getIndexFragmentFile(objectID, user, type, mountedDrive);
+
+        if (user.id() > -1 && (f.exists() && f.canRead())) {
+            List<String> lines = FileUtils.readLines(f, "UTF-8");
+
+            String serObject = "";
+            for (String l : lines) {
+                serObject += l;
+            }
+            // deserialize the object
+            IndexDocument indexDoc = Json.deserialize(serObject, IndexDocument.class);
+
+            return indexDoc;
+        }
+
+        throw new IOException("Error getting index fragment: " + getIndexFragmentStorageZone(mountedDrive) + "/"
+                + type.getStorageLocation() + objectID + ".serindexdocument" + ", file exists? " + f.exists()
+                + ", file is readable? " + f.canRead());
+    }
+
+    private static File getIndexFragmentFile(UUID objectID, User user, IndexFragmentType type, String mountedDrive)
+            throws IOException {
+        return new File(getIndexFragmentStorageZone(mountedDrive) + "/" + type.getStorageLocation() + objectID
+                + ".serindexdocument");
     }
 
     private static String getIndexFragmentStorageZone(String driveLetter) throws IOException {
