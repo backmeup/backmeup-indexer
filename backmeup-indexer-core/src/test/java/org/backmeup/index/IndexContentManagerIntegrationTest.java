@@ -61,7 +61,7 @@ public class IndexContentManagerIntegrationTest extends IndexManagerIntegrationT
         long backupJobID = 50 + this.testUser1.id();
         Date backupedAt = new Date();
         IndexFragmentEntryStatus status1 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_IMPORT, documentUUID,
-                true, this.testUser1, backupJobID, backupedAt);
+                this.testUser1, this.testUser1, backupJobID, backupedAt);
         persistInTransaction(status1);
     }
 
