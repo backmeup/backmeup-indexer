@@ -158,12 +158,90 @@ public class IndexFragmentEntryStatusDaoImpl extends BaseDaoImpl<IndexFragmentEn
     }
 
     @Override
+    public List<IndexFragmentEntryStatus> getAllByUserOwnedAndBeforeBackupDate(User user, Date date,
+            StatusType... types) {
+        return this.getAllByUserAndBeforeBackupDateAndByDocumentOwner(user, user, date, types);
+    }
+
+    @Override
+    public List<IndexFragmentEntryStatus> getAllByUserAndBeforeBackupDateAndByDocumentOwner(User user,
+            User actualDocOwner, Date date, StatusType... types) {
+        List<StatusType> lTypes = Arrays.asList(types);
+        TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM "
+                + TABLENAME
+                + " u WHERE u.userID = :userId and u.ownerID = :ownerId and u.statusType IN (:statusTypes) and u.backupedAt <= :date ORDER BY u.id ASC");
+        q.setParameter("userId", user.id());
+        q.setParameter("ownerId", actualDocOwner.id());
+        q.setParameter("date", date);
+        q.setParameter("statusTypes", lTypes);
+        return executeQuery(q);
+    }
+
+    @Override
+    public List<IndexFragmentEntryStatus> getAllByUserOwnedAndAfterBackupDate(User user, Date date, StatusType... types) {
+        return this.getAllByUserAndAfterBackupDateAndByDocumentOwner(user, user, date, types);
+    }
+
+    @Override
+    public List<IndexFragmentEntryStatus> getAllByUserAndAfterBackupDateAndByDocumentOwner(User user,
+            User actualDocOwner, Date date, StatusType... types) {
+        List<StatusType> lTypes = Arrays.asList(types);
+        TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM "
+                + TABLENAME
+                + " u WHERE u.userID = :userId and u.ownerID = :ownerId and u.statusType IN (:statusTypes) and u.backupedAt > :date ORDER BY u.id ASC");
+        q.setParameter("userId", user.id());
+        q.setParameter("ownerId", actualDocOwner.id());
+        q.setParameter("date", date);
+        q.setParameter("statusTypes", lTypes);
+        return executeQuery(q);
+    }
+
+    @Override
     public List<IndexFragmentEntryStatus> getAllByUserAndAfterBackupDate(User user, Date backupDate) {
         TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM " + TABLENAME
                 + " u WHERE u.userID = :userId and u.backupedAt > :backupDate ORDER BY u.id ASC");
         q.setParameter("userId", user.id());
         q.setParameter("backupDate", backupDate);
         return executeQuery(q);
+    }
+
+    @Override
+    public List<IndexFragmentEntryStatus> getAllByUserOwnedAndBackupJob(User user, Long backupJobID,
+            StatusType... types) {
+        return getAllByUserAndBackupJobAndByDocumentOwner(user, user, backupJobID, types);
+    }
+
+    @Override
+    public List<IndexFragmentEntryStatus> getAllByUserAndBackupJobAndByDocumentOwner(User user, User actualDocOwner,
+            Long backupJobID, StatusType... types) {
+        List<StatusType> lTypes = Arrays.asList(types);
+        TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM "
+                + TABLENAME
+                + " u WHERE u.userID = :userId and u.ownerID = :ownerId and u.statusType IN (:statusTypes) and u.jobID = :backupjobId ORDER BY u.id ASC");
+        q.setParameter("userId", user.id());
+        q.setParameter("ownerId", actualDocOwner.id());
+        q.setParameter("backupjobId", backupJobID);
+        q.setParameter("statusTypes", lTypes);
+        return executeQuery(q);
+    }
+
+    @Override
+    public IndexFragmentEntryStatus getByUserOwnedAndDocumentUUID(User user, UUID documentUUID, StatusType... types) {
+        return this.getByUserAndDocumentUUIDByDocumentOwner(user, user, documentUUID, types);
+    }
+
+    @Override
+    public IndexFragmentEntryStatus getByUserAndDocumentUUIDByDocumentOwner(User user, User actualDocOwner,
+            UUID documentUUID, StatusType... types) {
+        List<StatusType> lTypes = Arrays.asList(types);
+        TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM "
+                + TABLENAME
+                + " u WHERE u.userID = :userId and u.ownerID = :ownerId and u.statusType IN (:statusTypes) and u.documentUUID = :docUUID ORDER BY u.id ASC");
+        q.setParameter("userId", user.id());
+        q.setParameter("ownerId", actualDocOwner.id());
+        q.setParameter("docUUID", documentUUID);
+        q.setParameter("statusTypes", lTypes);
+        return executeQuerySelectFirst(q);
     }
 
 }

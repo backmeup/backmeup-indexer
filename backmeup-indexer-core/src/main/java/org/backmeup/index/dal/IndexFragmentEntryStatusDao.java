@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.backmeup.index.core.model.IndexFragmentEntryStatus;
+import org.backmeup.index.core.model.IndexFragmentEntryStatus.StatusType;
 import org.backmeup.index.model.User;
 
 /**
@@ -120,13 +121,108 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
     List<IndexFragmentEntryStatus> getAllByUserAndBeforeBackupDate(User user, Date backupDate);
 
     /**
-     * Returns Entry status objects for a given user with backupedAtDate after the given querytimestamp
+     * Get all Status Entries of a given user where he/she is the owner, the backup date is before a given date and the
+     * StatusType matches one of the given types
+     * 
+     * @param user
+     * @param date
+     * @param types
+     * @return
+     */
+    List<IndexFragmentEntryStatus> getAllByUserOwnedAndBeforeBackupDate(User user, Date date, StatusType... types);
+
+    /**
+     * Get all Status Entries of a given user matching a given actual document owner, the backup date is before a given
+     * date and the StatusType matches one of the given types
+     * 
+     * @param user
+     * @param date
+     * @param types
+     * @return
+     */
+    List<IndexFragmentEntryStatus> getAllByUserAndBeforeBackupDateAndByDocumentOwner(User user, User actualDocOwner,
+            Date date, StatusType... types);
+
+    /**
+     * Returns Entry status objects for a given user with backupedAtDate after the given query date
      * 
      * @param user
      * @param timestamp
      * @return
      */
     List<IndexFragmentEntryStatus> getAllByUserAndAfterBackupDate(User user, Date backupDate);
+
+    /**
+     * Get all Status Entries of a given user where he/she is the owner, the backup date is after a given date and the
+     * StatusType matches one of the given types
+     * 
+     * @param user
+     * @param date
+     * @param types
+     * @return
+     */
+    List<IndexFragmentEntryStatus> getAllByUserOwnedAndAfterBackupDate(User user, Date date, StatusType... types);
+
+    /**
+     * Get all Status Entries of a given user matching a given actual document owner, the backup date is before a given
+     * date and the StatusType matches one of the given types
+     * 
+     * @param user
+     * @param actualDocOwner
+     * @param date
+     * @param types
+     * @return
+     */
+    List<IndexFragmentEntryStatus> getAllByUserAndAfterBackupDateAndByDocumentOwner(User user, User actualDocOwner,
+            Date date, StatusType... types);
+
+    /**
+     * Get all Status Entries of a given user where he/she is the owner, the backup date is before a given date and the
+     * StatusType matches one of the given types
+     * 
+     * @param user
+     * @param date
+     * @param types
+     * @return
+     */
+    List<IndexFragmentEntryStatus> getAllByUserOwnedAndBackupJob(User user, Long backupJobID, StatusType... types);
+
+    /**
+     * Get all Status Entries of a given user matching a given actual document owner, the backup date is before a given
+     * date and the StatusType matches one of the given types
+     * 
+     * @param user
+     * @param actualDocOwner
+     * @param backupJobID
+     * @param types
+     * @return
+     */
+    List<IndexFragmentEntryStatus> getAllByUserAndBackupJobAndByDocumentOwner(User user, User actualDocOwner,
+            Long backupJobID, StatusType... types);
+
+    /**
+     * Get the Status Entry for a user who is the actual document owner, matching the document uuid and the StatusType
+     * matches one of the given types
+     * 
+     * @param user
+     * @param documentUUID
+     * @param types
+     * @return
+     */
+    IndexFragmentEntryStatus getByUserOwnedAndDocumentUUID(User user, UUID documentUUID, StatusType... types);
+
+    /**
+     * Get the Status Entry for a user, matching the document uuid, the actual owner and the StatusType matches one of
+     * the given types
+     * 
+     * @param user
+     * @param actualDocOwner
+     * @param documentUUID
+     * @param types
+     * @return
+     */
+    IndexFragmentEntryStatus getByUserAndDocumentUUIDByDocumentOwner(User user, User actualDocOwner,
+            UUID documentUUID, StatusType... types);
 
     /**
      * Find all Status objects over all users that match a certain condition e.g. waiting_for_import.

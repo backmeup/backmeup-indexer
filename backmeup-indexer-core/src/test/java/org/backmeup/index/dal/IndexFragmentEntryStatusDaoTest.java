@@ -40,7 +40,7 @@ public class IndexFragmentEntryStatusDaoTest {
     }
 
     @Test
-    public void shouldStoreDocumentAndReadAllFromDBByUser() {
+    public void getAllByUser() {
         persistTestData();
         List<IndexFragmentEntryStatus> found = this.statusDao.getAllFromUser(this.user1);
         assertTrue(found.size() == 2);
@@ -60,7 +60,7 @@ public class IndexFragmentEntryStatusDaoTest {
     }
 
     @Test
-    public void shouldStoreDocumentAndReadAllFromDBByStatus() {
+    public void getAllByStatus() {
         persistTestData();
         List<IndexFragmentEntryStatus> found = this.statusDao.getAllByStatusType(StatusType.DELETED);
         assertTrue(found.size() == 1);
@@ -76,7 +76,7 @@ public class IndexFragmentEntryStatusDaoTest {
      * 
      */
     @Test
-    public void shouldStoreDocumentAndReadAllFromDBByUserAndStatus() {
+    public void getAllByUserAndStatus() {
         persistTestData();
         List<IndexFragmentEntryStatus> found = this.statusDao.getAllFromUserOfType(this.user1, StatusType.DELETED);
         assertTrue(found.size() == 0);
@@ -88,7 +88,7 @@ public class IndexFragmentEntryStatusDaoTest {
      * Tests if the query returns document UUIDs that are within one of the provided StatusTypes of a given user
      */
     @Test
-    public void shouldStoreDocumentAndReadAllFromDBByUserAnd1toNStatus() {
+    public void getAllByUserAnd1toNStatus() {
         persistTestData();
         List<IndexFragmentEntryStatus> found = this.statusDao.getAllFromUserOfType(this.user2, StatusType.DELETED);
         assertTrue(found.size() == 1);
@@ -102,7 +102,7 @@ public class IndexFragmentEntryStatusDaoTest {
      * where the user is actually the document owner [not shared]
      */
     @Test
-    public void shouldStoreDocumentAndReadFromDBByUserAnd1toNStatusAndOwner() {
+    public void getAllByUserAnd1toNStatusAndOwner() {
         persistTestData();
         List<IndexFragmentEntryStatus> found = this.statusDao.getAllFromUserInOneOfTheTypesAndByUserAsDocumentOwner(
                 this.user2, StatusType.DELETED);
@@ -114,7 +114,7 @@ public class IndexFragmentEntryStatusDaoTest {
      * where the owner if actually a different user [sharing]
      */
     @Test
-    public void shouldStoreDocumentAndReadFromDBByUserAnd1toNStatusAndSharingPartner() {
+    public void getAllByUserAnd1toNStatusAndSharingPartner() {
         persistTestData();
         List<IndexFragmentEntryStatus> found = this.statusDao.getAllFromUserInOneOfTheTypesAndByDocumentOwner(
                 this.user3, this.user4, StatusType.WAITING_FOR_IMPORT);
@@ -122,7 +122,7 @@ public class IndexFragmentEntryStatusDaoTest {
     }
 
     @Test
-    public void shouldStoreDocumentAndReadAllFromDBByDocumentUUID() {
+    public void getAllByDocumentUUID() {
         persistTestData();
         List<IndexFragmentEntryStatus> found = this.statusDao.getAllByDocumentUUID(this.uuid2);
         assertTrue(found.size() == 2);
@@ -130,7 +130,7 @@ public class IndexFragmentEntryStatusDaoTest {
     }
 
     @Test
-    public void shouldStoreDocumentAndReadAllFromDBByBackupJobID() {
+    public void getAllByBackupJobID() {
         persistTestData();
         List<IndexFragmentEntryStatus> found = this.statusDao.getAllByUserAndBackupJobID(this.user1, this.backupJobID1);
         assertTrue(found.size() == 1);
@@ -141,7 +141,7 @@ public class IndexFragmentEntryStatusDaoTest {
     }
 
     @Test
-    public void shouldStoreDocumentAndReadAllFromDBByBeforeBackupDate() {
+    public void getAllBeforeBackupDate() {
         persistTestData();
         List<IndexFragmentEntryStatus> found = this.statusDao.getAllByUserAndBeforeBackupDate(this.user1, this.dateNow);
         //contains elements with the query timestamp, expecting <= operation
@@ -150,7 +150,7 @@ public class IndexFragmentEntryStatusDaoTest {
     }
 
     @Test
-    public void shouldStoreDocumentAndReadAllFromDBByAfterBackupDate() {
+    public void getAllAfterBackupDate() {
         persistTestData();
         List<IndexFragmentEntryStatus> found = this.statusDao.getAllByUserAndAfterBackupDate(this.user1, this.dateNow);
         //contains elements with the query timestamp, expecting <= operation
@@ -158,6 +158,65 @@ public class IndexFragmentEntryStatusDaoTest {
 
         found = this.statusDao.getAllByUserAndAfterBackupDate(this.user2, this.dateNow);
         assertTrue(found.size() == 1);
+    }
+
+    @Test
+    public void getAllByUserAndBeforeBackupDateAndByDocumentOwner() {
+        persistTestData();
+        List<IndexFragmentEntryStatus> found = this.statusDao.getAllByUserAndBeforeBackupDateAndByDocumentOwner(
+                this.user1, this.user1, this.dateNow, StatusType.WAITING_FOR_IMPORT);
+        assertTrue(found.size() == 1);
+
+        found = this.statusDao.getAllByUserOwnedAndBeforeBackupDate(this.user1, this.dateNow,
+                StatusType.WAITING_FOR_IMPORT);
+        assertTrue(found.size() == 1);
+
+        found = this.statusDao.getAllByUserAndBeforeBackupDateAndByDocumentOwner(this.user1, this.user1, this.dateNow,
+                StatusType.WAITING_FOR_DELETION);
+        assertTrue(found.size() == 1);
+    }
+
+    @Test
+    public void getAllByUserAndAfterBackupDateAndByDocumentOwner() {
+        persistTestData();
+        List<IndexFragmentEntryStatus> found = this.statusDao.getAllByUserAndAfterBackupDateAndByDocumentOwner(
+                this.user1, this.user1, this.dateNow, StatusType.WAITING_FOR_IMPORT);
+        assertTrue(found.size() == 0);
+
+        found = this.statusDao.getAllByUserAndAfterBackupDateAndByDocumentOwner(this.user2, this.user2, this.dateNow,
+                StatusType.WAITING_FOR_DELETION);
+        assertTrue(found.size() == 1);
+
+        found = this.statusDao.getAllByUserOwnedAndAfterBackupDate(this.user2, this.dateNow,
+                StatusType.WAITING_FOR_DELETION);
+        assertTrue(found.size() == 1);
+    }
+
+    @Test
+    public void getAllByUserAndBackupJobIDandDocumentOwner() {
+        persistTestData();
+        List<IndexFragmentEntryStatus> found = this.statusDao.getAllByUserOwnedAndBackupJob(this.user1,
+                this.backupJobID1, StatusType.WAITING_FOR_IMPORT);
+        assertTrue(found.size() == 1);
+
+        found = this.statusDao.getAllByUserAndBackupJobAndByDocumentOwner(this.user3, this.user4, this.backupJobID1,
+                StatusType.WAITING_FOR_IMPORT);
+        assertTrue(found.size() == 1);
+    }
+
+    @Test
+    public void getAllByUserAndDocumentUUIDByDocumentOwner() {
+        persistTestData();
+        IndexFragmentEntryStatus found = this.statusDao.getByUserAndDocumentUUIDByDocumentOwner(this.user1,
+                this.user1, this.uuid1, StatusType.WAITING_FOR_IMPORT);
+        assertNotNull(found);
+
+        found = this.statusDao.getByUserOwnedAndDocumentUUID(this.user1, this.uuid1, StatusType.WAITING_FOR_IMPORT);
+        assertNotNull(found);
+
+        found = this.statusDao.getByUserAndDocumentUUIDByDocumentOwner(this.user3, this.user4, this.uuid4,
+                StatusType.WAITING_FOR_IMPORT);
+        assertNotNull(found);
     }
 
     @Test
