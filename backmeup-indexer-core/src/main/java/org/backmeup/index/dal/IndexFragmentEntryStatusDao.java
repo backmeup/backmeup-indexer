@@ -42,6 +42,17 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
     List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(User user, IndexFragmentEntryStatus.StatusType type);
 
     /**
+     * Find Status on an IndexFragment Entry that match one of the given types as e.g. waiting_for_import or imported
+     * filtered by an underlying user
+     * 
+     * @param user
+     * @param types
+     * @return
+     */
+    List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(User user,
+            IndexFragmentEntryStatus.StatusType... types);
+
+    /**
      * Find Status on an IndexFragment Entry on a specific IndexDocument UUID over all users on. Shared documents
      * accross different users have the same documentUUID but with different documents.
      * 

@@ -71,6 +71,34 @@ public class IndexFragmentEntryStatusDaoTest {
         assertTrue(found.size() == 0);
     }
 
+    /**
+     * Tests if the query returns document UUIDs that are within a given StatusType, filtered by user
+     * 
+     */
+    @Test
+    public void shouldStoreDocumentAndReadAllFromDBByUserAndStatus() {
+        persistTestData();
+        List<IndexFragmentEntryStatus> found = this.statusDao.getAllIndexFragmentEntryStatus(this.user1,
+                StatusType.DELETED);
+        assertTrue(found.size() == 0);
+        found = this.statusDao.getAllIndexFragmentEntryStatus(this.user2, StatusType.DELETED);
+        assertTrue(found.size() == 1);
+    }
+
+    /**
+     * Tests if the query returns document UUIDs that are within one of the provided StatusTypes
+     */
+    @Test
+    public void shouldStoreDocumentAndReadAllFromDBByUserAnd1toNStatus() {
+        persistTestData();
+        List<IndexFragmentEntryStatus> found = this.statusDao.getAllIndexFragmentEntryStatus(this.user2,
+                StatusType.DELETED);
+        assertTrue(found.size() == 1);
+        found = this.statusDao.getAllIndexFragmentEntryStatus(this.user2, StatusType.DELETED,
+                StatusType.WAITING_FOR_DELETION);
+        assertTrue(found.size() == 2);
+    }
+
     @Test
     public void shouldStoreDocumentAndReadAllFromDBByDocumentUUID() {
         persistTestData();
@@ -139,17 +167,17 @@ public class IndexFragmentEntryStatusDaoTest {
         this.dateBeforeBackup = new Date(this.currentTime - hours * 60 * 60 * 1000);
         this.dateNow = new Date(this.currentTime);
 
-        this.status1 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_IMPORT, this.uuid1, true, this.user1,
+        this.status1 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_IMPORT, this.uuid1, this.user1, this.user1,
                 this.backupJobID1, this.dateNow);
 
-        this.status2 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_DELETION, this.uuid2, true, this.user1,
-                this.backupJobID2, this.dateBeforeBackup);
+        this.status2 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_DELETION, this.uuid2, this.user1,
+                this.user1, this.backupJobID2, this.dateBeforeBackup);
 
-        this.status3 = new IndexFragmentEntryStatus(StatusType.DELETED, this.uuid3, true, this.user2,
+        this.status3 = new IndexFragmentEntryStatus(StatusType.DELETED, this.uuid3, this.user2, this.user2,
                 this.backupJobID1, this.dateNow);
 
-        this.status4 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_DELETION, this.uuid2, true, this.user2,
-                this.backupJobID1, this.dateAfterBackup);
+        this.status4 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_DELETION, this.uuid2, this.user2,
+                this.user2, this.backupJobID1, this.dateAfterBackup);
     }
 
     private void persistTestData() {

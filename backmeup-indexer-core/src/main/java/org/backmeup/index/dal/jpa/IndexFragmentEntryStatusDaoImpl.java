@@ -1,6 +1,7 @@
 package org.backmeup.index.dal.jpa;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -55,15 +56,6 @@ public class IndexFragmentEntryStatusDaoImpl extends BaseDaoImpl<IndexFragmentEn
     }
 
     @Override
-    public List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(User user, StatusType type) {
-        TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM " + TABLENAME
-                + " u WHERE u.userID = :userId and u.statusType = :statusType ORDER BY u.id ASC");
-        q.setParameter("userId", user.id());
-        q.setParameter("statusType", type);
-        return executeQuery(q);
-    }
-
-    @Override
     public List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(UUID documentUUID) {
         TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM " + TABLENAME
                 + " u WHERE u.documentUUID = :documentUUID ORDER BY u.id ASC");
@@ -76,6 +68,25 @@ public class IndexFragmentEntryStatusDaoImpl extends BaseDaoImpl<IndexFragmentEn
         TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM " + TABLENAME
                 + " u WHERE u.statusType = :statusType ORDER BY u.id ASC");
         q.setParameter("statusType", type);
+        return executeQuery(q);
+    }
+
+    @Override
+    public List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(User user, StatusType type) {
+        TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM " + TABLENAME
+                + " u WHERE u.userID = :userId and u.statusType = :statusType ORDER BY u.id ASC");
+        q.setParameter("userId", user.id());
+        q.setParameter("statusType", type);
+        return executeQuery(q);
+    }
+
+    @Override
+    public List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(User user, StatusType... types) {
+        List<StatusType> lTypes = Arrays.asList(types);
+        TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM " + TABLENAME
+                + " u WHERE u.userID = :userId and u.statusType IN (:statusTypes) ORDER BY u.id ASC");
+        q.setParameter("userId", user.id());
+        q.setParameter("statusTypes", lTypes);
         return executeQuery(q);
     }
 
