@@ -42,7 +42,7 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
     List<IndexFragmentEntryStatus> getAllFromUserOfType(User user, IndexFragmentEntryStatus.StatusType type);
 
     /**
-     * Find Status on an IndexFragment Entry that match one of the given types as e.g. waiting_for_import or imported
+     * Find Status on an IndexFragment Entries that match one of the given types as e.g. waiting_for_import or imported
      * filtered by an underlying user
      * 
      * @param user
@@ -50,6 +50,30 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
      * @return
      */
     List<IndexFragmentEntryStatus> getAllFromUserInOneOfTheTypes(User user,
+            IndexFragmentEntryStatus.StatusType... types);
+
+    /**
+     * Find Status on an IndexFragment Entries that match one of the given types as e.g. waiting_for_import or imported
+     * filtered by an underlying user and filtered by the actual document owner
+     * 
+     * @param user
+     * @param actualDocumentOwner
+     * @param types
+     * @return
+     */
+    List<IndexFragmentEntryStatus> getAllFromUserInOneOfTheTypesAndByDocumentOwner(User user, User actualDocumentOwner,
+            IndexFragmentEntryStatus.StatusType... types);
+
+    /**
+     * Find Status on an IndexFragment Entries that match one of the given types as e.g. waiting_for_import or imported
+     * filtered by an underlying user and by document owner where the given user is the actual document owner
+     * 
+     * @param user
+     * @param actualDocumentOwner
+     * @param types
+     * @return
+     */
+    List<IndexFragmentEntryStatus> getAllFromUserInOneOfTheTypesAndByUserAsDocumentOwner(User user,
             IndexFragmentEntryStatus.StatusType... types);
 
     /**

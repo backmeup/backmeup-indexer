@@ -26,9 +26,9 @@ public class IndexFragmentEntryStatusDaoTest {
 
     private IndexFragmentEntryStatusDao statusDao;
 
-    private User user1, user2;
-    private UUID uuid1, uuid2, uuid3;
-    private IndexFragmentEntryStatus status1, status2, status3, status4;
+    private User user1, user2, user3, user4;
+    private UUID uuid1, uuid2, uuid3, uuid4;
+    private IndexFragmentEntryStatus status1, status2, status3, status4, status5;
     private Long backupJobID1, backupJobID2;
     private Date dateAfterBackup, dateBeforeBackup, dateNow;
     private Long currentTime = new Date().getTime();
@@ -65,7 +65,7 @@ public class IndexFragmentEntryStatusDaoTest {
         List<IndexFragmentEntryStatus> found = this.statusDao.getAllByStatusType(StatusType.DELETED);
         assertTrue(found.size() == 1);
         found = this.statusDao.getAllByStatusType(StatusType.WAITING_FOR_IMPORT);
-        assertTrue(found.size() == 1);
+        assertTrue(found.size() == 2);
         found = this.statusDao.getAllByStatusType(StatusType.IMPORTED);
         assertNotNull(found);
         assertTrue(found.size() == 0);
@@ -78,25 +78,47 @@ public class IndexFragmentEntryStatusDaoTest {
     @Test
     public void shouldStoreDocumentAndReadAllFromDBByUserAndStatus() {
         persistTestData();
-        List<IndexFragmentEntryStatus> found = this.statusDao.getAllFromUserOfType(this.user1,
-                StatusType.DELETED);
+        List<IndexFragmentEntryStatus> found = this.statusDao.getAllFromUserOfType(this.user1, StatusType.DELETED);
         assertTrue(found.size() == 0);
         found = this.statusDao.getAllFromUserOfType(this.user2, StatusType.DELETED);
         assertTrue(found.size() == 1);
     }
 
     /**
-     * Tests if the query returns document UUIDs that are within one of the provided StatusTypes
+     * Tests if the query returns document UUIDs that are within one of the provided StatusTypes of a given user
      */
     @Test
     public void shouldStoreDocumentAndReadAllFromDBByUserAnd1toNStatus() {
         persistTestData();
-        List<IndexFragmentEntryStatus> found = this.statusDao.getAllFromUserOfType(this.user2,
-                StatusType.DELETED);
+        List<IndexFragmentEntryStatus> found = this.statusDao.getAllFromUserOfType(this.user2, StatusType.DELETED);
         assertTrue(found.size() == 1);
         found = this.statusDao.getAllFromUserInOneOfTheTypes(this.user2, StatusType.DELETED,
                 StatusType.WAITING_FOR_DELETION);
         assertTrue(found.size() == 2);
+    }
+
+    /**
+     * Tests if the query returns document UUIDs that are within one of the provided StatusTypes of a given user and
+     * where the user is actually the document owner [not shared]
+     */
+    @Test
+    public void shouldStoreDocumentAndReadFromDBByUserAnd1toNStatusAndOwner() {
+        persistTestData();
+        List<IndexFragmentEntryStatus> found = this.statusDao.getAllFromUserInOneOfTheTypesAndByUserAsDocumentOwner(
+                this.user2, StatusType.DELETED);
+        assertTrue(found.size() == 1);
+    }
+
+    /**
+     * Tests if the query returns document UUIDs that are within one of the provided StatusTypes of a given user and
+     * where the owner if actually a different user [sharing]
+     */
+    @Test
+    public void shouldStoreDocumentAndReadFromDBByUserAnd1toNStatusAndSharingPartner() {
+        persistTestData();
+        List<IndexFragmentEntryStatus> found = this.statusDao.getAllFromUserInOneOfTheTypesAndByDocumentOwner(
+                this.user3, this.user4, StatusType.WAITING_FOR_IMPORT);
+        assertTrue(found.size() == 1);
     }
 
     @Test
@@ -110,8 +132,7 @@ public class IndexFragmentEntryStatusDaoTest {
     @Test
     public void shouldStoreDocumentAndReadAllFromDBByBackupJobID() {
         persistTestData();
-        List<IndexFragmentEntryStatus> found = this.statusDao.getAllByUserAndBackupJobID(this.user1,
-                this.backupJobID1);
+        List<IndexFragmentEntryStatus> found = this.statusDao.getAllByUserAndBackupJobID(this.user1, this.backupJobID1);
         assertTrue(found.size() == 1);
 
         found = this.statusDao.getAllByUserAndBackupJobID(this.user2, this.backupJobID2);
@@ -122,8 +143,7 @@ public class IndexFragmentEntryStatusDaoTest {
     @Test
     public void shouldStoreDocumentAndReadAllFromDBByBeforeBackupDate() {
         persistTestData();
-        List<IndexFragmentEntryStatus> found = this.statusDao.getAllByUserAndBeforeBackupDate(
-                this.user1, this.dateNow);
+        List<IndexFragmentEntryStatus> found = this.statusDao.getAllByUserAndBeforeBackupDate(this.user1, this.dateNow);
         //contains elements with the query timestamp, expecting <= operation
         assertTrue(found.size() == 2);
         assertTrue(found.get(0).getId() < found.get(1).getId());
@@ -132,8 +152,7 @@ public class IndexFragmentEntryStatusDaoTest {
     @Test
     public void shouldStoreDocumentAndReadAllFromDBByAfterBackupDate() {
         persistTestData();
-        List<IndexFragmentEntryStatus> found = this.statusDao.getAllByUserAndAfterBackupDate(this.user1,
-                this.dateNow);
+        List<IndexFragmentEntryStatus> found = this.statusDao.getAllByUserAndAfterBackupDate(this.user1, this.dateNow);
         //contains elements with the query timestamp, expecting <= operation
         assertTrue(found.size() == 0);
 
@@ -154,10 +173,13 @@ public class IndexFragmentEntryStatusDaoTest {
     private void createTestData() {
         this.user1 = new User(1L);
         this.user2 = new User(2L);
+        this.user3 = new User(3L);
+        this.user4 = new User(4L);
 
         this.uuid1 = UUID.randomUUID();
         this.uuid2 = UUID.randomUUID();
         this.uuid3 = UUID.randomUUID();
+        this.uuid4 = UUID.randomUUID();
 
         this.backupJobID1 = 98L;
         this.backupJobID2 = 99L;
@@ -178,6 +200,9 @@ public class IndexFragmentEntryStatusDaoTest {
 
         this.status4 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_DELETION, this.uuid2, this.user2,
                 this.user2, this.backupJobID1, this.dateAfterBackup);
+
+        this.status5 = new IndexFragmentEntryStatus(StatusType.WAITING_FOR_IMPORT, this.uuid4, this.user3, this.user4,
+                this.backupJobID1, this.dateAfterBackup);
     }
 
     private void persistTestData() {
@@ -185,6 +210,7 @@ public class IndexFragmentEntryStatusDaoTest {
         this.status2 = persistInTransaction(this.status2);
         this.status3 = persistInTransaction(this.status3);
         this.status4 = persistInTransaction(this.status4);
+        this.status5 = persistInTransaction(this.status5);
     }
 
     private IndexFragmentEntryStatus persistInTransaction(IndexFragmentEntryStatus entryStatus) {

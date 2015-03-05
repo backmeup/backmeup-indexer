@@ -91,6 +91,25 @@ public class IndexFragmentEntryStatusDaoImpl extends BaseDaoImpl<IndexFragmentEn
     }
 
     @Override
+    public List<IndexFragmentEntryStatus> getAllFromUserInOneOfTheTypesAndByDocumentOwner(User user,
+            User actualDocumentOwner, StatusType... types) {
+        List<StatusType> lTypes = Arrays.asList(types);
+        TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM "
+                + TABLENAME
+                + " u WHERE u.userID = :userId and u.ownerID = :ownerId and u.statusType IN (:statusTypes) ORDER BY u.id ASC");
+        q.setParameter("userId", user.id());
+        q.setParameter("ownerId", actualDocumentOwner.id());
+        q.setParameter("statusTypes", lTypes);
+        return executeQuery(q);
+    }
+
+    @Override
+    public List<IndexFragmentEntryStatus> getAllFromUserInOneOfTheTypesAndByUserAsDocumentOwner(User userAndOwner,
+            StatusType... types) {
+        return this.getAllFromUserInOneOfTheTypesAndByDocumentOwner(userAndOwner, userAndOwner, types);
+    }
+
+    @Override
     public IndexFragmentEntryStatus getByEntityId(Long entityId) {
         TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM " + TABLENAME
                 + " u WHERE u.Id = :entityId");
