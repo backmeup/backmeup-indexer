@@ -50,9 +50,9 @@ public class IndexDocumentSharingIntegrationTest extends IndexManagerIntegration
 
         //give the document distribution a chance to kick-off, the checkImport tasks will trigger ES import 
         Thread.sleep(4000);
-        List<IndexFragmentEntryStatus> status = this.contentStatusDao.getAllIndexFragmentEntryStatus(userOwner,
+        List<IndexFragmentEntryStatus> status = this.contentStatusDao.getAllFromUserOfType(userOwner,
                 StatusType.WAITING_FOR_IMPORT);
-        status = this.contentStatusDao.getAllIndexFragmentEntryStatus(userSharingP, StatusType.WAITING_FOR_IMPORT);
+        status = this.contentStatusDao.getAllFromUserOfType(userSharingP, StatusType.WAITING_FOR_IMPORT);
         assertTrue(status.size() > 0);
 
         //TODO need to overwrite the getActive users to make ContentManager Import work

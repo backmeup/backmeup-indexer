@@ -85,14 +85,14 @@ public class IndexContentManager {
      * @param user
      */
     public void executeContentUpdates(User user) {
-        List<IndexFragmentEntryStatus> lToImport = this.entryStatusDao.getAllIndexFragmentEntryStatus(user,
+        List<IndexFragmentEntryStatus> lToImport = this.entryStatusDao.getAllFromUserOfType(user,
                 StatusType.WAITING_FOR_IMPORT);
         for (IndexFragmentEntryStatus toImport : lToImport) {
             //execute the import task
             importIndexFragment(user, toImport);
         }
 
-        List<IndexFragmentEntryStatus> lToDelete = this.entryStatusDao.getAllIndexFragmentEntryStatus(user,
+        List<IndexFragmentEntryStatus> lToDelete = this.entryStatusDao.getAllFromUserOfType(user,
                 StatusType.WAITING_FOR_DELETION);
         for (IndexFragmentEntryStatus toDelete : lToDelete) {
             //execute the deletion task

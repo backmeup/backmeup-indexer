@@ -43,7 +43,7 @@ public class IndexContentManagerIntegrationTest extends IndexManagerIntegrationT
         RunningIndexUserConfig conf = this.runningInstancesdao.findConfigByUser(this.testUser1);
         assertNotNull(conf);
 
-        List<IndexFragmentEntryStatus> lStatus = this.contentStatusDao.getAllIndexFragmentEntryStatus(this.testUser1,
+        List<IndexFragmentEntryStatus> lStatus = this.contentStatusDao.getAllFromUserOfType(this.testUser1,
                 StatusType.IMPORTED);
         assertTrue(lStatus.size() > 0);
     }

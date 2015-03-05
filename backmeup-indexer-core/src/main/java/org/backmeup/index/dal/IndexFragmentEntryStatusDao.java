@@ -20,7 +20,7 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
      * @param entityId
      * @return
      */
-    IndexFragmentEntryStatus getIndexFragmentEntryStatustByEntityId(Long entityId);
+    IndexFragmentEntryStatus getByEntityId(Long entityId);
 
     /**
      * Find all status objects on an IndexFragment Entry for a given user. The summary of all status objects reflects
@@ -29,7 +29,7 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
      * @param userID
      * @return
      */
-    public List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(User user);
+    public List<IndexFragmentEntryStatus> getAllFromUser(User user);
 
     /**
      * Find Status on an IndexFragment Entry on a specific type as e.g. waiting_for_import filtered by an underlying
@@ -39,7 +39,7 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
      * @param type
      * @return
      */
-    List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(User user, IndexFragmentEntryStatus.StatusType type);
+    List<IndexFragmentEntryStatus> getAllFromUserOfType(User user, IndexFragmentEntryStatus.StatusType type);
 
     /**
      * Find Status on an IndexFragment Entry that match one of the given types as e.g. waiting_for_import or imported
@@ -49,7 +49,7 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
      * @param types
      * @return
      */
-    List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(User user,
+    List<IndexFragmentEntryStatus> getAllFromUserInOneOfTheTypes(User user,
             IndexFragmentEntryStatus.StatusType... types);
 
     /**
@@ -59,7 +59,7 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
      * @param documentUUID
      * @return
      */
-    List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(UUID documentUUID);
+    List<IndexFragmentEntryStatus> getAllByDocumentUUID(UUID documentUUID);
 
     /**
      * Find Status on an IndexFragment Entry on a specific IndexDocument UUID for a given user.
@@ -67,7 +67,7 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
      * @param documentUUID
      * @return
      */
-    IndexFragmentEntryStatus getIndexFragmentEntryStatus(User user, UUID documentUUID);
+    IndexFragmentEntryStatus getByUserAndDocumentUUID(User user, UUID documentUUID);
 
     /**
      * Is status on an IndexFragment Entry on a specific IndexDocument UUID for a given user existing in DB?
@@ -84,7 +84,7 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
      * @param backupJobId
      * @return
      */
-    List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(User user, long backupJobId);
+    List<IndexFragmentEntryStatus> getAllByUserAndBackupJobID(User user, long backupJobId);
 
     /**
      * Returns Entry status objects for a given user with backupedAtDate before the given querytimestamp
@@ -93,7 +93,7 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
      * @param timestamp
      * @return
      */
-    List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatusBeforeBackupDate(User user, Date backupDate);
+    List<IndexFragmentEntryStatus> getAllByUserAndBeforeBackupDate(User user, Date backupDate);
 
     /**
      * Returns Entry status objects for a given user with backupedAtDate after the given querytimestamp
@@ -102,7 +102,7 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
      * @param timestamp
      * @return
      */
-    List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatusAfterBackupDate(User user, Date backupDate);
+    List<IndexFragmentEntryStatus> getAllByUserAndAfterBackupDate(User user, Date backupDate);
 
     /**
      * Find all Status objects over all users that match a certain condition e.g. waiting_for_import.
@@ -110,7 +110,7 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
      * @param type
      * @return
      */
-    List<IndexFragmentEntryStatus> getAllIndexFragmentEntryStatus(IndexFragmentEntryStatus.StatusType type);
+    List<IndexFragmentEntryStatus> getAllByStatusType(IndexFragmentEntryStatus.StatusType type);
 
     void deleteAll();
 
