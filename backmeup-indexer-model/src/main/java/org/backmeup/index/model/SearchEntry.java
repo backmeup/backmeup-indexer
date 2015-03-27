@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.backmeup.index.api.IndexFields;
-import org.backmeup.index.api.IndexFields.TikaMetadataFields;
 
 public class SearchEntry {
 
@@ -187,11 +186,17 @@ public class SearchEntry {
         }
     }
 
+    /**
+     * Fetches the Tika metadata records out of all properties within the index
+     * 
+     * @param source
+     */
     public void copyTikaMetadataIfExist(Map<String, Object> source) {
-        for (TikaMetadataFields field : IndexFields.TikaMetadataFields.values()) {
-            String key = field.getFieldKey();
-            if (source.get(key) != null) {
-                setMetadata(key, source.get(key).toString());
+        for (String key : source.keySet()) {
+            if (key.startsWith(IndexFields.TIKA_FIELDS_PREFIX)) {
+                //return a record without the Tika prefix as key
+                String k = key.substring(IndexFields.TIKA_FIELDS_PREFIX.length());
+                setMetadata(k, source.get(key).toString());
             }
         }
     }

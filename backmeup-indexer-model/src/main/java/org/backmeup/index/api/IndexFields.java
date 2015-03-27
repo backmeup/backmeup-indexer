@@ -29,7 +29,11 @@ public class IndexFields {
     public static final String FIELD_SHARED_BY_USER_ID = "shared_by_userId";
 
     /*----Fields which are provided by Tika and are used to build up the ojbect's metadata-----*/
+    public static final String TIKA_FIELDS_PREFIX = "tikaprop_";
+
     //currently for doxc, pdf and jpeg (exif)
+    //won't be used any longer, use TIKA_FIELDS_PREFIX instead to determine Tika within the index
+    @Deprecated()
     public enum TikaMetadataFields {
         DC_SUBJECT("dc:subject"), DC_CREATOR("dc:creator"), DC_TITLE("dc:title"), DCTERMS_MODIFIED("dcterms:modified"), DCTERMS_CREATED(
                 "dcterms:created"), META_CREATION_DATE("meta:creation-date"), META_SAVE_DATE("meta:save-date"), META_AUTHOR(
