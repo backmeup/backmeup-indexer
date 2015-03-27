@@ -61,7 +61,7 @@ public class CommandLineUtils {
         String line;
         if (SystemUtils.IS_OS_WINDOWS) {
             //tasklist exit code is always 0. Parse output
-            line = "cmd /c \"taskkill /F /PID " + pid;
+            line = "cmd /c \"taskkill /F /PID " + pid + "\"";
         } else {
             //ps exit code 0 if process exists, 1 if it doesn't
             line = "sudo kill -9 " + pid;
