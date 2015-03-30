@@ -1,6 +1,7 @@
 package org.backmeup.index.query;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
 import org.backmeup.index.api.IndexClient;
 import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.model.FileInfo;
@@ -19,6 +21,7 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
@@ -49,13 +52,60 @@ public class ElasticSearchIndexClient implements IndexClient {
         IndicesExistsResponse existsResponse = this.client.admin().indices().prepareExists(INDEX_NAME).execute()
                 .actionGet();
         if (!existsResponse.isExists()) {
-            CreateIndexRequestBuilder cirb = this.client.admin().indices().prepareCreate(INDEX_NAME);
+            CreateIndexRequestBuilder cirb = this.client.admin().indices().prepareCreate(INDEX_NAME)
+                    .addMapping("_default_", getIndexFieldMapping());
             CreateIndexResponse createIndexResponse = cirb.execute().actionGet();
             if (!createIndexResponse.isAcknowledged()) {
                 // throw new Exception("Could not create index ["+ INDEX_NAME +"].");
                 this.logger.error("Could not create index [" + INDEX_NAME + " ].");
+            } else {
+                this.logger.debug("Successfully created index [" + INDEX_NAME + " ].");
             }
         }
+        //backward compatibility: check if we have an outdated version of the index - if so delete and recreate with mapping
+        else if (!checkIsIndexDynamicTemplateMappingSet()) {
+            this.client.admin().indices().prepareDelete(INDEX_NAME).execute().actionGet();
+            this.logger.debug("Deleted [" + INDEX_NAME + " ]" + "due to missing dynamic template configuration");
+            createIndexIfNeeded();
+        }
+    }
+
+    /**
+     * Checks if the currently existing version of the index was configured properly e.g. if the dynamic template
+     * property mapping was set etc
+     */
+    private boolean checkIsIndexDynamicTemplateMappingSet() {
+        GetMappingsResponse mapping = this.client.admin().indices().prepareGetMappings(INDEX_NAME).get();
+        try {
+            HashMap props = (HashMap) mapping.getMappings().get(INDEX_NAME).get("_default_").getSourceAsMap();
+            if (props != null) {
+                if (props.containsKey("dynamic_templates")) {
+                    ArrayList al = ((ArrayList) props.get("dynamic_templates"));
+                    if (al.size() > 0) {
+                        HashMap hm = (HashMap) al.get(0);
+                        if (hm.containsKey("tikaprops")) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            this.logger.debug("Index does not contain dynamic_templates config to set Tika field types to String");
+        }
+        return false;
+    }
+
+    /**
+     * An alternative approach to disabling date detection and explicitly mapping specific fields as dates is instruct
+     * ElasticSearchs dynamic mapping functionality to adhere to naming conventions for fields Mapping sets field type
+     * to String for all fields that start with tikaprop_
+     * 
+     * @see mapping date fields using naming conventions
+     *      http://joelabrahamsson.com/dynamic-mappings-and-dates-in-elasticsearch/
+     * @return
+     */
+    private String getIndexFieldMapping() {
+        return loadJson("elasticsearch_dynamic_templates_config.json");
     }
 
     @Override
@@ -230,5 +280,19 @@ public class ElasticSearchIndexClient implements IndexClient {
         this.logger.debug("Done sending IndexDocument to ES");
     }
 
-    //TODO UPDATE TTL SERVICE
+    /**
+     * Load content of a json file to String using classloader and resource as stream
+     * 
+     * @param fileName
+     * @return
+     * @throws IOException
+     */
+    private String loadJson(String fileName) {
+        try {
+            return IOUtils.toString(getClass().getClassLoader().getResourceAsStream(fileName));
+        } catch (IOException e) {
+            this.logger.error("was not able to read json file from disk: " + fileName);
+            return null;
+        }
+    }
 }

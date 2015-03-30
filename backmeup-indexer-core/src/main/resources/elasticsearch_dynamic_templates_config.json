@@ -1,0 +1,14 @@
+{
+     "date_detection": true,
+     "dynamic_templates": [
+        {
+           "tikaprops": {
+              "match": "tikaprop_.*",
+              "match_pattern": "regex",
+              "mapping": {
+                 "type": "string"
+              }
+           }
+        }
+     ]
+   }
