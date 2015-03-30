@@ -103,8 +103,10 @@ public class SharingPolicyIndexDocumentHistoryDistributorTest extends IndexDocum
                 lUUIDs.get(0).toString().equals(doc.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString()));
 
         //b. now create the sharing policy
-        this.pol1w2 = this.policyManager.createSharingRule(this.user1, this.user2,
+        this.database.entityManager.getTransaction().begin();
+        this.pol1w2 = this.policyManager.createAndAddSharingPolicy(this.user1, this.user2,
                 SharingPolicies.SHARE_ALL_INKLUDING_OLD);
+        this.database.entityManager.getTransaction().commit();
 
         //c. expecting data to show up into shared user's drop off space
         //give import a chance to kick-off
