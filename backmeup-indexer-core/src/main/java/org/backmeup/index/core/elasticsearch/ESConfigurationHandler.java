@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.SystemUtils;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -30,6 +31,9 @@ import org.slf4j.LoggerFactory;
 public class ESConfigurationHandler {
 
     private static final Logger log = LoggerFactory.getLogger(ESConfigurationHandler.class);
+
+    private static RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10 * 1000)
+            .setSocketTimeout(10 * 1000).build();
 
     private static int TCPPORT_MIN = 9300;
     private static int TCPPORT_MAX = 9399;
@@ -180,7 +184,7 @@ public class ESConfigurationHandler {
     }
 
     private static void shutdownElasticSearch(HttpPost shutdownRequest) throws IOException {
-        try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+        try (CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build()) {
             log.debug("Issuing shutdown request: " + shutdownRequest + " to ES");
             try (CloseableHttpResponse response = httpClient.execute(shutdownRequest)) {
                 if (response.getStatusLine().getStatusCode() == 200) {
@@ -213,7 +217,8 @@ public class ESConfigurationHandler {
     public static boolean isElasticSearchInstanceRunning(URL host, int httpPort) throws IOException {
 
         if ((host != null) && (host.getProtocol() != null) && (host.getHost() != null) && (httpPort > -1)) {
-            try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+            try (CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig)
+                    .build()) {
                 HttpGet healthyRequest = new HttpGet(host.getProtocol() + "://" + host.getHost() + ":" + httpPort
                         + "/_cluster/health?pretty=true");
 
