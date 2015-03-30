@@ -6,9 +6,11 @@ import org.backmeup.index.core.truecrypt.EncryptionProvider;
 import org.backmeup.index.dal.DerbyDatabase;
 import org.backmeup.index.dal.IndexFragmentEntryStatusDao;
 import org.backmeup.index.dal.RunningIndexUserConfigDao;
+import org.backmeup.index.dal.SharingPolicyDao;
 import org.backmeup.index.model.User;
 import org.backmeup.index.query.ES;
 import org.backmeup.index.sharing.execution.IndexContentManager;
+import org.backmeup.index.sharing.policy.SharingPolicyManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -23,6 +25,8 @@ public class IndexManagerIntegrationTestSetup {
     protected RunningIndexUserConfigDao runningInstancesdao;
     protected IndexContentManager contentManager;
     protected IndexFragmentEntryStatusDao contentStatusDao;
+    protected SharingPolicyDao sharingPoliyDao;
+    protected SharingPolicyManager sharingPolicyManager;
 
     @After
     public void after() {
@@ -43,11 +47,13 @@ public class IndexManagerIntegrationTestSetup {
         getDaoFromDb();
         createIndexManager();
         createIndexContentManager();
+        createSharingPolicyManager();
     }
 
     public void getDaoFromDb() {
         this.runningInstancesdao = this.database.indexManagerDao;
         this.contentStatusDao = this.database.statusDao;
+        this.sharingPoliyDao = this.database.sharingPolicyDao;
     }
 
     private void createIndexManager() {
@@ -67,6 +73,11 @@ public class IndexManagerIntegrationTestSetup {
         Whitebox.setInternalState(this.contentManager, "entryStatusDao", this.contentStatusDao);
         Whitebox.setInternalState(this.contentManager, "runninInstancesDao", this.runningInstancesdao);
         Whitebox.setInternalState(this.contentManager, "indexManager", this.indexManager);
+    }
+
+    private void createSharingPolicyManager() {
+        this.sharingPolicyManager = new SharingPolicyManager();
+        Whitebox.setInternalState(this.sharingPolicyManager, "sharingPolicyDao", this.sharingPoliyDao);
     }
 
 }

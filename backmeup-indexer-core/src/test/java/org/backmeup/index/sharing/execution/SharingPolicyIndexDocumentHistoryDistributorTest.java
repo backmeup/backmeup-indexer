@@ -45,7 +45,7 @@ public class SharingPolicyIndexDocumentHistoryDistributorTest extends IndexDocum
     private SharingPolicyImportNewPluginDataTask distributeNewTask;
     private SharingPolicyUpToDateCheckerTask distributeExistingTask;
     private SharingPolicyExecution policyExecution;
-    private SharingPolicyManager policyManager = SharingPolicyManager.getInstance();
+    private SharingPolicyManager policyManager;
     private SharingPolicy2DocumentUUIDConverter pol2uuidConverter;
     private ActiveUsers activeUsers;
 
@@ -70,7 +70,6 @@ public class SharingPolicyIndexDocumentHistoryDistributorTest extends IndexDocum
         this.distributeNewTask.shutdownSharingPolicyExecution();
         this.distributeExistingTask.shutdownSharingPolicyExecution();
         cleanupTestData();
-        this.policyManager.removeAllSharingPolicies();
     }
 
     @Test
@@ -140,6 +139,8 @@ public class SharingPolicyIndexDocumentHistoryDistributorTest extends IndexDocum
     }
 
     private void setupWhiteboxTest() {
+        this.policyManager = new SharingPolicyManager();
+        Whitebox.setInternalState(this.policyManager, "sharingPolicyDao", this.database.sharingPolicyDao);
 
         this.queuedIndexDocsDao = this.database.queuedIndexDocsDao;
         this.queue = new IndexDocumentDropOffQueue();

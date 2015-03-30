@@ -1,6 +1,7 @@
 package org.backmeup.index.dal.jpa;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.enterprise.context.RequestScoped;
@@ -8,6 +9,7 @@ import javax.persistence.TypedQuery;
 
 import org.backmeup.index.dal.SharingPolicyDao;
 import org.backmeup.index.model.User;
+import org.backmeup.index.sharing.policy.SharingPolicies;
 import org.backmeup.index.sharing.policy.SharingPolicy;
 
 @RequestScoped
@@ -60,6 +62,19 @@ public class SharingPolicyDaoImpl extends BaseDaoImpl<SharingPolicy> implements 
                 + " u WHERE u.withUserID = :withUserID and u.fromUserID = :fromUserID ORDER BY u.Id ASC");
         q.setParameter("withUserID", withUser.id());
         q.setParameter("fromUserID", fromUser.id());
+        return executeQuery(q);
+    }
+
+    @Override
+    public List<SharingPolicy> getAllSharingPoliciesBetweenUsersInType(User fromUser, User withUser,
+            SharingPolicies... types) {
+        List<SharingPolicies> lTypes = Arrays.asList(types);
+        TypedQuery<SharingPolicy> q = createTypedQuery("SELECT u FROM "
+                + TABLENAME
+                + " u WHERE u.withUserID = :withUserID and u.fromUserID = :fromUserID and u.policy IN (:statusTypes) ORDER BY u.Id ASC");
+        q.setParameter("withUserID", withUser.id());
+        q.setParameter("fromUserID", fromUser.id());
+        q.setParameter("statusTypes", lTypes);
         return executeQuery(q);
     }
 

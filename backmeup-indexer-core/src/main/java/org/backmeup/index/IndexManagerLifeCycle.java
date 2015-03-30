@@ -7,6 +7,7 @@ import org.backmeup.index.sharing.execution.IndexContentUpdateTask;
 import org.backmeup.index.sharing.execution.IndexDocumentDropOffQueue;
 import org.backmeup.index.sharing.execution.SharingPolicyImportNewPluginDataTask;
 import org.backmeup.index.sharing.execution.SharingPolicyUpToDateCheckerTask;
+import org.backmeup.index.sharing.policy.SharingPolicyManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,11 +35,15 @@ public class IndexManagerLifeCycle {
     private IndexContentManager contentManager;
     @Inject
     private IndexContentUpdateTask importTask;
+    @Inject
+    private SharingPolicyManager sharingPolicyManager;
 
     public void initialized() {
         this.log.debug(">>>>> Startup IndexManager >>>>>");
 
         this.indexManager.startupIndexManager();
+
+        this.sharingPolicyManager.startupSharingPolicyManager();
 
         this.cleanupTask.init();
 
@@ -69,6 +74,8 @@ public class IndexManagerLifeCycle {
         this.queue.shutdownDroOffQueue();
 
         this.cleanupTask.end();
+
+        this.sharingPolicyManager.shutdownSharingPolicyManager();
 
         this.indexManager.shutdownIndexManager();
 

@@ -22,7 +22,6 @@ public class SharingPolicy {
     private Long withUserID;
     @Enumerated(EnumType.STRING)
     private SharingPolicies policy;
-    private String policyID;
     private String sharedElementID; //e.g. indexdocumentUUID or backupJobID dependent on policy
     @Temporal(TemporalType.TIMESTAMP)
     private Date policyCreationDate;
@@ -64,14 +63,6 @@ public class SharingPolicy {
         this.policy = policy;
     }
 
-    public String getPolicyID() {
-        return this.policyID;
-    }
-
-    public void setPolicyID(String policyID) {
-        this.policyID = policyID;
-    }
-
     /**
      * e.g. indexdocumentUUID or backupJobID dependent on policy
      */
@@ -93,8 +84,8 @@ public class SharingPolicy {
 
     @Override
     public String toString() {
-        return "policyID: '" + this.policyID + "', fromUserID: '" + this.fromUserID + "', withUserID: '"
-                + this.withUserID + "', policy: '" + this.policy + "', sharedElement: '" + this.sharedElementID + "'";
+        return "id: '" + this.Id + "', fromUserID: '" + this.fromUserID + "', withUserID: '" + this.withUserID
+                + "', policy: '" + this.policy + "', sharedElement: '" + this.sharedElementID + "'";
     }
 
     public Date getPolicyLastCheckedDate() {
@@ -103,6 +94,14 @@ public class SharingPolicy {
 
     public void setPolicyLastCheckedDate(Date policyLastCheckedDate) {
         this.policyLastCheckedDate = policyLastCheckedDate;
+    }
+
+    public Long getId() {
+        return this.Id;
+    }
+
+    public void setId(Long id) {
+        this.Id = id;
     }
 
 }

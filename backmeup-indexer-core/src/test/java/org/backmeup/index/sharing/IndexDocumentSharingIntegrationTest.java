@@ -16,7 +16,6 @@ import org.backmeup.index.sharing.execution.IndexContentUpdateTask;
 import org.backmeup.index.sharing.execution.IndexDocumentDropOffQueue;
 import org.backmeup.index.sharing.execution.SharingPolicyImportNewPluginDataTask;
 import org.backmeup.index.sharing.policy.SharingPolicies;
-import org.backmeup.index.sharing.policy.SharingPolicyManager;
 import org.backmeup.index.storage.ThemisDataSink;
 import org.junit.After;
 import org.junit.Before;
@@ -26,7 +25,6 @@ import org.mockito.internal.util.reflection.Whitebox;
 
 public class IndexDocumentSharingIntegrationTest extends IndexManagerIntegrationTestSetup {
 
-    private SharingPolicyManager policyManager;
     private IndexDocumentDropOffQueue droppOffqueue;
     private QueuedIndexDocumentDao queuedIndexDocsDao;
     private SharingPolicyImportNewPluginDataTask distributor;
@@ -39,7 +37,7 @@ public class IndexDocumentSharingIntegrationTest extends IndexManagerIntegration
     @Test
     public void testSharingContentBetweenUsers() throws InterruptedException {
         //create sharing policy between two users
-        this.policyManager.createSharingRule(userOwner, userSharingP, SharingPolicies.SHARE_ALL_AFTER_NOW);
+        this.sharingPolicyManager.createSharingRule(userOwner, userSharingP, SharingPolicies.SHARE_ALL_AFTER_NOW);
 
         IndexDocument doc1 = IndexDocumentTestingUtils.createIndexDocument(userOwner.id());
         doc1.field(IndexFields.FIELD_INDEX_DOCUMENT_UUID, UUID.randomUUID().toString());
@@ -72,11 +70,9 @@ public class IndexDocumentSharingIntegrationTest extends IndexManagerIntegration
         this.checkImports.shutdownCheckingForContentUpdates();
         this.distributor.shutdownSharingPolicyExecution();
         cleanupTestData();
-        this.policyManager.removeAllSharingPolicies();
     }
 
     private void setupWhiteboxTest() {
-        this.policyManager = SharingPolicyManager.getInstance();
         this.droppOffqueue = new IndexDocumentDropOffQueue();
         this.distributor = new SharingPolicyImportNewPluginDataTask();
         this.checkImports = new IndexContentUpdateTask();

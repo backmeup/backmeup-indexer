@@ -25,7 +25,7 @@ public class SharingPolicyDaoTest {
     private SharingPolicyDao sharingPolicyDao;
 
     private User user1, user2, user3;
-    private SharingPolicy pol1, pol2, pol3;
+    private SharingPolicy pol1, pol2;
     private UUID uuid1 = UUID.randomUUID();
 
     @Before
@@ -60,6 +60,32 @@ public class SharingPolicyDaoTest {
         List<SharingPolicy> lPolicies = this.sharingPolicyDao.getAllSharingPoliciesBetweenUsers(this.user1, this.user2);
         assertNotNull(lPolicies);
         assertTrue(lPolicies.size() == 1);
+    }
+
+    @Test
+    public void getNotExistingPolicy() {
+        List<SharingPolicy> lPolicies = this.sharingPolicyDao.getAllSharingPoliciesBetweenUsers(this.user2, this.user3);
+        assertNotNull(lPolicies);
+        assertTrue(lPolicies.size() == 0);
+    }
+
+    @Test
+    public void getSharingPolicyOfSpecificType() {
+        List<SharingPolicy> lPolicies = this.sharingPolicyDao.getAllSharingPoliciesBetweenUsersInType(this.user1,
+                this.user2, SharingPolicies.SHARE_ALL_AFTER_NOW);
+        assertNotNull(lPolicies);
+        assertTrue(lPolicies.size() == 1);
+
+        lPolicies = this.sharingPolicyDao.getAllSharingPoliciesBetweenUsersInType(this.user1, this.user2,
+                SharingPolicies.SHARE_ALL_AFTER_NOW, SharingPolicies.SHARE_ALL_INKLUDING_OLD,
+                SharingPolicies.SHARE_INDEX_DOCUMENT);
+        assertNotNull(lPolicies);
+        assertTrue(lPolicies.size() == 1);
+
+        lPolicies = this.sharingPolicyDao.getAllSharingPoliciesBetweenUsersInType(this.user2, this.user3,
+                SharingPolicies.SHARE_ALL_AFTER_NOW, SharingPolicies.SHARE_INDEX_DOCUMENT);
+        assertNotNull(lPolicies);
+        assertTrue(lPolicies.size() == 0);
     }
 
     private void persistInTransaction(SharingPolicy policy) {

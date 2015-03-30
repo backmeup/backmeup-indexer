@@ -1,45 +1,47 @@
 package org.backmeup.index.sharing.policy;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import javax.inject.Inject;
+
+import org.backmeup.index.dal.SharingPolicyDao;
 import org.backmeup.index.model.User;
+import org.backmeup.index.utils.cdi.RunRequestScoped;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Allows to set sharing policies e.g. User A shares IndexDocument with User B, User A shares Backup with User B, etc.
+ * Allows to define sharing policies e.g. User A shares IndexDocument with User B, User A shares Backup with User B,
+ * etc.
  *
  */
+//@ApplicationScoped
 public class SharingPolicyManager {
 
-    //TODO persist SharingPolicy within Database
     //TODO only allow sharing policy creation if the EntryStatus matches imported?
+    //TODO REST Interface, get active user from system, do not accept others creating policies for this user
+    //TODO Need to trigger Policy Change Event?
 
-    private Map<Long, ActiveSharingPoliciesForUser> sharingPolicies = new HashMap<Long, ActiveSharingPoliciesForUser>();
-    private Map<String, Long> policyIDToUserIDMapping = new HashMap<String, Long>();
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private static SharingPolicyManager instance;
+    @Inject
+    private SharingPolicyDao sharingPolicyDao;
 
-    public static SharingPolicyManager getInstance() {
-        if (instance == null) {
-            synchronized (SharingPolicyManager.class) {
-                instance = new SharingPolicyManager();
-            }
-        }
-        return instance;
+    public SharingPolicyManager() {
     }
 
-    private SharingPolicyManager() {
-        //
+    @RunRequestScoped
+    public void startupSharingPolicyManager() {
+        this.log.debug("startup() SharingPolicyManager (ApplicationScoped) completed");
+    }
+
+    @RunRequestScoped
+    public void shutdownSharingPolicyManager() {
+        this.log.debug("shutdown() SharingPolicyManager (ApplicationScoped) completed");
     }
 
     public List<SharingPolicy> getAllActivePoliciesForUser(User user) {
-        if (this.sharingPolicies.containsKey(user.id())) {
-            return this.sharingPolicies.get(user.id()).getPolicies();
-        } else {
-            return new ArrayList<SharingPolicy>();
-        }
+        return this.sharingPolicyDao.getAllSharingPoliciesFromUser(user);
     }
 
     public List<SharingPolicy> getAllDeletedPoliciesForUser(User user) {
@@ -47,14 +49,13 @@ public class SharingPolicyManager {
         return null;
     }
 
-    public SharingPolicy createSharingRule(User owner, User sharingWith, SharingPolicies policy) {
+    public SharingPolicy createAndAddSharingPolicy(User owner, User sharingWith, SharingPolicies policy) {
         SharingPolicy shPolicy = new SharingPolicy(owner, sharingWith, policy);
-        shPolicy.setPolicyID(createPolicyKey());
-        addPolicy(shPolicy);
-        return shPolicy;
+        return addSharingPolicy(shPolicy);
     }
 
     /**
+     * 
      * @param owner
      * @param sharingWith
      * @param policy
@@ -62,53 +63,49 @@ public class SharingPolicyManager {
      *            either the IndexDocument UUID for SHARE_DOCUMENT or the BackupJobID for ShareBackupJob
      * @return
      */
-    public SharingPolicy createSharingRule(User owner, User sharingWith, SharingPolicies policy, String sharedElementID) {
-        SharingPolicy shPol = createSharingRule(owner, sharingWith, policy);
+    public SharingPolicy createAndAddSharingPolicy(User owner, User sharingWith, SharingPolicies policy,
+            String sharedElementID) {
+        SharingPolicy shPol = createAndAddSharingPolicy(owner, sharingWith, policy);
         shPol.setSharedElementID(sharedElementID);
-        return shPol;
+        return addSharingPolicy(shPol);
     }
 
-    public void removeSharingRule(String sharingPolicyID) {
-        if (this.policyIDToUserIDMapping.containsKey(sharingPolicyID)) {
-            Long ownerUserID = this.policyIDToUserIDMapping.get(sharingPolicyID);
-            this.sharingPolicies.get(ownerUserID).removePolicy(sharingPolicyID);
-            this.policyIDToUserIDMapping.remove(sharingPolicyID);
+    public SharingPolicy addSharingPolicy(SharingPolicy shPolicy) {
+        List<SharingPolicy> existingPols = this.sharingPolicyDao.getAllSharingPoliciesBetweenUsersInType(new User(
+                shPolicy.getFromUserID()), new User(shPolicy.getWithUserID()), shPolicy.getPolicy());
+        if (existingPols.size() == 0) {
+            return shPolicy = this.sharingPolicyDao.save(shPolicy);
+        } else if (existingPols.size() > 0) {
+            //in this case we need to check on the sharedElement ID and see if it already exists
+            for (SharingPolicy pol : existingPols) {
+                if ((shPolicy.getSharedElementID() != null) && (pol.getSharedElementID() != null)) {
+                    //identical policies, both with the same sharedelement value
+                    if (shPolicy.getSharedElementID().equals(pol.getSharedElementID())) {
+                        return pol;
+                    }
+                } else if ((shPolicy.getSharedElementID() == null) && (pol.getSharedElementID() == null)) {
+                    //identical policies, both without sharedelement value
+                    return pol;
+                }
+            }
+            //we didn't find it, so let's create it
+            return shPolicy = this.sharingPolicyDao.save(shPolicy);
         }
+        return null;
+    }
+
+    public void removeSharingRule(Long policyID) {
+        SharingPolicy p = this.sharingPolicyDao.getByEntityId(policyID);
+        removeSharingPolicy(p);
     }
 
     public void removeSharingPolicy(SharingPolicy p) {
-        removeSharingRule(p.getPolicyID());
+        this.sharingPolicyDao.delete(p);
     }
 
     public void removeAllSharingPoliciesForUser(User owner) {
-        for (SharingPolicy policy : this.getAllActivePoliciesForUser(owner)) {
+        for (SharingPolicy policy : this.sharingPolicyDao.getAllSharingPoliciesFromUser(owner)) {
             this.removeSharingPolicy(policy);
         }
-    }
-
-    @Deprecated
-    public void removeAllSharingPolicies() {
-        //TODO need to fix when rolling out DB
-        this.policyIDToUserIDMapping = new HashMap<String, Long>();
-        this.sharingPolicies = new HashMap<Long, ActiveSharingPoliciesForUser>();
-    }
-
-    private void addPolicy(SharingPolicy p) {
-        if (!this.sharingPolicies.containsKey(p.getFromUserID())) {
-            ActiveSharingPoliciesForUser userPolicies = new ActiveSharingPoliciesForUser(p.getFromUserID());
-            this.sharingPolicies.put(p.getFromUserID(), userPolicies);
-        }
-        this.policyIDToUserIDMapping.put(p.getPolicyID(), p.getFromUserID());
-        this.sharingPolicies.get(p.getFromUserID()).addPolicy(p);
-    }
-
-    private String createPolicyKey() {
-        //TODO switch to proper DB keys here
-        return myRandomWithHigh(1, 100000) + "";
-    }
-
-    private static int myRandomWithHigh(int low, int high) {
-        high++;
-        return (int) (Math.random() * (high - low) + low);
     }
 }

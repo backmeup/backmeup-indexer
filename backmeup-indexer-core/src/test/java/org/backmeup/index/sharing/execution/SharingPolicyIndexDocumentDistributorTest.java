@@ -34,7 +34,7 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
     private IndexDocumentDropOffQueue queue;
     private SharingPolicyImportNewPluginDataTask policyExecutionTask;
     private SharingPolicyExecution policyExecution;
-    private SharingPolicyManager policyManager = SharingPolicyManager.getInstance();
+    private SharingPolicyManager policyManager;
 
     //fixed test set on sharing policies
     private SharingPolicy pol1w2, pol1w7, pol3w4, pol5w6, pol1w8, pol1w9;
@@ -54,7 +54,6 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
     public void after() {
         this.policyExecutionTask.shutdownSharingPolicyExecution();
         cleanupTestData();
-        this.policyManager.removeAllSharingPolicies();
     }
 
     @Test
@@ -164,6 +163,9 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
     }
 
     private void setupWhiteboxTest() {
+        this.policyManager = new SharingPolicyManager();
+        Whitebox.setInternalState(this.policyManager, "sharingPolicyDao", this.database.sharingPolicyDao);
+
         this.queuedIndexDocsDao = this.database.queuedIndexDocsDao;
         this.queue = new IndexDocumentDropOffQueue();
         this.policyExecution = new SharingPolicyExecution();
@@ -181,32 +183,44 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
         this.user1 = new User(1L);
         this.user2 = new User(2L);
         this.user7 = new User(7L);
-        this.pol1w2 = this.policyManager.createSharingRule(this.user1, this.user2,
+        this.database.entityManager.getTransaction().begin();
+        this.pol1w2 = this.policyManager.createAndAddSharingPolicy(this.user1, this.user2,
                 SharingPolicies.SHARE_ALL_INKLUDING_OLD);
-        this.pol1w7 = this.policyManager.createSharingRule(this.user1, this.user7,
+        this.pol1w7 = this.policyManager.createAndAddSharingPolicy(this.user1, this.user7,
                 SharingPolicies.SHARE_ALL_INKLUDING_OLD);
+        this.database.entityManager.getTransaction().commit();
 
         //policy 1b -> share all data but only data that has been created after the policy
         this.user8 = new User(8L);
         this.user9 = new User(9L);
-        this.pol1w8 = this.policyManager.createSharingRule(this.user1, this.user8, SharingPolicies.SHARE_ALL_AFTER_NOW);
-        this.pol1w9 = this.policyManager.createSharingRule(this.user1, this.user9, SharingPolicies.SHARE_ALL_AFTER_NOW);
+        this.pol1w8 = new SharingPolicy(this.user1, this.user8, SharingPolicies.SHARE_ALL_AFTER_NOW);
+        this.pol1w9 = new SharingPolicy(this.user1, this.user9, SharingPolicies.SHARE_ALL_AFTER_NOW);
         int hours = 2; //create a date in history 
         this.dateAfterBackup = new Date(this.currentTime + hours * 60 * 60 * 1000);
         this.dateBeforeBackup = new Date(this.currentTime - hours * 60 * 60 * 1000);
         this.pol1w9.setPolicyCreationDate(this.dateBeforeBackup);
         this.pol1w8.setPolicyCreationDate(this.dateAfterBackup);
+        this.database.entityManager.getTransaction().begin();
+        this.policyManager.addSharingPolicy(this.pol1w8);
+        this.policyManager.addSharingPolicy(this.pol1w9);
+        this.database.entityManager.getTransaction().commit();
 
         //policy 2 -> share all elements of a specific backup job 53
         this.user3 = new User(3L);
         this.user4 = new User(4L);
-        this.pol3w4 = this.policyManager.createSharingRule(this.user3, this.user4, SharingPolicies.SHARE_BACKUP, "53");
+        this.database.entityManager.getTransaction().begin();
+        this.pol3w4 = this.policyManager.createAndAddSharingPolicy(this.user3, this.user4,
+                SharingPolicies.SHARE_BACKUP, "53");
+        this.database.entityManager.getTransaction().commit();
 
         //policy 3 -> share a specific index-document, which however is not reflected in our testdata
         this.user5 = new User(5L);
         this.user6 = new User(6L);
+        this.database.entityManager.getTransaction().begin();
         this.pol5w6 = new SharingPolicy(this.user5, this.user6, SharingPolicies.SHARE_INDEX_DOCUMENT);
         this.pol5w6.setSharedElementID(UUID.randomUUID().toString());
+        this.policyManager.addSharingPolicy(this.pol5w6);
+        this.database.entityManager.getTransaction().commit();
 
     }
 

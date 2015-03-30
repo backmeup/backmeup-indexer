@@ -7,11 +7,17 @@ import static org.junit.Assert.assertTrue;
 import java.util.Date;
 import java.util.List;
 
+import org.backmeup.index.dal.DerbyDatabase;
 import org.backmeup.index.model.User;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.internal.util.reflection.Whitebox;
 
 public class SharingPolicyCreationTest {
+
+    @Rule
+    public final DerbyDatabase database = new DerbyDatabase();
 
     private SharingPolicyManager shManager;
     private User owner = new User(1L);
@@ -19,19 +25,19 @@ public class SharingPolicyCreationTest {
 
     @Before
     public void before() {
-        this.shManager = SharingPolicyManager.getInstance();
-        this.shManager.removeAllSharingPolicies();
+        setupWhiteboxTest();
     }
 
     @Test
     public void createShareAllPolicy() throws InterruptedException {
-
-        SharingPolicy p = this.shManager.createSharingRule(this.owner, this.sharedWith,
+        this.database.entityManager.getTransaction().begin();
+        SharingPolicy p = this.shManager.createAndAddSharingPolicy(this.owner, this.sharedWith,
                 SharingPolicies.SHARE_ALL_AFTER_NOW);
+        this.database.entityManager.getTransaction().commit();
 
         assertEquals(this.owner.id(), p.getFromUserID());
         assertEquals(this.sharedWith.id(), p.getWithUserID());
-        assertNotNull(p.getPolicyID());
+        assertNotNull(p.getId());
         assertEquals(SharingPolicies.SHARE_ALL_AFTER_NOW, p.getPolicy());
         //need to sleep as Date does not capture millis but just seconds
         Thread.sleep(1200);
@@ -39,26 +45,60 @@ public class SharingPolicyCreationTest {
     }
 
     @Test
-    public void addShareAllPolicyAndRemoveIt() {
-
-        SharingPolicy p = this.shManager.createSharingRule(this.owner, this.sharedWith,
+    public void addPolicyTwice() {
+        this.database.entityManager.getTransaction().begin();
+        SharingPolicy p = this.shManager.createAndAddSharingPolicy(this.owner, this.sharedWith,
                 SharingPolicies.SHARE_ALL_AFTER_NOW);
+        this.database.entityManager.getTransaction().commit();
+
+        assertEquals(this.owner.id(), p.getFromUserID());
+        assertEquals(this.sharedWith.id(), p.getWithUserID());
+        assertNotNull(p.getId());
+        assertEquals(SharingPolicies.SHARE_ALL_AFTER_NOW, p.getPolicy());
+
+        this.database.entityManager.getTransaction().begin();
+        SharingPolicy p2 = this.shManager.createAndAddSharingPolicy(this.owner, this.sharedWith,
+                SharingPolicies.SHARE_ALL_AFTER_NOW);
+        this.database.entityManager.getTransaction().commit();
+
+        assertTrue(p.getId() == p2.getId());
+        assertTrue(this.shManager.getAllActivePoliciesForUser(this.owner).size() == 1);
+    }
+
+    @Test
+    public void addShareAllPolicyAndRemoveIt() {
+        this.database.entityManager.getTransaction().begin();
+        SharingPolicy p = this.shManager.createAndAddSharingPolicy(this.owner, this.sharedWith,
+                SharingPolicies.SHARE_ALL_AFTER_NOW);
+        this.database.entityManager.getTransaction().commit();
         List<SharingPolicy> ps = this.shManager.getAllActivePoliciesForUser(this.owner);
         assertTrue(ps.contains(p));
 
-        this.shManager.removeSharingRule(p.getPolicyID());
+        this.database.entityManager.getTransaction().begin();
+        this.shManager.removeSharingRule(p.getId());
+        this.database.entityManager.getTransaction().commit();
         ps = this.shManager.getAllActivePoliciesForUser(this.owner);
         assertTrue(ps.size() == 0);
     }
 
     @Test
     public void createShareBackupJobPolicy() {
-        SharingPolicy p = this.shManager.createSharingRule(this.owner, this.sharedWith, SharingPolicies.SHARE_BACKUP);
+        //Info: need manual transaction in test because transactional interceptor is not installed in tests
+        this.database.entityManager.getTransaction().begin();
         //share all elements of backupJobID 1
-        p.setSharedElementID("1");
+        SharingPolicy p = this.shManager.createAndAddSharingPolicy(this.owner, this.sharedWith,
+                SharingPolicies.SHARE_BACKUP, "1");
+        this.database.entityManager.getTransaction().commit();
+
         List<SharingPolicy> ps = this.shManager.getAllActivePoliciesForUser(this.owner);
         assertTrue(ps.contains(p));
         assertTrue(ps.get(0).getSharedElementID().equals("1"));
+    }
+
+    private void setupWhiteboxTest() {
+        this.shManager = new SharingPolicyManager();
+        Whitebox.setInternalState(this.shManager, "sharingPolicyDao", this.database.sharingPolicyDao);
+
     }
 
 }

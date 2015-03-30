@@ -3,6 +3,7 @@ package org.backmeup.index.dal;
 import java.util.List;
 
 import org.backmeup.index.model.User;
+import org.backmeup.index.sharing.policy.SharingPolicies;
 import org.backmeup.index.sharing.policy.SharingPolicy;
 
 /**
@@ -25,6 +26,8 @@ public interface SharingPolicyDao extends BaseDao<SharingPolicy> {
     List<SharingPolicy> getAllSharingPoliciesWithUser(User withUser);
 
     List<SharingPolicy> getAllSharingPoliciesBetweenUsers(User fromUser, User withUser);
+
+    List<SharingPolicy> getAllSharingPoliciesBetweenUsersInType(User fromUser, User withUser, SharingPolicies... types);
 
     void deleteAll();
 

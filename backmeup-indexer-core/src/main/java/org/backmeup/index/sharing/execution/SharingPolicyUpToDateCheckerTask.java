@@ -41,7 +41,7 @@ public class SharingPolicyUpToDateCheckerTask {
     @Inject
     private SharingPolicyExecution policyExecution;
     @Inject
-    private SharingPolicyManager manager = SharingPolicyManager.getInstance(); //TODO need to add bean and init methods in lifecycle
+    private SharingPolicyManager manager;
 
     @RunRequestScoped
     public void startupSharingPolicyExecution() {
