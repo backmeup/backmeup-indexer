@@ -22,12 +22,10 @@ import org.backmeup.index.sharing.policy.SharingPolicyManager;
 import org.backmeup.index.storage.ThemisDataSink;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.internal.util.reflection.Whitebox;
 
-@Ignore("TODO AL: Test broken due to new SharingPolicy distribution -> need to fix")
 public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTestingUtils {
 
     @Rule
@@ -47,8 +45,6 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
 
     @Before
     public void before() {
-        this.policyExecutionTask = new SharingPolicyImportNewPluginDataTask();
-        this.policyExecutionTask.setFrequency(1);
         setupWhiteboxTest();
     }
 
@@ -174,9 +170,14 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
         this.queue = new IndexDocumentDropOffQueue();
         this.policyExecution = new SharingPolicyExecution();
         Whitebox.setInternalState(this.queue, "dao", this.queuedIndexDocsDao);
-        Whitebox.setInternalState(this.policyExecutionTask, "queue", this.queue);
         Whitebox.setInternalState(this.policyExecution, "entryStatusDao", this.database.statusDao);
+
+        this.policyExecutionTask = new SharingPolicyImportNewPluginDataTask();
+        this.policyExecutionTask.setFrequency(1);
+        Whitebox.setInternalState(this.policyExecutionTask, "queue", this.queue);
         Whitebox.setInternalState(this.policyExecutionTask, "policyExecution", this.policyExecution);
+        Whitebox.setInternalState(this.policyExecutionTask, "manager", this.policyManager);
+
         createQueueInputData();
         createSharingPolicyData();
         this.queue.startupDroOffQueue();
