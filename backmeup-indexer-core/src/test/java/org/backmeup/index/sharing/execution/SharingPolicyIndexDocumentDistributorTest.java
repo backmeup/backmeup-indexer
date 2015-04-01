@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.backmeup.index.api.IndexFields;
+import org.backmeup.index.core.model.IndexFragmentEntryStatus;
+import org.backmeup.index.core.model.IndexFragmentEntryStatus.StatusType;
 import org.backmeup.index.core.model.QueuedIndexDocument;
 import org.backmeup.index.dal.DerbyDatabase;
 import org.backmeup.index.dal.QueuedIndexDocumentDao;
@@ -81,13 +83,13 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
         User sharingp1 = this.user8;
         List<UUID> lUUIDs = ThemisDataSink.getAllIndexFragmentUUIDs(sharingp1,
                 ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
-        //case1a: where policy was created after the actual backup job execution
+        //case1a: where no sharing policy exists between users
         assertTrue(lUUIDs.size() == 0);
 
         sharingp1 = this.user9;
         lUUIDs = ThemisDataSink.getAllIndexFragmentUUIDs(sharingp1,
                 ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
-        //case1b: where policy was created after the actual backup job execution
+        //case1b: where sharing policy existed at document drop off time
         assertTrue(lUUIDs.size() == 1);
         UUID uuid = lUUIDs.get(0);
         IndexDocument docSharingp1 = ThemisDataSink.getIndexFragment(uuid, sharingp1,
@@ -97,6 +99,20 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
         assertEquals(uuid.toString(), docSharingp1.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString());
         assertEquals(owner1.id().toString(), docSharingp1.getFields().get(IndexFields.FIELD_SHARED_BY_USER_ID)
                 .toString());
+
+        //check that the proper waiting for import status types were created
+        List<IndexFragmentEntryStatus> lDBStatus = this.database.statusDao
+                .getAllFromUserInOneOfTheTypesAndByUserAsDocumentOwner(owner1, StatusType.WAITING_FOR_IMPORT);
+        assertNotNull(lDBStatus);
+        assertTrue(lDBStatus.size() == 1);
+        assertEquals("missing proper import status for owner", StatusType.WAITING_FOR_IMPORT, lDBStatus.get(0)
+                .getStatusType());
+        lDBStatus = this.database.statusDao.getAllFromUserInOneOfTheTypesAndByDocumentOwner(sharingp1, owner1,
+                StatusType.WAITING_FOR_IMPORT);
+        assertNotNull(lDBStatus);
+        assertTrue(lDBStatus.size() == 1);
+        assertEquals("missing proper import status for sharingpartner", StatusType.WAITING_FOR_IMPORT, lDBStatus.get(0)
+                .getStatusType());
     }
 
     @Test
