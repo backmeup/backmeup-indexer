@@ -7,6 +7,9 @@
 		transaction-type="RESOURCE_LOCAL">
 		<provider>org.hibernate.ejb.HibernatePersistence</provider>
 		<class>org.backmeup.index.core.model.RunningIndexUserConfig</class>
+		<class>org.backmeup.index.core.model.QueuedIndexDocument</class>
+		<class>org.backmeup.index.core.model.IndexFragmentEntryStatus</class>
+		<class>org.backmeup.index.sharing.policy.SharingPolicy</class>
 		<properties>
 			<property name="javax.persistence.jdbc.user" value="dbu_indexcore" />
 			<property name="javax.persistence.jdbc.password" value="dbu_indexcore" />
