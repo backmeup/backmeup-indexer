@@ -181,7 +181,7 @@ public class Sharing implements SharingPolicyServer {
     private SharingPolicyEntry convert(SharingPolicy p) {
         SharingPolicyTypeEntry t = convert(p.getPolicy());
         SharingPolicyEntry e = new SharingPolicyEntry(p.getId(), new User(p.getFromUserID()), new User(
-                p.getWithUserID()), t, p.getPolicyCreationDate());
+                p.getWithUserID()), t, p.getPolicyCreationDate(), p.getSharedElementID());
         return e;
     }
 

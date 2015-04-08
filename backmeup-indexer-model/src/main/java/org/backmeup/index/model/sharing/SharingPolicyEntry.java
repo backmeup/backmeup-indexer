@@ -18,12 +18,13 @@ public class SharingPolicyEntry {
     private Date policyCreationDate;
 
     public SharingPolicyEntry(Long id, User fromUser, User withUser, SharingPolicyTypeEntry policy,
-            Date policyCreationDate) {
+            Date policyCreationDate, String sharedElementID) {
         this.Id = id;
         this.fromUserID = fromUser.id();
         this.withUserID = withUser.id();
         this.policy = policy;
         this.policyCreationDate = policyCreationDate;
+        this.sharedElementID = sharedElementID;
     }
 
     public Long getFromUserID() {
