@@ -15,10 +15,11 @@ public class RestApiServerStubTest {
 
     @Test
     public void testQueryBackup() {
-        server.setStatusCode(200);
-        server.setResourceFileName("query.json");
+        this.server.setStatusCode(200);
+        this.server.setResourceFileName("searchresult.json");
 
-        SearchResultAccumulator searchResult = new RestApiServerStub(testConfig()).query(new User(1L), "find_me", null, null, "", "peter");
+        SearchResultAccumulator searchResult = new RestApiServerStub(testConfig()).query(new User(1L), "find_me", null,
+                null, "", "peter");
         assertNotNull(searchResult);
         assertEquals(2, searchResult.getBySource().size());
     }
