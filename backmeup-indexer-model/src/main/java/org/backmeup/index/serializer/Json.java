@@ -9,6 +9,7 @@ import java.util.Set;
 import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
+import org.backmeup.index.model.sharing.SharingPolicyEntry;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -32,7 +33,8 @@ public class Json {
     private static class DateSerializer implements com.google.gson.JsonSerializer<Date>, JsonDeserializer<Date> {
 
         @Override
-        public Date deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        public Date deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
             return new Date(json.getAsLong());
         }
 
@@ -44,12 +46,13 @@ public class Json {
 
     @SuppressWarnings("unused")
     private static class UserSerializer implements com.google.gson.JsonSerializer<User>, JsonDeserializer<User> {
-        
+
         @Override
-        public User deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        public User deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
             return new User(json.getAsLong());
         }
-        
+
         @Override
         public JsonElement serialize(User src, Type typeOfSrc, JsonSerializationContext context) {
             return new JsonPrimitive(src.id());
@@ -59,8 +62,8 @@ public class Json {
     private static class IndexDocumentSerializer implements JsonDeserializer<IndexDocument> {
 
         @Override
-        public IndexDocument deserialize(JsonElement json, @SuppressWarnings("unused") Type typeOfT, JsonDeserializationContext context)
-                throws JsonParseException {
+        public IndexDocument deserialize(JsonElement json, @SuppressWarnings("unused") Type typeOfT,
+                JsonDeserializationContext context) throws JsonParseException {
             JsonObject self = json.getAsJsonObject();
 
             IndexDocument document = new IndexDocument();
@@ -116,6 +119,11 @@ public class Json {
 
     public static Set<FileItem> deserializeSetOfFileItems(String body) {
         return deserialize(body, new TypeToken<Set<FileItem>>() {
+        }.getType());
+    }
+
+    public static Set<SharingPolicyEntry> deserializeSetOfSharingPolicyEntries(String body) {
+        return deserialize(body, new TypeToken<Set<SharingPolicyEntry>>() {
         }.getType());
     }
 }

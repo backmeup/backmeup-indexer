@@ -30,11 +30,11 @@ import org.backmeup.index.query.ElasticSearchSetup;
 @Produces(MediaType.APPLICATION_JSON)
 public class Index implements IndexServer {
 
-    @Inject 
-    private ElasticSearchSetup clientFactory; 
-    
+    @Inject
+    private ElasticSearchSetup clientFactory;
+
     private IndexClient getIndexClient(User userId) {
-        return clientFactory.createIndexClient(userId);
+        return this.clientFactory.createIndexClient(userId);
     }
 
     @Override

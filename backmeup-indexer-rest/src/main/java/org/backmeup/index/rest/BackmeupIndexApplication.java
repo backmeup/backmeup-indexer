@@ -8,6 +8,7 @@ import javax.ws.rs.core.Application;
 import org.backmeup.index.rest.provider.JacksonJsonConfiguration;
 import org.backmeup.index.rest.resources.Config;
 import org.backmeup.index.rest.resources.Index;
+import org.backmeup.index.rest.resources.Sharing;
 
 public class BackmeupIndexApplication extends Application {
     private final Set<Class<?>> set = new HashSet<>();
@@ -15,20 +16,21 @@ public class BackmeupIndexApplication extends Application {
 
     public BackmeupIndexApplication() {
         // The default life-cycle for resource class instances is per-request. 
-        set.add(Index.class);
-        set.add(Config.class);
+        this.set.add(Index.class);
+        this.set.add(Config.class);
+        this.set.add(Sharing.class);
 
         // The default life-cycle for providers (registered directly or via a feature) is singleton.
-        set.add(JacksonJsonConfiguration.class); // provider
+        this.set.add(JacksonJsonConfiguration.class); // provider
     }
 
     @Override
     public Set<Class<?>> getClasses() {
-        return set;
+        return this.set;
     }
 
     @Override
     public Set<Object> getSingletons() {
-        return singletons;
+        return this.singletons;
     }
 }

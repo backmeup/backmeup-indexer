@@ -40,8 +40,12 @@ public class SharingPolicyManager {
         this.log.debug("shutdown() SharingPolicyManager (ApplicationScoped) completed");
     }
 
-    public List<SharingPolicy> getAllActivePoliciesForUser(User user) {
+    public List<SharingPolicy> getAllActivePoliciesOwnedByUser(User user) {
         return this.sharingPolicyDao.getAllSharingPoliciesFromUser(user);
+    }
+
+    public List<SharingPolicy> getAllActivePoliciesSharedWithUser(User user) {
+        return this.sharingPolicyDao.getAllSharingPoliciesWithUser(user);
     }
 
     public List<SharingPolicy> getAllDeletedPoliciesForUser(User user) {
@@ -94,7 +98,7 @@ public class SharingPolicyManager {
         return null;
     }
 
-    public void removeSharingRule(Long policyID) {
+    public void removeSharingPolicy(Long policyID) {
         SharingPolicy p = this.sharingPolicyDao.getByEntityId(policyID);
         removeSharingPolicy(p);
     }

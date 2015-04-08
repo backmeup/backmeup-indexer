@@ -107,7 +107,7 @@ public class SharingPolicyImportNewPluginDataTask {
         long ownerID = Long.parseLong(doc.getFields().get(IndexFields.FIELD_OWNER_ID).toString());
 
         //iterate over all sharing policies that a given user has defined
-        List<SharingPolicy> policies = this.manager.getAllActivePoliciesForUser(new User(ownerID));
+        List<SharingPolicy> policies = this.manager.getAllActivePoliciesOwnedByUser(new User(ownerID));
         for (SharingPolicy policy : policies) {
 
             //add additional entries for sharing within the IndexDocument

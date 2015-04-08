@@ -62,7 +62,7 @@ public class SharingPolicyCreationTest {
         this.database.entityManager.getTransaction().commit();
 
         assertTrue(p.getId() == p2.getId());
-        assertTrue(this.shManager.getAllActivePoliciesForUser(this.owner).size() == 1);
+        assertTrue(this.shManager.getAllActivePoliciesOwnedByUser(this.owner).size() == 1);
     }
 
     @Test
@@ -71,13 +71,13 @@ public class SharingPolicyCreationTest {
         SharingPolicy p = this.shManager.createAndAddSharingPolicy(this.owner, this.sharedWith,
                 SharingPolicies.SHARE_ALL_AFTER_NOW);
         this.database.entityManager.getTransaction().commit();
-        List<SharingPolicy> ps = this.shManager.getAllActivePoliciesForUser(this.owner);
+        List<SharingPolicy> ps = this.shManager.getAllActivePoliciesOwnedByUser(this.owner);
         assertTrue(ps.contains(p));
 
         this.database.entityManager.getTransaction().begin();
-        this.shManager.removeSharingRule(p.getId());
+        this.shManager.removeSharingPolicy(p.getId());
         this.database.entityManager.getTransaction().commit();
-        ps = this.shManager.getAllActivePoliciesForUser(this.owner);
+        ps = this.shManager.getAllActivePoliciesOwnedByUser(this.owner);
         assertTrue(ps.size() == 0);
     }
 
@@ -90,7 +90,7 @@ public class SharingPolicyCreationTest {
                 SharingPolicies.SHARE_BACKUP, "1");
         this.database.entityManager.getTransaction().commit();
 
-        List<SharingPolicy> ps = this.shManager.getAllActivePoliciesForUser(this.owner);
+        List<SharingPolicy> ps = this.shManager.getAllActivePoliciesOwnedByUser(this.owner);
         assertTrue(ps.contains(p));
         assertTrue(ps.get(0).getSharedElementID().equals("1"));
     }

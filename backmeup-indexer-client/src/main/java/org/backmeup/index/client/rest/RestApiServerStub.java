@@ -23,10 +23,10 @@ import org.backmeup.index.serializer.Json;
 public class RestApiServerStub implements IndexServer {
 
     private final HttpMethods http = new HttpMethods();
-    private final RestUrls urls;
+    private final RestUrlsIndex urls;
 
     public RestApiServerStub(RestApiConfig config) {
-        urls = new RestUrls(config);
+        urls = new RestUrlsIndex(config);
     }
 
     @Override

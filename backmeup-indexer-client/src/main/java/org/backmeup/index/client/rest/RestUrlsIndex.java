@@ -12,13 +12,13 @@ import org.backmeup.index.model.User;
  * 
  * @author <a href="http://www.code-cop.org/">Peter Kofler</a>
  */
-public class RestUrls {
+public class RestUrlsIndex {
 
     private final String host;
     private final int port;
     private final String basePath;
 
-    public RestUrls(RestApiConfig config) {
+    public RestUrlsIndex(RestApiConfig config) {
         this.host = config.host;
         this.port = config.port;
         this.basePath = config.basepath + "/index";
