@@ -19,6 +19,7 @@ public class SharingPolicyEntry {
 
     public SharingPolicyEntry(Long id, User fromUser, User withUser, SharingPolicyTypeEntry policy,
             Date policyCreationDate) {
+        this.Id = id;
         this.fromUserID = fromUser.id();
         this.withUserID = withUser.id();
         this.policy = policy;

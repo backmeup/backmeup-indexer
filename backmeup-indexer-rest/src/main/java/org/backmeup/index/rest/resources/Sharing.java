@@ -83,7 +83,11 @@ public class Sharing implements SharingPolicyServer {
         mandatory("fromUserId", owner);
         mandatory("policyID", policyID);
 
-        return status(Response.Status.ACCEPTED, removeOwned(owner, policyID));
+        try {
+            return status(Response.Status.ACCEPTED, removeOwned(owner, policyID));
+        } catch (IllegalArgumentException e) {
+            return status(Response.Status.NOT_ACCEPTABLE, "failed to delete policy: " + policyID);
+        }
 
     }
 
