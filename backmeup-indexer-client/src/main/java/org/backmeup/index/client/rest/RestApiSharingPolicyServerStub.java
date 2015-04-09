@@ -53,7 +53,7 @@ public class RestApiSharingPolicyServerStub implements SharingPolicyServer {
     public SharingPolicyEntry add(User currUser, User sharingWith, SharingPolicyTypeEntry policy, String sharedElementID) {
         try {
             URI url = this.urls.forAdd(currUser, sharingWith, policy, sharedElementID);
-            String body = this.http.get(url, 200);
+            String body = this.http.post(url, "", 200);
             return Json.deserialize(body, SharingPolicyEntry.class);
 
         } catch (IOException | URISyntaxException e) {
