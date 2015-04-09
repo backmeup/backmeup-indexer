@@ -175,6 +175,9 @@ public class ESConfigurationHandler {
                         throw new IOException(s, e);
                     }
                 }
+            } else {
+                log.debug("stopElasticSearch for userID " + user.id()
+                        + " missing Process PID for ES instance, no forced termination possible");
             }
         } else {
             String s = "stopElasticSearch for userID " + user.id() + " failed due to missing RunningIndexUserConfig";
