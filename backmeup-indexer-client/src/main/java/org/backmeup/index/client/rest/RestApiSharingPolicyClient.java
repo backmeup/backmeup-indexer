@@ -37,13 +37,13 @@ public class RestApiSharingPolicyClient implements SharingPolicyClient {
     }
 
     @Override
-    public void remove(Long policyID) {
-        this.server.removeOwned(this.currUser, policyID);
+    public String removeOwned(Long policyID) {
+        return this.server.removeOwned(this.currUser, policyID);
     }
 
     @Override
-    public void removeAllOwned() {
-        this.server.removeAllOwned(this.currUser);
+    public String removeAllOwned() {
+        return this.server.removeAllOwned(this.currUser);
     }
 
     @Override
