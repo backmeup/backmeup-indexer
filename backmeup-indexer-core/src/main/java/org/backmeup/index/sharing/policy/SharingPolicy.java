@@ -31,6 +31,11 @@ public class SharingPolicy {
     public SharingPolicy() {
     }
 
+    public SharingPolicy(User fromUser, User withUser, SharingPolicies policy, String sharedElementID) {
+        this(fromUser, withUser, policy);
+        this.sharedElementID = sharedElementID;
+    }
+
     public SharingPolicy(User fromUser, User withUser, SharingPolicies policy) {
         this.fromUserID = fromUser.id();
         this.withUserID = withUser.id();

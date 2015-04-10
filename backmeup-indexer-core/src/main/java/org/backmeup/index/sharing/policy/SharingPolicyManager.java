@@ -54,8 +54,7 @@ public class SharingPolicyManager {
     }
 
     public SharingPolicy createAndAddSharingPolicy(User owner, User sharingWith, SharingPolicies policy) {
-        SharingPolicy shPolicy = new SharingPolicy(owner, sharingWith, policy);
-        return addSharingPolicy(shPolicy);
+        return createAndAddSharingPolicy(owner, sharingWith, policy, null);
     }
 
     /**
@@ -69,8 +68,7 @@ public class SharingPolicyManager {
      */
     public SharingPolicy createAndAddSharingPolicy(User owner, User sharingWith, SharingPolicies policy,
             String sharedElementID) {
-        SharingPolicy shPol = createAndAddSharingPolicy(owner, sharingWith, policy);
-        shPol.setSharedElementID(sharedElementID);
+        SharingPolicy shPol = new SharingPolicy(owner, sharingWith, policy, sharedElementID);
         return addSharingPolicy(shPol);
     }
 
