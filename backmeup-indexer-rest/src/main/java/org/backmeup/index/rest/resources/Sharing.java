@@ -84,7 +84,7 @@ public class Sharing implements SharingPolicyServer {
         mandatory("policyID", policyID);
 
         try {
-            return status(Response.Status.ACCEPTED, removeOwned(owner, policyID));
+            return status(Response.Status.OK, removeOwned(owner, policyID));
         } catch (IllegalArgumentException e) {
             return status(Response.Status.NOT_ACCEPTABLE, "failed to delete policy: " + policyID);
         }
@@ -109,7 +109,7 @@ public class Sharing implements SharingPolicyServer {
     public Response removeAllOwnedRS( //
             @PathParam("fromUserId") User owner) {
         mandatory("fromUserId", owner);
-        return status(Response.Status.ACCEPTED, removeAllOwned(owner));
+        return status(Response.Status.OK, removeAllOwned(owner));
     }
 
     private void mandatory(String name, String value) {
