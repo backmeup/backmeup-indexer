@@ -20,12 +20,12 @@ import org.backmeup.index.serializer.Json;
  * 
  * @author <a href="http://www.code-cop.org/">Peter Kofler</a>
  */
-public class RestApiServerStub implements IndexServer {
+public class RestApiIndexServerStub implements IndexServer {
 
     private final HttpMethods http = new HttpMethods();
     private final RestUrlsIndex urls;
 
-    public RestApiServerStub(RestApiConfig config) {
+    public RestApiIndexServerStub(RestApiConfig config) {
         urls = new RestUrlsIndex(config);
     }
 

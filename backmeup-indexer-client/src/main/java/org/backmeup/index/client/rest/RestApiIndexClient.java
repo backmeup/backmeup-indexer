@@ -19,7 +19,7 @@ import org.backmeup.index.model.User;
  */
 public class RestApiIndexClient implements IndexClient {
 
-    private final IndexServer server = new RestApiServerStub(RestApiConfig.DEFAULT);
+    private final IndexServer server = new RestApiIndexServerStub(RestApiConfig.DEFAULT);
     private final User userId;
 
     public RestApiIndexClient(User userId) {

@@ -17,7 +17,8 @@ import org.backmeup.index.model.User;
  */
 public interface IndexServer {
 
-    SearchResultAccumulator query(User userId, String query, String filterBySource, String filterByType, String filterByJob, String username);
+    SearchResultAccumulator query(User userId, String query, String filterBySource, String filterByType,
+            String filterByJob, String username);
 
     Set<FileItem> filesForJob(User userId, Long jobId);
 
@@ -27,6 +28,16 @@ public interface IndexServer {
 
     String delete(User userId, Long jobId, Date timestamp);
 
+    /**
+     * starts the physical indexing process for a given document. i.e. spins up a private Index instance (e.g. ES) and
+     * executes the indexing for the given document -> since document sharing: this method should no longer be directly
+     * called by the plugins rather use uploadForSharing instead
+     * 
+     * @param userId
+     * @param document
+     * @return
+     * @throws IOException
+     */
     String index(User userId, IndexDocument document) throws IOException;
 
 }

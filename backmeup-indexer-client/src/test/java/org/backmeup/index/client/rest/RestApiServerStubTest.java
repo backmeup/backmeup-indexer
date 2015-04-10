@@ -18,7 +18,7 @@ public class RestApiServerStubTest {
         this.server.setStatusCode(200);
         this.server.setResourceFileName("searchresult.json");
 
-        SearchResultAccumulator searchResult = new RestApiServerStub(testConfig()).query(new User(1L), "find_me", null,
+        SearchResultAccumulator searchResult = new RestApiIndexServerStub(testConfig()).query(new User(1L), "find_me", null,
                 null, "", "peter");
         assertNotNull(searchResult);
         assertEquals(2, searchResult.getBySource().size());
