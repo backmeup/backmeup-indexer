@@ -13,6 +13,7 @@ import org.backmeup.index.dal.QueuedIndexDocumentDao;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
 import org.backmeup.index.sharing.execution.IndexContentUpdateTask;
+import org.backmeup.index.sharing.execution.IndexContentUpdateTaskLauncher;
 import org.backmeup.index.sharing.execution.IndexDocumentDropOffQueue;
 import org.backmeup.index.sharing.execution.SharingPolicyImportNewPluginDataTask;
 import org.backmeup.index.sharing.execution.SharingPolicyImportNewPluginDataTaskLauncher;
@@ -31,6 +32,7 @@ public class IndexDocumentSharingIntegrationTest extends IndexManagerIntegration
     private SharingPolicyImportNewPluginDataTaskLauncher distributorLauncher;
     private SharingPolicyImportNewPluginDataTask distributor;
     private IndexContentUpdateTask checkImports;
+    private IndexContentUpdateTaskLauncher checkImportsLauncher;
 
     private static final User userOwner = new User(999991L);
     private static final User userSharingP = new User(999992L);
@@ -66,13 +68,13 @@ public class IndexDocumentSharingIntegrationTest extends IndexManagerIntegration
         setupWhiteboxTest();
         //start the components
         this.droppOffqueue.startupDroOffQueue();
-        this.checkImports.setCheckingFrequency(1);
-        this.checkImports.startupCheckingForContentUpdates();
+        this.checkImportsLauncher.setFrequency(1);
+        this.checkImportsLauncher.startupIndexContentUpdateExecution();
     }
 
     @After
     public void afterTest() {
-        this.checkImports.shutdownCheckingForContentUpdates();
+        this.checkImportsLauncher.shutdownIndexContentUpdateExecution();
         this.distributorLauncher.shutdownSharingPolicyExecution();
         cleanupTestData();
     }
@@ -82,11 +84,14 @@ public class IndexDocumentSharingIntegrationTest extends IndexManagerIntegration
         this.distributor = new SharingPolicyImportNewPluginDataTask();
         this.distributorLauncher = new SharingPolicyImportNewPluginDataTaskLauncher();
         this.checkImports = new IndexContentUpdateTask();
+        this.checkImportsLauncher = new IndexContentUpdateTaskLauncher();
         this.queuedIndexDocsDao = this.database.queuedIndexDocsDao;
 
         Whitebox.setInternalState(this.droppOffqueue, "dao", this.queuedIndexDocsDao);
         Whitebox.setInternalState(this.distributor, "queue", this.droppOffqueue);
         Whitebox.setInternalState(this.distributorLauncher, "task", this.distributor);
+
+        Whitebox.setInternalState(this.checkImportsLauncher, "task", this.checkImports);
     }
 
     private void cleanupTestData() {

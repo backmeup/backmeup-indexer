@@ -45,6 +45,7 @@ public class SharingPolicyIndexDocumentHistoryDistributorTest extends IndexDocum
     private SharingPolicyImportNewPluginDataTask distributeNewTask;
     private SharingPolicyImportNewPluginDataTaskLauncher distributeNewTaskLauncher;
     private SharingPolicyUpToDateCheckerTask distributeExistingTask;
+    private SharingPolicyUpToDateCheckerTaskLauncher distributeExistingTaskLauncher;
     private SharingPolicyExecution policyExecution;
     private SharingPolicyManager policyManager;
     private SharingPolicy2DocumentUUIDConverter pol2uuidConverter;
@@ -62,14 +63,15 @@ public class SharingPolicyIndexDocumentHistoryDistributorTest extends IndexDocum
         this.distributeNewTask = new SharingPolicyImportNewPluginDataTask();
         this.distributeNewTaskLauncher.setFrequency(1);
         this.distributeExistingTask = new SharingPolicyUpToDateCheckerTask();
-        this.distributeExistingTask.setFrequency(1);
+        this.distributeExistingTaskLauncher = new SharingPolicyUpToDateCheckerTaskLauncher();
+        this.distributeExistingTaskLauncher.setFrequency(1);
         setupWhiteboxTest();
     }
 
     @After
     public void after() {
         this.distributeNewTaskLauncher.shutdownSharingPolicyExecution();
-        this.distributeExistingTask.shutdownSharingPolicyExecution();
+        this.distributeExistingTaskLauncher.shutdownPolicyUpToDateChecker();
         cleanupTestData();
     }
 
@@ -132,7 +134,7 @@ public class SharingPolicyIndexDocumentHistoryDistributorTest extends IndexDocum
         //start the distribution thread
         try {
             this.database.entityManager.getTransaction().begin();
-            this.distributeExistingTask.startupSharingPolicyExecution();
+            this.distributeExistingTaskLauncher.startupPolicyUpToDateChecker();
             this.distributeNewTaskLauncher.startupSharingPolicyExecution();
             Thread.sleep(4000);
             this.database.entityManager.getTransaction().commit();

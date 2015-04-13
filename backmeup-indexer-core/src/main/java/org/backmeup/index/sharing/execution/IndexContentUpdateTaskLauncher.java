@@ -11,33 +11,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Launches a Thread for executing SharingPolicyImportNewPluginDataTask at a fixed rate
+ * Launches a Thread for executing IndexContentUpdateTask at a fixed rate
  */
 @ApplicationScoped
-public class SharingPolicyImportNewPluginDataTaskLauncher {
+public class IndexContentUpdateTaskLauncher {
 
-    private int SECONDS_BETWEEN_RECHECKING = 2;
+    private int SECONDS_BETWEEN_RECHECKING = 30;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
 
     @Inject
-    private SharingPolicyImportNewPluginDataTask task;
+    private IndexContentUpdateTask task;
 
-    public void startupSharingPolicyExecution() {
-        this.log.debug("startup SharingPolicyImportNewPluginDataTask (ApplicationScoped) - started");
-
+    public void startupIndexContentUpdateExecution() {
+        this.log.debug("startup IndexContentUpdateTask (ApplicationScoped) - started");
         this.exec.scheduleAtFixedRate(this.task, this.SECONDS_BETWEEN_RECHECKING, this.SECONDS_BETWEEN_RECHECKING,
                 TimeUnit.SECONDS);
-        this.log.debug("startup SharingPolicyImportNewPluginDataTask - completed");
+        this.log.debug("startup IndexContentUpdateTask - completed");
     }
 
-    public void shutdownSharingPolicyExecution() {
+    public void shutdownIndexContentUpdateExecution() {
         //stopping index-plugin data distribution thread
-        this.log.debug("shutdown SharingPolicyImportNewPluginDataTask (ApplicationScoped) - started");
+        this.log.debug("shutdown IndexContentUpdateTask (ApplicationScoped) - started");
         this.exec.shutdown();
-        this.log.debug("shutdown SharingPolicyImportNewPluginDataTask - completed");
+        this.log.debug("shutdown IndexContentUpdateTask - completed");
     }
 
     /**
@@ -45,7 +44,7 @@ public class SharingPolicyImportNewPluginDataTaskLauncher {
      * 
      * @param seconds
      */
-    protected void setFrequency(int seconds) {
+    public void setFrequency(int seconds) {
         this.SECONDS_BETWEEN_RECHECKING = seconds;
     }
 

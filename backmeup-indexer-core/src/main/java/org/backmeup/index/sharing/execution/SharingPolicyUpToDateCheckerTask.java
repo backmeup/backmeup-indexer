@@ -3,8 +3,6 @@ package org.backmeup.index.sharing.execution;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -18,7 +16,6 @@ import org.backmeup.index.sharing.policy.SharingPolicy2DocumentUUIDConverter;
 import org.backmeup.index.sharing.policy.SharingPolicyManager;
 import org.backmeup.index.storage.ThemisEncryptedPartition;
 import org.backmeup.index.storage.ThemisEncryptedPartition.IndexFragmentType;
-import org.backmeup.index.utils.cdi.RunRequestScoped;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,11 +25,9 @@ import org.slf4j.LoggerFactory;
  *
  */
 @ApplicationScoped
-public class SharingPolicyUpToDateCheckerTask {
+public class SharingPolicyUpToDateCheckerTask implements Runnable {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private final ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
-    private int SECONDS_BETWEEN_RECHECKING = 120;
 
     @Inject
     private ActiveUsers activeUsers;
@@ -43,31 +38,9 @@ public class SharingPolicyUpToDateCheckerTask {
     @Inject
     private SharingPolicyManager manager;
 
-    @RunRequestScoped
-    public void startupSharingPolicyExecution() {
-        startPolicyExecution();
-        this.log.debug("startup() SharingPolicyUpToDateCheckerTask (ApplicationScoped) completed");
-    }
-
-    @RunRequestScoped
-    public void shutdownSharingPolicyExecution() {
-        stopPolicyExecution();
-        this.log.debug("shutdown() SharingPolicyUpToDateCheckerTask (ApplicationScoped) completed");
-    }
-
-    private void startPolicyExecution() {
-
-        this.exec.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                checkExistingPolicies();
-            }
-        }, this.SECONDS_BETWEEN_RECHECKING, this.SECONDS_BETWEEN_RECHECKING, java.util.concurrent.TimeUnit.SECONDS);
-    }
-
-    public void stopPolicyExecution() {
-        this.log.debug("SharingPolicyExecutionTask stopping distribution thread");
-        this.exec.shutdownNow();
+    @Override
+    public void run() {
+        checkExistingPolicies();
     }
 
     /**
@@ -115,15 +88,6 @@ public class SharingPolicyUpToDateCheckerTask {
 
     private void checkDeletionSharings() {
         //TODO Need to implement
-    }
-
-    /**
-     * Used for JUnit Tests to modify the default value
-     * 
-     * @param seconds
-     */
-    protected void setFrequency(int seconds) {
-        this.SECONDS_BETWEEN_RECHECKING = seconds;
     }
 
 }

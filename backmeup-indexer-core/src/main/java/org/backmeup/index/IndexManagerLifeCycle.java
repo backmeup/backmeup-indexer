@@ -3,10 +3,10 @@ package org.backmeup.index;
 import javax.inject.Inject;
 
 import org.backmeup.index.sharing.execution.IndexContentManager;
-import org.backmeup.index.sharing.execution.IndexContentUpdateTask;
+import org.backmeup.index.sharing.execution.IndexContentUpdateTaskLauncher;
 import org.backmeup.index.sharing.execution.IndexDocumentDropOffQueue;
 import org.backmeup.index.sharing.execution.SharingPolicyImportNewPluginDataTaskLauncher;
-import org.backmeup.index.sharing.execution.SharingPolicyUpToDateCheckerTask;
+import org.backmeup.index.sharing.execution.SharingPolicyUpToDateCheckerTaskLauncher;
 import org.backmeup.index.sharing.policy.SharingPolicyManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,11 +30,11 @@ public class IndexManagerLifeCycle {
     @Inject
     private SharingPolicyImportNewPluginDataTaskLauncher distributeNew;
     @Inject
-    private SharingPolicyUpToDateCheckerTask distributeExisting;
+    private SharingPolicyUpToDateCheckerTaskLauncher distributeExisting;
     @Inject
     private IndexContentManager contentManager;
     @Inject
-    private IndexContentUpdateTask importTask;
+    private IndexContentUpdateTaskLauncher importTask;
     @Inject
     private SharingPolicyManager sharingPolicyManager;
 
@@ -51,9 +51,9 @@ public class IndexManagerLifeCycle {
 
         this.distributeNew.startupSharingPolicyExecution();
 
-        this.distributeExisting.startupSharingPolicyExecution();
+        this.distributeExisting.startupPolicyUpToDateChecker();
 
-        this.importTask.startupCheckingForContentUpdates();
+        this.importTask.startupIndexContentUpdateExecution();
 
         this.contentManager.startupIndexContentManager();
 
@@ -65,9 +65,9 @@ public class IndexManagerLifeCycle {
 
         this.contentManager.shutdownIndexContentManager();
 
-        this.importTask.shutdownCheckingForContentUpdates();
+        this.importTask.shutdownIndexContentUpdateExecution();
 
-        this.distributeExisting.shutdownSharingPolicyExecution();
+        this.distributeExisting.shutdownPolicyUpToDateChecker();
 
         this.distributeNew.shutdownSharingPolicyExecution();
 
