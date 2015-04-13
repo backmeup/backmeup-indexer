@@ -5,7 +5,7 @@ import javax.inject.Inject;
 import org.backmeup.index.sharing.execution.IndexContentManager;
 import org.backmeup.index.sharing.execution.IndexContentUpdateTask;
 import org.backmeup.index.sharing.execution.IndexDocumentDropOffQueue;
-import org.backmeup.index.sharing.execution.SharingPolicyImportNewPluginDataTask;
+import org.backmeup.index.sharing.execution.SharingPolicyImportNewPluginDataTaskLauncher;
 import org.backmeup.index.sharing.execution.SharingPolicyUpToDateCheckerTask;
 import org.backmeup.index.sharing.policy.SharingPolicyManager;
 import org.slf4j.Logger;
@@ -22,13 +22,16 @@ public class IndexManagerLifeCycle {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Inject
+    private TestMyTaskCaller temp;
+
+    @Inject
     private IndexManager indexManager;
     @Inject
     private IndexCoreGarbageCollector cleanupTask;
     @Inject
     private IndexDocumentDropOffQueue queue;
     @Inject
-    private SharingPolicyImportNewPluginDataTask distributeNew;
+    private SharingPolicyImportNewPluginDataTaskLauncher distributeNew;
     @Inject
     private SharingPolicyUpToDateCheckerTask distributeExisting;
     @Inject
@@ -46,6 +49,8 @@ public class IndexManagerLifeCycle {
         this.sharingPolicyManager.startupSharingPolicyManager();
 
         this.cleanupTask.init();
+
+        this.temp.init();
 
         this.queue.startupDroOffQueue();
 
@@ -72,6 +77,8 @@ public class IndexManagerLifeCycle {
         this.distributeNew.shutdownSharingPolicyExecution();
 
         this.queue.shutdownDroOffQueue();
+
+        this.temp.end();
 
         this.cleanupTask.end();
 

@@ -23,14 +23,12 @@ public class IndexContentUpdateTask {
     @Inject
     private IndexContentManager contentManager;
 
-    //TODO add this method to the LifeCycle!
     @RunRequestScoped
     public void startupCheckingForContentUpdates() {
         startChecking();
         this.log.debug("startup() IndexDocumentCheckForImports (ApplicationScoped) completed");
     }
 
-    //TODO add this method to the LifeCycle!
     @RunRequestScoped
     public void shutdownCheckingForContentUpdates() {
         stopChecking();

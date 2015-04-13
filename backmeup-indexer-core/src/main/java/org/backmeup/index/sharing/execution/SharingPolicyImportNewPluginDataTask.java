@@ -2,8 +2,6 @@ package org.backmeup.index.sharing.execution;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -26,11 +24,9 @@ import org.slf4j.LoggerFactory;
  * 
  */
 @ApplicationScoped
-public class SharingPolicyImportNewPluginDataTask {
+public class SharingPolicyImportNewPluginDataTask implements Runnable {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private final ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
-    private int SECONDS_BETWEEN_RECHECKING = 2;
 
     @Inject
     private IndexDocumentDropOffQueue queue;
@@ -39,31 +35,10 @@ public class SharingPolicyImportNewPluginDataTask {
     @Inject
     private SharingPolicyManager manager;
 
+    @Override
     @RunRequestScoped
-    public void startupSharingPolicyExecution() {
-        startPolicyExecutionFromQueueData();
-        this.log.debug("startup() SharingPolicyImportNewPluginDataTask (ApplicationScoped) completed");
-    }
-
-    @RunRequestScoped
-    public void shutdownSharingPolicyExecution() {
-        stopPolicyExecutionFromQueueData();
-        this.log.debug("shutdown() SharingPolicyImportNewPluginDataTask (ApplicationScoped) completed");
-    }
-
-    private void startPolicyExecutionFromQueueData() {
-
-        this.exec.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                fetchDataFromQueue();
-            }
-        }, this.SECONDS_BETWEEN_RECHECKING, this.SECONDS_BETWEEN_RECHECKING, java.util.concurrent.TimeUnit.SECONDS);
-    }
-
-    public void stopPolicyExecutionFromQueueData() {
-        this.log.debug("SharingPolicyImportNewPluginDataTask stopping index-plugin data distribution thread");
-        this.exec.shutdownNow();
+    public void run() {
+        fetchDataFromQueue();
     }
 
     /**
@@ -118,15 +93,6 @@ public class SharingPolicyImportNewPluginDataTask {
             //check the different sharing policies and create according import tasks for doc
             this.policyExecution.executeImportSharingParnter(policy, doc);
         }
-    }
-
-    /**
-     * Used for JUnit Tests to modify the default value
-     * 
-     * @param seconds
-     */
-    protected void setFrequency(int seconds) {
-        this.SECONDS_BETWEEN_RECHECKING = seconds;
     }
 
 }
