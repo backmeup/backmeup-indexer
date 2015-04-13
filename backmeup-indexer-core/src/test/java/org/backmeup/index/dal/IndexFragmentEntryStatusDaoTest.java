@@ -41,8 +41,10 @@ public class IndexFragmentEntryStatusDaoTest {
 
     @Test
     public void getAllByUser() {
-        persistTestData();
         List<IndexFragmentEntryStatus> found = this.statusDao.getAllFromUser(this.user1);
+        assertTrue(found.size() == 0);
+        persistTestData();
+        found = this.statusDao.getAllFromUser(this.user1);
         assertTrue(found.size() == 2);
         //assert on sort order, first in first out
         assertTrue(found.get(0).getId() < found.get(1).getId());
@@ -207,8 +209,8 @@ public class IndexFragmentEntryStatusDaoTest {
     @Test
     public void getAllByUserAndDocumentUUIDByDocumentOwner() {
         persistTestData();
-        IndexFragmentEntryStatus found = this.statusDao.getByUserAndDocumentUUIDByDocumentOwner(this.user1,
-                this.user1, this.uuid1, StatusType.WAITING_FOR_IMPORT);
+        IndexFragmentEntryStatus found = this.statusDao.getByUserAndDocumentUUIDByDocumentOwner(this.user1, this.user1,
+                this.uuid1, StatusType.WAITING_FOR_IMPORT);
         assertNotNull(found);
 
         found = this.statusDao.getByUserOwnedAndDocumentUUID(this.user1, this.uuid1, StatusType.WAITING_FOR_IMPORT);

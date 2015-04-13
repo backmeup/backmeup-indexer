@@ -35,6 +35,7 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
     private QueuedIndexDocumentDao queuedIndexDocsDao;
     private IndexDocumentDropOffQueue queue;
     private SharingPolicyImportNewPluginDataTask policyExecutionTask;
+    private SharingPolicyImportNewPluginDataTaskLauncher policyExecutionTaskLauncher;
     private SharingPolicyExecution policyExecution;
     private SharingPolicyManager policyManager;
 
@@ -52,7 +53,7 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
 
     @After
     public void after() {
-        this.policyExecutionTask.shutdownSharingPolicyExecution();
+        this.policyExecutionTaskLauncher.shutdownSharingPolicyExecution();
         cleanupTestData();
     }
 
@@ -170,7 +171,7 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
         //start the distribution thread
         try {
             this.database.entityManager.getTransaction().begin();
-            this.policyExecutionTask.startupSharingPolicyExecution();
+            this.policyExecutionTaskLauncher.startupSharingPolicyExecution();
             Thread.sleep(2000);
             this.database.entityManager.getTransaction().commit();
         } catch (InterruptedException e) {
@@ -189,10 +190,13 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
         Whitebox.setInternalState(this.policyExecution, "entryStatusDao", this.database.statusDao);
 
         this.policyExecutionTask = new SharingPolicyImportNewPluginDataTask();
-        this.policyExecutionTask.setFrequency(1);
+        this.policyExecutionTaskLauncher = new SharingPolicyImportNewPluginDataTaskLauncher();
+        this.policyExecutionTaskLauncher.setFrequency(1);
+
         Whitebox.setInternalState(this.policyExecutionTask, "queue", this.queue);
         Whitebox.setInternalState(this.policyExecutionTask, "policyExecution", this.policyExecution);
         Whitebox.setInternalState(this.policyExecutionTask, "manager", this.policyManager);
+        Whitebox.setInternalState(this.policyExecutionTaskLauncher, "task", this.policyExecutionTask);
 
         createQueueInputData();
         createSharingPolicyData();

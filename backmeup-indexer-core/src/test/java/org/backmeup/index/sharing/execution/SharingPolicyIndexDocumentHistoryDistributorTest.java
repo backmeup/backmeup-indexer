@@ -43,6 +43,7 @@ public class SharingPolicyIndexDocumentHistoryDistributorTest extends IndexDocum
     private QueuedIndexDocumentDao queuedIndexDocsDao;
     private IndexDocumentDropOffQueue queue;
     private SharingPolicyImportNewPluginDataTask distributeNewTask;
+    private SharingPolicyImportNewPluginDataTaskLauncher distributeNewTaskLauncher;
     private SharingPolicyUpToDateCheckerTask distributeExistingTask;
     private SharingPolicyExecution policyExecution;
     private SharingPolicyManager policyManager;
@@ -57,9 +58,9 @@ public class SharingPolicyIndexDocumentHistoryDistributorTest extends IndexDocum
     @Before
     public void before() {
         this.currentTime = new Date().getTime();
-
+        this.distributeNewTaskLauncher = new SharingPolicyImportNewPluginDataTaskLauncher();
         this.distributeNewTask = new SharingPolicyImportNewPluginDataTask();
-        this.distributeNewTask.setFrequency(1);
+        this.distributeNewTaskLauncher.setFrequency(1);
         this.distributeExistingTask = new SharingPolicyUpToDateCheckerTask();
         this.distributeExistingTask.setFrequency(1);
         setupWhiteboxTest();
@@ -67,7 +68,7 @@ public class SharingPolicyIndexDocumentHistoryDistributorTest extends IndexDocum
 
     @After
     public void after() {
-        this.distributeNewTask.shutdownSharingPolicyExecution();
+        this.distributeNewTaskLauncher.shutdownSharingPolicyExecution();
         this.distributeExistingTask.shutdownSharingPolicyExecution();
         cleanupTestData();
     }
@@ -132,7 +133,7 @@ public class SharingPolicyIndexDocumentHistoryDistributorTest extends IndexDocum
         try {
             this.database.entityManager.getTransaction().begin();
             this.distributeExistingTask.startupSharingPolicyExecution();
-            this.distributeNewTask.startupSharingPolicyExecution();
+            this.distributeNewTaskLauncher.startupSharingPolicyExecution();
             Thread.sleep(4000);
             this.database.entityManager.getTransaction().commit();
         } catch (InterruptedException e) {

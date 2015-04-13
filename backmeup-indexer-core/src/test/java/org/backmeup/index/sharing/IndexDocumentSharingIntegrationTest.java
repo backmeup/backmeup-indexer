@@ -15,6 +15,7 @@ import org.backmeup.index.model.User;
 import org.backmeup.index.sharing.execution.IndexContentUpdateTask;
 import org.backmeup.index.sharing.execution.IndexDocumentDropOffQueue;
 import org.backmeup.index.sharing.execution.SharingPolicyImportNewPluginDataTask;
+import org.backmeup.index.sharing.execution.SharingPolicyImportNewPluginDataTaskLauncher;
 import org.backmeup.index.sharing.policy.SharingPolicies;
 import org.backmeup.index.storage.ThemisDataSink;
 import org.junit.After;
@@ -27,6 +28,7 @@ public class IndexDocumentSharingIntegrationTest extends IndexManagerIntegration
 
     private IndexDocumentDropOffQueue droppOffqueue;
     private QueuedIndexDocumentDao queuedIndexDocsDao;
+    private SharingPolicyImportNewPluginDataTaskLauncher distributorLauncher;
     private SharingPolicyImportNewPluginDataTask distributor;
     private IndexContentUpdateTask checkImports;
 
@@ -71,17 +73,20 @@ public class IndexDocumentSharingIntegrationTest extends IndexManagerIntegration
     @After
     public void afterTest() {
         this.checkImports.shutdownCheckingForContentUpdates();
-        this.distributor.shutdownSharingPolicyExecution();
+        this.distributorLauncher.shutdownSharingPolicyExecution();
         cleanupTestData();
     }
 
     private void setupWhiteboxTest() {
         this.droppOffqueue = new IndexDocumentDropOffQueue();
         this.distributor = new SharingPolicyImportNewPluginDataTask();
+        this.distributorLauncher = new SharingPolicyImportNewPluginDataTaskLauncher();
         this.checkImports = new IndexContentUpdateTask();
         this.queuedIndexDocsDao = this.database.queuedIndexDocsDao;
+
         Whitebox.setInternalState(this.droppOffqueue, "dao", this.queuedIndexDocsDao);
         Whitebox.setInternalState(this.distributor, "queue", this.droppOffqueue);
+        Whitebox.setInternalState(this.distributorLauncher, "task", this.distributor);
     }
 
     private void cleanupTestData() {
