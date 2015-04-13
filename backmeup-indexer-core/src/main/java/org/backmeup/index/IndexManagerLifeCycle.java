@@ -22,9 +22,6 @@ public class IndexManagerLifeCycle {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Inject
-    private TestMyTaskCaller temp;
-
-    @Inject
     private IndexManager indexManager;
     @Inject
     private IndexCoreGarbageCollector cleanupTask;
@@ -49,8 +46,6 @@ public class IndexManagerLifeCycle {
         this.sharingPolicyManager.startupSharingPolicyManager();
 
         this.cleanupTask.init();
-
-        this.temp.init();
 
         this.queue.startupDroOffQueue();
 
@@ -77,8 +72,6 @@ public class IndexManagerLifeCycle {
         this.distributeNew.shutdownSharingPolicyExecution();
 
         this.queue.shutdownDroOffQueue();
-
-        this.temp.end();
 
         this.cleanupTask.end();
 
