@@ -42,7 +42,7 @@ public class IndexDocumentUpload implements IndexDocumentUploadServer {
     }
 
     private void mandatory(IndexDocument doc) {
-        if (doc == null || doc.getFields().containsKey(IndexFields.FIELD_OWNER_ID)) {
+        if (doc == null || (!doc.getFields().containsKey(IndexFields.FIELD_OWNER_ID))) {
             badRequestMissingIndexDocument();
         }
     }
