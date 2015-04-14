@@ -10,6 +10,8 @@ import org.backmeup.index.api.IndexFields;
 public class SearchEntry {
 
     private String fileId;
+    private String ownerId; //the user/sharingpartner that provides this record 
+    private boolean isSharing;
     private Date timeStamp;
     private String title;
     private String type;
@@ -27,10 +29,12 @@ public class SearchEntry {
     public SearchEntry() {
     }
 
-    public SearchEntry(String fileId, Date timeStamp, String type, String title, String downloadUrl,
-            String thumbnailUrl, String datasource, String datasink, String jobName, String preview,
-            Map<String, String> properties, Map<String, String> metadata) {
+    public SearchEntry(String fileId, String ownerId, boolean isSharing, Date timeStamp, String type, String title,
+            String downloadUrl, String thumbnailUrl, String datasource, String datasink, String jobName,
+            String preview, Map<String, String> properties, Map<String, String> metadata) {
         this.fileId = fileId;
+        this.ownerId = ownerId;
+        this.isSharing = isSharing;
         this.timeStamp = timeStamp;
         this.title = title;
         this.setType(type);
@@ -180,6 +184,22 @@ public class SearchEntry {
         this.datasinkId = datasinkId;
     }
 
+    public String getOwnerId() {
+        return this.ownerId;
+    }
+
+    public void setOwnerId(String userId) {
+        this.ownerId = userId;
+    }
+
+    public boolean getIsSharing() {
+        return this.isSharing;
+    }
+
+    public void setIsSharing(boolean isSharing) {
+        this.isSharing = isSharing;
+    }
+
     public void copyPropertyIfExist(String key, Map<String, Object> source) {
         if (source.get(key) != null) {
             setProperty(key, source.get(key).toString());
@@ -203,11 +223,12 @@ public class SearchEntry {
 
     @Override
     public String toString() {
-        return "SearchEntry [fileId=" + this.fileId + ", timeStamp=" + this.timeStamp + ", title=" + this.title
-                + ", type=" + this.type + ", thumbnailUrl=" + this.thumbnailUrl + ", datasource=" + this.datasource
-                + ", datasourceId=" + this.datasourceId + ", datasink=" + this.datasink + ", datasinkId="
-                + this.datasinkId + ", jobName=" + this.jobName + ", preview=" + this.preview + ", properties=["
-                + this.properties + "], metadata=[" + this.metadata + "]";
+        return "SearchEntry [fileId=" + this.fileId + ", ownerId=" + this.ownerId + ", isSahring=" + this.isSharing
+                + ", timeStamp=" + this.timeStamp + ", title=" + this.title + ", type=" + this.type + ", thumbnailUrl="
+                + this.thumbnailUrl + ", datasource=" + this.datasource + ", datasourceId=" + this.datasourceId
+                + ", datasink=" + this.datasink + ", datasinkId=" + this.datasinkId + ", jobName=" + this.jobName
+                + ", preview=" + this.preview + ", properties=[" + this.properties + "], metadata=[" + this.metadata
+                + "]";
     }
 
 }

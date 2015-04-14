@@ -120,11 +120,18 @@ class IndexUtils {
 
             SearchEntry entry = new SearchEntry();
 
-            // We're constructing a (reasonably) unique ID using owner, hash and timestamp
-            entry.setFileId(owner + ":" + hash + ":" + timestamp);
+            // We're using the document UUID which is required for sharing
+            entry.setFileId(source.get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString());
             entry.setTitle(source.get(IndexFields.FIELD_FILENAME).toString());
             entry.setTimeStamp(new Date(timestamp));
-
+            if (source.get(IndexFields.FIELD_SHARED_BY_USER_ID) == null) {
+                //we only set the shared_by field in elements that weren't produced by the current user
+                entry.setOwnerId(source.get(IndexFields.FIELD_OWNER_ID).toString());
+                entry.setIsSharing(false);
+            } else {
+                entry.setOwnerId(source.get(IndexFields.FIELD_SHARED_BY_USER_ID).toString());
+                entry.setIsSharing(true);
+            }
             if (source.get(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_ID) != null) {
                 String sID = source.get(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_ID).toString();
                 entry.setDatasourceId(sID);
