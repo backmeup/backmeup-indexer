@@ -64,10 +64,7 @@ public class SharingPolicy2DocumentUUIDConverter {
                         StatusType.WAITING_FOR_IMPORT);
 
         //calculate delta - remove all elements that have already been imported
-        currUserUUIDs.removeAll(sharingPUUIDs);
-        for (IndexFragmentEntryStatus status : currUserUUIDs) {
-            ret.add(status.getDocumentUUID());
-        }
+        ret = removeDelta(currUserUUIDs, sharingPUUIDs);
         return ret;
     }
 
@@ -93,10 +90,7 @@ public class SharingPolicy2DocumentUUIDConverter {
                         policy.getPolicyCreationDate(), StatusType.IMPORTED, StatusType.WAITING_FOR_IMPORT);
 
         //calculate delta - remove all elements that have already been imported
-        currUserUUIDs.removeAll(sharingPUUIDs);
-        for (IndexFragmentEntryStatus status : currUserUUIDs) {
-            ret.add(status.getDocumentUUID());
-        }
+        ret = removeDelta(currUserUUIDs, sharingPUUIDs);
         return ret;
     }
 
@@ -121,9 +115,34 @@ public class SharingPolicy2DocumentUUIDConverter {
                 sharingPartner, currentUser, backupJobID, StatusType.IMPORTED, StatusType.WAITING_FOR_IMPORT);
 
         //calculate delta - remove all elements that have already been imported
-        currUserUUIDs.removeAll(sharingPUUIDs);
+        ret = removeDelta(currUserUUIDs, sharingPUUIDs);
+        return ret;
+    }
+
+    /**
+     * Calculates the Delta by UUID key comparison and removes elements from currUserUUIDs that already are contained in
+     * sharedUserUUIDs and returns the delta as list
+     * 
+     * @param currUserUUIDs
+     * @param sharedUserUUIDs
+     * @return
+     */
+    private List<UUID> removeDelta(List<IndexFragmentEntryStatus> currUserUUIDs,
+            List<IndexFragmentEntryStatus> sharedUserUUIDs) {
+        List<UUID> ret = new ArrayList<UUID>();
+        //add all and then remove existing ones
         for (IndexFragmentEntryStatus status : currUserUUIDs) {
             ret.add(status.getDocumentUUID());
+        }
+        for (IndexFragmentEntryStatus shFragm : sharedUserUUIDs) {
+            UUID shUUID = shFragm.getDocumentUUID();
+            for (IndexFragmentEntryStatus ownFragm : currUserUUIDs) {
+                UUID ownUUID = ownFragm.getDocumentUUID();
+                if (ownUUID.equals(shUUID)) {
+                    //UUID comparison, if already existing exclude from delta 
+                    ret.remove(ownUUID);
+                }
+            }
         }
 
         return ret;

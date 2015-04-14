@@ -12,6 +12,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.backmeup.index.model.User;
+import org.hibernate.annotations.Type;
 
 /**
  * A DB record on the status of a specific IndexDocument regarding its status in ElasticSearch e.g. if it is waiting for
@@ -32,6 +33,7 @@ public class IndexFragmentEntryStatus {
     private Long Id;
     @Enumerated(EnumType.STRING)
     private StatusType statusType;
+    @Type(type = "uuid-char")
     private UUID documentUUID;
     private Long userID;
     private Long jobID;

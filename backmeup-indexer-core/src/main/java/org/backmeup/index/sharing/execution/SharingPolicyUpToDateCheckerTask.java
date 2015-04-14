@@ -59,7 +59,6 @@ public class SharingPolicyUpToDateCheckerTask implements Runnable {
         for (User activeUser : this.activeUsers.getActiveUsers()) {
             //iterate over all policies for this given user
             for (SharingPolicy policy : this.manager.getAllActivePoliciesOwnedByUser(activeUser)) {
-                //TODO add a threshold on policy.getPolicyLastCheckedDate(), e.g. only recheck every 5 Minutes
                 List<UUID> missingImports = this.pol2uuidConverter.getMissingDeltaToImportForSharingPartner(policy);
                 this.log.debug("found a delta of: " + missingImports.size() + " missing imports for policy: "
                         + policy.toString());

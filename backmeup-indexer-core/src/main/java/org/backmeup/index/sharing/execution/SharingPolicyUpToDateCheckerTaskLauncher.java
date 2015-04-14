@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 @ApplicationScoped
 public class SharingPolicyUpToDateCheckerTaskLauncher {
 
-    private int SECONDS_BETWEEN_RECHECKING = 120;
+    private int SECONDS_BETWEEN_RECHECKING = 60;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
