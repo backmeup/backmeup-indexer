@@ -16,6 +16,7 @@ import org.backmeup.index.sharing.policy.SharingPolicy2DocumentUUIDConverter;
 import org.backmeup.index.sharing.policy.SharingPolicyManager;
 import org.backmeup.index.storage.ThemisEncryptedPartition;
 import org.backmeup.index.storage.ThemisEncryptedPartition.IndexFragmentType;
+import org.backmeup.index.utils.cdi.RunRequestScoped;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +40,7 @@ public class SharingPolicyUpToDateCheckerTask implements Runnable {
     private SharingPolicyManager manager;
 
     @Override
+    @RunRequestScoped
     public void run() {
         checkExistingPolicies();
     }

@@ -67,6 +67,8 @@ public class IndexContentManager {
             this.entryStatusDao.merge(importTask);
             //4. finally move the serialized Index Document to the encrypted partition
             moveFragmentToEncryptedUserStorage(doc, user, importTask.isUserOwned());
+            this.log.debug("Import index fragment " + importTask.getDocumentUUID() + " for user " + user.id()
+                    + " completed");
 
         } catch (ContentUpdateException | SearchInstanceException e) {
             this.log.debug("Failed to execute content import task", e);
@@ -111,6 +113,8 @@ public class IndexContentManager {
             try (IndexClient indexClient = new ElasticSearchIndexClient(user,
                     this.indexManager.initAndCreateAndDoEverthing(user))) {
                 indexClient.index(doc);
+                this.log.debug("document indexed by ElasticSearch. userID=" + user.id() + " document: "
+                        + Json.serialize(doc));
             }
 
         } catch (SearchInstanceException e) {

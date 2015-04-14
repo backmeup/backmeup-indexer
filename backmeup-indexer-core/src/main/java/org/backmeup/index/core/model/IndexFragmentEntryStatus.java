@@ -105,7 +105,7 @@ public class IndexFragmentEntryStatus {
      * @return
      */
     public boolean isUserOwned() {
-        if (this.userID == this.ownerID) {
+        if (this.userID.longValue() == this.ownerID.longValue()) {
             return true;
         }
         return false;
