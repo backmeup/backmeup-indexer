@@ -4,10 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.backmeup.index.api.IndexFields;
+import org.backmeup.index.core.elasticsearch.CommandLineUtils;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
 import org.backmeup.index.serializer.Json;
@@ -59,9 +61,12 @@ public class ThemisEncryptedPartition {
         String serializedIndexDoc = Json.serialize(indexFragment);
         if (serializedIndexDoc != null) {
 
-            FileUtils.writeStringToFile(
-                    new File(getIndexFragmentStorageZone(mountedDrive) + "/" + type.getStorageLocation() + uuid
-                            + ".serindexdocument"), serializedIndexDoc);
+            File f = new File(getIndexFragmentStorageZone(mountedDrive) + "/" + type.getStorageLocation() + uuid
+                    + ".serindexdocument");
+            if (!f.getParentFile().exists()) {
+                mkDirs(f.getParentFile());
+            }
+            FileUtils.writeStringToFile(f, serializedIndexDoc);
             return uuid;
 
         }
@@ -137,4 +142,36 @@ public class ThemisEncryptedPartition {
         }
     }
 
+    private static void mkDirs(File f) {
+        if (SystemUtils.IS_OS_LINUX) {
+            String command = "sudo mkdir -p " + f.getAbsolutePath();
+            try {
+                int exitVal = CommandLineUtils.executeCommandLine(command, 2, TimeUnit.SECONDS);
+                if (exitVal != 0) {
+                    throw new IllegalArgumentException("error executing command " + command + " exit value: " + exitVal);
+                }
+                //encrypted partition runs as root user. change owner of the top level folder and all files in it 
+                //to tomcat7 user and group so the application can read/create files
+                chownRTomcat7(f);
+            } catch (IOException e) {
+                throw new IllegalArgumentException("error executing command " + command, e);
+            }
+        } else {
+            f.mkdirs();
+        }
+    }
+
+    private static void chownRTomcat7(File f) {
+        if (SystemUtils.IS_OS_LINUX) {
+            String command = "sudo chown -R tomcat7:tomcat7 " + f.getAbsolutePath();
+            try {
+                int exitVal = CommandLineUtils.executeCommandLine(command, 2, TimeUnit.SECONDS);
+                if (exitVal != 0) {
+                    throw new IllegalArgumentException("error executing command " + command + " exit value: " + exitVal);
+                }
+            } catch (IOException e) {
+                throw new IllegalArgumentException("error executing command " + command, e);
+            }
+        }
+    }
 }
