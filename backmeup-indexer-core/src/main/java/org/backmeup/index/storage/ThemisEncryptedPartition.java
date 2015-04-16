@@ -59,9 +59,12 @@ public class ThemisEncryptedPartition {
         String serializedIndexDoc = Json.serialize(indexFragment);
         if (serializedIndexDoc != null) {
 
-            FileUtils.writeStringToFile(
-                    new File(getIndexFragmentStorageZone(mountedDrive) + "/" + type.getStorageLocation() + uuid
-                            + ".serindexdocument"), serializedIndexDoc);
+            File f = new File(getIndexFragmentStorageZone(mountedDrive) + "/" + type.getStorageLocation() + uuid
+                    + ".serindexdocument");
+            if (!f.getParentFile().exists()) {
+                mkDirs(f.getParentFile());
+            }
+            FileUtils.writeStringToFile(f, serializedIndexDoc);
             return uuid;
 
         }
@@ -135,6 +138,10 @@ public class ThemisEncryptedPartition {
         } else {
             throw new IOException("Mounted data partition: " + driveLetter + " not accessible");
         }
+    }
+
+    private static void mkDirs(File f) {
+        f.mkdirs();
     }
 
 }
