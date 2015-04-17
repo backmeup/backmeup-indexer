@@ -3,6 +3,7 @@ package org.backmeup.index.client.rest;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Set;
+import java.util.UUID;
 
 import org.backmeup.index.api.IndexClient;
 import org.backmeup.index.api.IndexServer;
@@ -27,38 +28,44 @@ public class RestApiIndexClient implements IndexClient {
     }
 
     @Override
-    public SearchResultAccumulator queryBackup(String query, String filterBySource, String filterByType, String filterByJob, String username) {
-        return server.query(userId, query, filterBySource, filterByType, filterByJob, username);
+    public SearchResultAccumulator queryBackup(String query, String filterBySource, String filterByType,
+            String filterByJob, String username) {
+        return this.server.query(this.userId, query, filterBySource, filterByType, filterByJob, username);
     }
 
     @Override
     public Set<FileItem> searchAllFileItemsForJob(Long jobId) {
-        return server.filesForJob(userId, jobId);
+        return this.server.filesForJob(this.userId, jobId);
     }
 
     @Override
     public FileInfo getFileInfoForFile(String fileId) {
-        return server.fileInfoForFile(userId, fileId);
+        return this.server.fileInfoForFile(this.userId, fileId);
     }
 
     @Override
     public String getThumbnailPathForFile(String fileId) {
-        return server.thumbnailPathForFile(userId, fileId);
+        return this.server.thumbnailPathForFile(this.userId, fileId);
     }
 
     @Override
     public void deleteRecordsForUser() {
-        server.delete(userId, null, null);
+        this.server.delete(this.userId, null, null);
     }
 
     @Override
-    public void deleteRecordsForJobAndTimestamp(Long jobId, Date timestamp) {
-        server.delete(userId, jobId, timestamp);
+    public void deleteRecordsForUserAndJobAndTimestamp(Long jobId, Date timestamp) {
+        this.server.delete(this.userId, jobId, timestamp);
+    }
+
+    @Override
+    public void deleteRecordsForUserAndDocumentUUID(UUID documentUUID) {
+        // only required for the ES Client implementation not the REST API
     }
 
     @Override
     public void index(IndexDocument document) throws IOException {
-        server.index(userId, document);
+        this.server.index(this.userId, document);
     }
 
     @Override

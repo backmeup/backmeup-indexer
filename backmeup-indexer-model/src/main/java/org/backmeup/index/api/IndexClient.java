@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Set;
+import java.util.UUID;
 
 import org.backmeup.index.model.FileInfo;
 import org.backmeup.index.model.FileItem;
@@ -28,7 +29,14 @@ public interface IndexClient extends Closeable {
 
     void deleteRecordsForUser();
 
-    void deleteRecordsForJobAndTimestamp(Long jobId, Date timestamp);
+    /**
+     * Removes a given index fragment via its document UUID from the user's index
+     * 
+     * @param documentUUID
+     */
+    public void deleteRecordsForUserAndDocumentUUID(UUID documentUUID);
+
+    void deleteRecordsForUserAndJobAndTimestamp(Long jobId, Date timestamp);
 
     /**
      * starts the physical indexing process for a given document. i.e. spins up a private Index instance (e.g. ES) and

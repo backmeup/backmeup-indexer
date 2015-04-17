@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.backmeup.index.api.IndexClient;
@@ -244,7 +245,7 @@ public class ElasticSearchIndexClient implements IndexClient {
 
     @Override
     public void deleteRecordsForUser() {
-        boolean hasIndex = this.client.admin().indices().exists(new IndicesExistsRequest("indexName")).actionGet()
+        boolean hasIndex = this.client.admin().indices().exists(new IndicesExistsRequest(INDEX_NAME)).actionGet()
                 .isExists();
         if (hasIndex) {
             this.client.prepareDeleteByQuery(INDEX_NAME)
@@ -253,10 +254,19 @@ public class ElasticSearchIndexClient implements IndexClient {
     }
 
     @Override
-    public void deleteRecordsForJobAndTimestamp(Long jobId, Date timestamp) {
+    public void deleteRecordsForUserAndJobAndTimestamp(Long jobId, Date timestamp) {
         QueryBuilder qBuilder = QueryBuilders.boolQuery()
                 .must(QueryBuilders.matchQuery(IndexFields.FIELD_JOB_ID, jobId))
                 .must(QueryBuilders.matchQuery(IndexFields.FIELD_BACKUP_AT, timestamp.getTime()));
+
+        this.client.prepareDeleteByQuery(INDEX_NAME).setQuery(qBuilder).execute().actionGet();
+    }
+
+    @Override
+    public void deleteRecordsForUserAndDocumentUUID(UUID documentUUID) {
+        QueryBuilder qBuilder = QueryBuilders.boolQuery()
+                .must(QueryBuilders.matchQuery(IndexFields.FIELD_OWNER_ID, this.userId))
+                .must(QueryBuilders.matchQuery(IndexFields.FIELD_INDEX_DOCUMENT_UUID, documentUUID));
 
         this.client.prepareDeleteByQuery(INDEX_NAME).setQuery(qBuilder).execute().actionGet();
     }

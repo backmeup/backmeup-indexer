@@ -3,6 +3,7 @@ package org.backmeup.index.client.rest;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
+import java.util.UUID;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.backmeup.index.model.User;
@@ -24,8 +25,8 @@ public class RestUrlsIndex {
         this.basePath = config.basepath + "/index";
     }
 
-    public URI forQuery(User userId, String query, String filterBySource, String filterByType, String filterByJob, String username)
-            throws URISyntaxException {
+    public URI forQuery(User userId, String query, String filterBySource, String filterByType, String filterByJob,
+            String username) throws URISyntaxException {
         URIBuilder urlBuilder = startWithBaseUrl(userId, "");
         addMandatoryParameter(urlBuilder, "query", query);
         addOptionalParameter(urlBuilder, "source", filterBySource);
@@ -56,6 +57,12 @@ public class RestUrlsIndex {
         return urlBuilder.build();
     }
 
+    public URI forDelete(User userId, UUID indexFragmentUUID) throws URISyntaxException {
+        URIBuilder urlBuilder = startWithBaseUrl(userId, "");
+        addMandatoryParameter(urlBuilder, "document", indexFragmentUUID);
+        return urlBuilder.build();
+    }
+
     public URI forNewDocument(User userId) throws URISyntaxException {
         return startWithBaseUrl(userId, "").build();
     }
@@ -71,6 +78,13 @@ public class RestUrlsIndex {
             throw new IllegalArgumentException("parameter " + key + " is mandatory");
         }
         url.addParameter(key, value);
+    }
+
+    private void addMandatoryParameter(URIBuilder url, String key, UUID value) {
+        if (value == null) {
+            throw new IllegalArgumentException("parameter " + key + " is mandatory");
+        }
+        url.addParameter(key, value.toString());
     }
 
     private void addMandatoryParameter(URIBuilder url, String key, Long value) {

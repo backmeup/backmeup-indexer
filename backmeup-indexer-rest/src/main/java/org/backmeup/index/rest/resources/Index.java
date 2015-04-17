@@ -3,6 +3,7 @@ package org.backmeup.index.rest.resources;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -111,12 +112,21 @@ public class Index implements IndexServer {
         try (IndexClient indexClient = getIndexClient(userId)) {
 
             if (jobId != null && jobId != 0) {
-                indexClient.deleteRecordsForJobAndTimestamp(jobId, timestamp);
-                return "records of job deleted";
+                indexClient.deleteRecordsForUserAndJobAndTimestamp(jobId, timestamp);
+                return "index records of job " + jobId + " and timestamp " + timestamp.toString() + " deleted for user";
             }
 
             indexClient.deleteRecordsForUser();
-            return "records of user deleted";
+            return "all index records of user deleted";
+
+        }
+    }
+
+    @Override
+    public String delete(User userId, UUID indexFragmentUUID) {
+        try (IndexClient indexClient = getIndexClient(userId)) {
+            indexClient.deleteRecordsForUserAndDocumentUUID(indexFragmentUUID);
+            return "index fragment with uuid " + indexFragmentUUID + " deleted for user";
 
         }
     }
@@ -125,10 +135,31 @@ public class Index implements IndexServer {
     @Path("/{userId}")
     public Response deleteRS( //
             @PathParam("userId") User userId, //
-            @QueryParam("job") Long jobId, // optional for user and timestamp 
-            @QueryParam("time") Long timestamp) { // optional
+            @QueryParam("job") Long jobId, // delete either via user and timestamp OR
+            @QueryParam("time") Long timestamp, //
+            @QueryParam("document") UUID indexFragmentUUID) { //delete via document UUID
 
-        return status(Response.Status.ACCEPTED, delete(userId, jobId, new Date(timestamp)));
+        //scenario1: delete record for user via job and timestamp
+        if ((jobId != null) && (jobId != 0)) {
+            mandatory("job", jobId);
+            mandatory("time", timestamp);
+            return status(Response.Status.ACCEPTED, delete(userId, jobId, new Date(timestamp)));
+        }
+        if ((timestamp != null) && (timestamp != 0)) {
+            mandatory("job", jobId);
+            mandatory("time", timestamp);
+            return status(Response.Status.ACCEPTED, delete(userId, jobId, new Date(timestamp)));
+        }
+
+        //scenario2: delete record fors user via document uuid
+        if (indexFragmentUUID != null) {
+            mandatory("document", indexFragmentUUID);
+            return status(Response.Status.ACCEPTED, delete(userId, indexFragmentUUID));
+        }
+
+        //scenario3: no parameters used, delete entire index for user
+        return status(Response.Status.ACCEPTED, delete(userId, null, null));
+
     }
 
     @Override
@@ -156,6 +187,12 @@ public class Index implements IndexServer {
 
     private void mandatory(String name, String value) {
         if (value == null || value.isEmpty()) {
+            badRequestMissingParameter(name);
+        }
+    }
+
+    private void mandatory(String name, UUID value) {
+        if (value == null || value.toString().isEmpty()) {
             badRequestMissingParameter(name);
         }
     }

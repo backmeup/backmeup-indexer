@@ -3,6 +3,7 @@ package org.backmeup.index.api;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Set;
+import java.util.UUID;
 
 import org.backmeup.index.model.FileInfo;
 import org.backmeup.index.model.FileItem;
@@ -27,6 +28,8 @@ public interface IndexServer {
     String thumbnailPathForFile(User userId, String fileId);
 
     String delete(User userId, Long jobId, Date timestamp);
+
+    String delete(User userId, UUID indexFragmentUUID);
 
     /**
      * starts the physical indexing process for a given document. i.e. spins up a private Index instance (e.g. ES) and

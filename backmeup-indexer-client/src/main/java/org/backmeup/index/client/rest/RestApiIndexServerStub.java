@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.Set;
+import java.util.UUID;
 
 import org.backmeup.index.api.IndexServer;
 import org.backmeup.index.client.IndexClientException;
@@ -26,16 +27,16 @@ public class RestApiIndexServerStub implements IndexServer {
     private final RestUrlsIndex urls;
 
     public RestApiIndexServerStub(RestApiConfig config) {
-        urls = new RestUrlsIndex(config);
+        this.urls = new RestUrlsIndex(config);
     }
 
     @Override
-    public SearchResultAccumulator query(User userId, String query, String filterBySource, String filterByType, String filterByJob,
-            String username) {
+    public SearchResultAccumulator query(User userId, String query, String filterBySource, String filterByType,
+            String filterByJob, String username) {
         try {
 
-            URI url = urls.forQuery(userId, query, filterBySource, filterByType, filterByJob, username);
-            String body = http.get(url, 200);
+            URI url = this.urls.forQuery(userId, query, filterBySource, filterByType, filterByJob, username);
+            String body = this.http.get(url, 200);
             return Json.deserialize(body, SearchResultAccumulator.class);
 
         } catch (IOException | URISyntaxException e) {
@@ -47,8 +48,8 @@ public class RestApiIndexServerStub implements IndexServer {
     public Set<FileItem> filesForJob(User userId, Long jobId) {
         try {
 
-            URI url = urls.forFilesOfJob(userId, jobId);
-            String body = http.get(url, 200);
+            URI url = this.urls.forFilesOfJob(userId, jobId);
+            String body = this.http.get(url, 200);
             return Json.deserializeSetOfFileItems(body);
 
         } catch (IOException | URISyntaxException e) {
@@ -60,8 +61,8 @@ public class RestApiIndexServerStub implements IndexServer {
     public FileInfo fileInfoForFile(User userId, String fileId) {
         try {
 
-            URI url = urls.forFileInfo(userId, fileId);
-            String body = http.get(url, 200);
+            URI url = this.urls.forFileInfo(userId, fileId);
+            String body = this.http.get(url, 200);
             return Json.deserialize(body, FileInfo.class);
 
         } catch (IOException | URISyntaxException e) {
@@ -73,8 +74,8 @@ public class RestApiIndexServerStub implements IndexServer {
     public String thumbnailPathForFile(User userId, String fileId) {
         try {
 
-            URI url = urls.forThumbnail(userId, fileId);
-            String body = http.get(url, 200);
+            URI url = this.urls.forThumbnail(userId, fileId);
+            String body = this.http.get(url, 200);
             return body;
 
         } catch (IOException | URISyntaxException e) {
@@ -86,8 +87,20 @@ public class RestApiIndexServerStub implements IndexServer {
     public String delete(User userId, Long jobId, Date timestamp) {
         try {
 
-            URI url = urls.forDelete(userId, jobId, timestamp);
-            String body = http.delete(url, 202);
+            URI url = this.urls.forDelete(userId, jobId, timestamp);
+            String body = this.http.delete(url, 202);
+            return body;
+
+        } catch (IOException | URISyntaxException e) {
+            throw failedToContactServer(e);
+        }
+    }
+
+    @Override
+    public String delete(User userId, UUID indexFragmentUUID) {
+        try {
+            URI url = this.urls.forDelete(userId, indexFragmentUUID);
+            String body = this.http.delete(url, 202);
             return body;
 
         } catch (IOException | URISyntaxException e) {
@@ -99,9 +112,9 @@ public class RestApiIndexServerStub implements IndexServer {
     public String index(User userId, IndexDocument document) throws IOException {
         try {
 
-            URI url = urls.forNewDocument(userId);
+            URI url = this.urls.forNewDocument(userId);
             String jsonPayload = Json.serialize(document);
-            String body = http.post(url, jsonPayload, 201);
+            String body = this.http.post(url, jsonPayload, 201);
             return body;
 
         } catch (URISyntaxException e) {
