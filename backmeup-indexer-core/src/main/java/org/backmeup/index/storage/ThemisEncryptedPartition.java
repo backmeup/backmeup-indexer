@@ -9,10 +9,10 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.backmeup.index.api.IndexFields;
-import org.backmeup.index.core.elasticsearch.CommandLineUtils;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
 import org.backmeup.index.serializer.Json;
+import org.backmeup.index.utils.cmd.CommandLineUtils;
 
 /**
  * Simplifies access to the already mounted TrueCrypt partition for a given user

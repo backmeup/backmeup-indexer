@@ -25,6 +25,7 @@ import org.backmeup.index.core.elasticsearch.tokenreader.MapTokenResolver;
 import org.backmeup.index.core.elasticsearch.tokenreader.TokenReplaceReader;
 import org.backmeup.index.core.model.RunningIndexUserConfig;
 import org.backmeup.index.model.User;
+import org.backmeup.index.utils.cmd.CommandLineUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

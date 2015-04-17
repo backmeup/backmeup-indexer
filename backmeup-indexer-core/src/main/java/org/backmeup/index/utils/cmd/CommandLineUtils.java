@@ -1,4 +1,4 @@
-package org.backmeup.index.core.elasticsearch;
+package org.backmeup.index.utils.cmd;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -101,7 +101,7 @@ public class CommandLineUtils {
                 pid = f.getInt(p);
 
             } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-                log.debug("Issue getting PID of ElasticSearch " + e.toString());
+                log.debug("Issue getting PID of CommandLine call " + e.toString());
             }
         }
         if (SystemUtils.IS_OS_WINDOWS) {
@@ -114,10 +114,10 @@ public class CommandLineUtils {
                 handle.setPointer(Pointer.createConstant(handLong));
                 pid = kernel.GetProcessId(handle);
             } catch (Exception e) {
-                log.debug("Issue getting PID of ElasticSearch " + e.toString());
+                log.debug("Issue getting PID of CommandLine call " + e.toString());
             }
         }
-        log.debug("Executing ElasticSearch with PID of " + pid);
+        log.debug("Executing CommandLine call with PID of " + pid);
         return pid;
     }
 

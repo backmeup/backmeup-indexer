@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.apache.commons.lang.SystemUtils;
 import org.backmeup.index.config.Configuration;
+import org.backmeup.index.utils.cmd.CommandLineUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,7 +86,8 @@ class TCMountHandler {
         }
 
         command = createMountCommand(tcVolume, driveLetter, password);
-        executeCmd(command);
+        int PID = executeCmd(command);
+        log.debug("executed command: " + command + " TrueCrypt PID: " + PID);
         //    throw new IOException("Failed to mount tc voulume: " + tcVolume.getAbsolutePath());
 
         // wait until mouinted at max 5 sec
@@ -108,12 +110,12 @@ class TCMountHandler {
         return driveLetter;
     }
 
-    private static void executeCmd(String command) throws IOException, InterruptedException {
+    private static int executeCmd(String command) throws IOException, InterruptedException {
         try {
             // Execute the call
             log.debug("executing: " + command);
             Process process = Runtime.getRuntime().exec(command);
-            // TODO ProcessBuilder?
+            // TODO Switch to using CommandLineUtils class to execute calls and use the provided exit codes
 
             //on windows don't read result, as nothing returns (blocking process)
             if (SystemUtils.IS_OS_LINUX) {
@@ -130,7 +132,7 @@ class TCMountHandler {
 
             log.debug("waiting for command to finish");
             process.waitFor();
-            // TODO Andrew, use the exit code if maybe it is ok - int errorCode = process.waitFor(); 
+            return CommandLineUtils.getExecPID(process);
 
         } catch (IOException | InterruptedException e) {
             log.error("Error executing: " + command + " " + e.toString());
