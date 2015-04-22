@@ -76,8 +76,9 @@ public class IndexContentManager {
 
     }
 
-    private void deleteIndexFragment(User user, IndexFragmentEntryStatus importTask) {
-        //TODO AL
+    private void deleteIndexFragment(User user, IndexFragmentEntryStatus deletionTask) {
+        //TODO CONTINUE AL
+        //this.deleteFromESIndex(docUUID);
     }
 
     /**
@@ -127,13 +128,23 @@ public class IndexContentManager {
     }
 
     /**
-     * Uses the Elastic Search IndexClient to execute the index operation which imports the IndexDocument to ES
+     * Uses the Elastic Search IndexClient to execute the delete operation which deletes a specific IndexDocument from
+     * ES
      * 
      * @param doc
      * @param user
      */
-    private void deleteFromESIndex(IndexDocument doc, User user) {
-        //TODO still need to implement the indexClient.delete(doc) operation
+    private void deleteFromESIndex(UUID docUUID, User user) {
+        try {
+            try (IndexClient indexClient = new ElasticSearchIndexClient(user,
+                    this.indexManager.initAndCreateAndDoEverthing(user))) {
+                indexClient.deleteRecordsForUserAndDocumentUUID(docUUID);
+                this.log.debug("document " + docUUID + " removed from ElasticSearch for userID=" + user.id());
+            }
+        } catch (SearchInstanceException e) {
+            this.log.error("failed to delete IndexDocument " + docUUID + " for userID: " + user.id() + " " + e);
+            throw e;
+        }
     }
 
     private String getMountedTCDriveLetter(User user) {

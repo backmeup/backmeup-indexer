@@ -2,6 +2,8 @@ package org.backmeup.index.sharing.execution;
 
 import java.io.IOException;
 import java.sql.Date;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -74,6 +76,11 @@ public class SharingPolicyExecution {
             else if (policy.getPolicy().equals(SharingPolicies.SHARE_INDEX_DOCUMENT)) {
                 this.executeImportShareDocument(policy, doc, docUUID, shareWithUser, actualDocOwner);
             }
+
+            //4. check if we're sharing this document group
+            else if (policy.getPolicy().equals(SharingPolicies.SHARE_INDEX_DOCUMENT_GROUP)) {
+                this.executeImportShareDocumentGroup(policy, doc, docUUID, shareWithUser, actualDocOwner);
+            }
         }
     }
 
@@ -143,6 +150,27 @@ public class SharingPolicyExecution {
             createWaitingForImportEntry(doc, shareWithUser, actualDocOwner);
             this.log.debug("distributed and stored shared IndexFragment: " + docUUID.toString() + " for userID: "
                     + shareWithUser.id() + " policy: " + policy.toString());
+        }
+    }
+
+    private void executeImportShareDocumentGroup(SharingPolicy policy, IndexDocument doc, UUID docUUID,
+            User shareWithUser, User actualDocOwner) throws IOException {
+        if (policy.getSharedElementID() != null) {
+            //get the sharedElementID which is list of documentUUIDs which were persisted via List.toString();
+            String s = policy.getSharedElementID();
+            List<String> docsInPolicy = Arrays.asList(s.substring(1, s.length() - 1).split(",\\s*"));
+
+            //iterate over all documentUUIDs in document group from the policy and check if we're sharing this specific element
+            for (String docInPol : docsInPolicy) {
+                if (docInPol.equals(doc.getFields().get(IndexFields.FIELD_JOB_ID))) {
+                    //drop off document in public user drop off zone
+                    ThemisDataSink.saveIndexFragment(doc, shareWithUser, IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
+                    //create a status object
+                    createWaitingForImportEntry(doc, shareWithUser, actualDocOwner);
+                    this.log.debug("distributed and stored shared IndexFragment: " + docUUID.toString()
+                            + " for userID: " + shareWithUser.id() + " policy: " + policy.toString());
+                }
+            }
         }
     }
 
