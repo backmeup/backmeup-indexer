@@ -10,7 +10,7 @@ public class SharingPolicyEntry {
         Document, DocumentGroup, Backup, AllFromNow, AllInklOld
     }
 
-    private Long Id;
+    private Long id;
     private Long fromUserID;
     private Long withUserID;
     private SharingPolicyTypeEntry policy;
@@ -19,7 +19,7 @@ public class SharingPolicyEntry {
 
     public SharingPolicyEntry(Long id, User fromUser, User withUser, SharingPolicyTypeEntry policy,
             Date policyCreationDate, String sharedElementID) {
-        this.Id = id;
+        this.id = id;
         this.fromUserID = fromUser.id();
         this.withUserID = withUser.id();
         this.policy = policy;
@@ -52,12 +52,12 @@ public class SharingPolicyEntry {
 
     @Override
     public String toString() {
-        return "id: '" + this.Id + "', fromUserID: '" + this.fromUserID + "', withUserID: '" + this.withUserID
+        return "id: '" + this.id + "', fromUserID: '" + this.fromUserID + "', withUserID: '" + this.withUserID
                 + "', policy: '" + this.policy + "', sharedElement: '" + this.sharedElementID + "'";
     }
 
     public Long getId() {
-        return this.Id;
+        return this.id;
     }
 
 }
