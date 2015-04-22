@@ -477,22 +477,31 @@ class IndexUtils {
             // minimum 1 of the should clausels must match
             sourcematches.minimumNumberShouldMatch(1);
 
+            // get out the source plugin, result will be
             for (String filter : filters.get("source")) {
-                // get out the source plugin, result will be
-                // "org.backmeup.source"
-                String source = filter.substring(0, filter.indexOf(" "));
-
-                // get out the profile "(Profilename)"
-                String profile = filter.substring(filter.indexOf(" ") + 1, filter.length());
-
-                // remove the brackets at begin and end, result will be "ProfileName"
-                profile = profile.substring(1, profile.length() - 1);
-
                 BoolQueryBuilder tempbuilder = new BoolQueryBuilder();
-                tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_BACKUP_SOURCE_AUTH_TITLE, source));
-                tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_BACKUP_SOURCE_PROFILE_ID, profile));
 
-                // tempbuilder1 or tempbulder2 or ...
+                //test if we have a profile name set as e.g. "org.backmeup.source (ProfileName)"
+                if ((filter.lastIndexOf(" ") != -1) && (filter.lastIndexOf(")") != -1)) {
+                    // "org.backmeup.source"
+                    String source = filter.substring(0, filter.indexOf(" "));
+
+                    // get out the profile "(Profilename)"
+                    String profile = filter.substring(filter.indexOf(" ") + 1, filter.length());
+
+                    // remove the brackets at begin and end, result will be "ProfileName"
+                    profile = profile.substring(1, profile.length() - 1);
+
+                    tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_ID, source));
+                    tempbuilder.must(QueryBuilders
+                            .matchPhraseQuery(IndexFields.FIELD_BACKUP_SOURCE_AUTH_TITLE, profile));
+                } else {
+                    //we don't have a profile set
+                    String source = filter;
+                    tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_ID, source));
+                }
+
+                // tempbuilder1 or tempbuilder2 or ...
                 sourcematches.should(tempbuilder);
             }
         }
