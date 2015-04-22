@@ -69,10 +69,11 @@ public class Sharing implements SharingPolicyServer {
         mandatory("fromUserId", fromUser);
         mandatory("withUserId", withUser);
         mandatory("policyType", policyType);
-        if ((policyType == SharingPolicyTypeEntry.Backup) || (policyType == SharingPolicyTypeEntry.Document)) {
+        if (policyType == SharingPolicyTypeEntry.Backup) {
             mandatory("policyValue", policyValue);
-        }
-        if ((policyType == SharingPolicyTypeEntry.DocumentGroup)) {
+        } else if (policyType == SharingPolicyTypeEntry.Document) {
+            mandatoryUUID("policyValue", policyValue);
+        } else if ((policyType == SharingPolicyTypeEntry.DocumentGroup)) {
             mandatoryListFromString("policyValue", policyValue);
         }
 
@@ -125,6 +126,20 @@ public class Sharing implements SharingPolicyServer {
         }
     }
 
+    private void mandatoryUUID(String name, String value) {
+        if (value == null || value.isEmpty()) {
+            badRequestMissingParameter(name);
+        }
+        try {
+            UUID.fromString(value);
+        } catch (Exception e) {
+            throw new WebApplicationException(
+                    Response.status(Response.Status.BAD_REQUEST)
+                            .entity(name + " parameter is malformed. Expecting UUID of syntax: "
+                                    + UUID.randomUUID().toString()).build());
+        }
+    }
+
     private void mandatoryListFromString(String name, String value) {
         if (value == null || value.isEmpty()) {
             badRequestMissingParameter(name);
@@ -132,7 +147,7 @@ public class Sharing implements SharingPolicyServer {
         try {
             String[] sArr = value.substring(1, value.length() - 1).split(",\\s*");
             List<String> lArr = Arrays.asList(sArr);
-            if (lArr.size() < 1) {
+            if (lArr.size() <= 1) {
                 badRequestMalformedListOfUUIDsParameter(name);
             }
             //test sample on UUIDs
@@ -212,6 +227,9 @@ public class Sharing implements SharingPolicyServer {
         }
         if (policy == SharingPolicies.SHARE_ALL_INKLUDING_OLD) {
             return SharingPolicyTypeEntry.AllInklOld;
+        }
+        if (policy == SharingPolicies.SHARE_INDEX_DOCUMENT_GROUP) {
+            return SharingPolicyTypeEntry.DocumentGroup;
         }
         return null;
     }
