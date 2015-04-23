@@ -37,8 +37,8 @@ public class RestUrlsSharingPolicy {
         return urlBuilder.build();
     }
 
-    public URI forAdd(User fromUser, User withUser, SharingPolicyTypeEntry policyType, String policyValue)
-            throws URISyntaxException {
+    public URI forAdd(User fromUser, User withUser, SharingPolicyTypeEntry policyType, String policyValue, String name,
+            String description) throws URISyntaxException {
         URIBuilder urlBuilder = startWithBaseUrl(fromUser, "");
         addMandatoryParameter(urlBuilder, "withUserId", withUser);
         addMandatoryParameter(urlBuilder, "policyType", policyType);
@@ -49,6 +49,8 @@ public class RestUrlsSharingPolicy {
         } else {
             addOptionalParameter(urlBuilder, "policyValue", policyValue);
         }
+        addOptionalParameter(urlBuilder, "name", name);
+        addOptionalParameter(urlBuilder, "description", description);
         return urlBuilder.build();
     }
 

@@ -25,6 +25,7 @@ import org.backmeup.index.model.sharing.SharingPolicyEntry;
 import org.backmeup.index.model.sharing.SharingPolicyEntry.SharingPolicyTypeEntry;
 import org.backmeup.index.sharing.policy.SharingPolicies;
 import org.backmeup.index.sharing.policy.SharingPolicy;
+import org.backmeup.index.sharing.policy.SharingPolicy2DocumentUUIDConverter;
 import org.backmeup.index.sharing.policy.SharingPolicyManager;
 
 @Path("sharing")
@@ -33,6 +34,8 @@ public class Sharing implements SharingPolicyServer {
 
     @Inject
     private SharingPolicyManager sharingManager;
+    @Inject
+    private SharingPolicy2DocumentUUIDConverter pol2uuidConverter;
 
     @Override
     @GET
@@ -64,7 +67,9 @@ public class Sharing implements SharingPolicyServer {
             @PathParam("fromUserId") User fromUser, // 
             @QueryParam("withUserId") User withUser, //
             @QueryParam("policyType") SharingPolicyTypeEntry policyType, //
-            @QueryParam("policyValue") String policyValue) {
+            @QueryParam("policyValue") String policyValue,//
+            @QueryParam("name") String name,//
+            @QueryParam("description") String description) {
 
         mandatory("fromUserId", fromUser);
         mandatory("withUserId", withUser);
@@ -78,7 +83,8 @@ public class Sharing implements SharingPolicyServer {
         }
 
         SharingPolicies policy = convert(policyType);
-        SharingPolicy p = this.sharingManager.createAndAddSharingPolicy(fromUser, withUser, policy, policyValue);
+        SharingPolicy p = this.sharingManager.createAndAddSharingPolicy(fromUser, withUser, policy, policyValue, name,
+                description);
         return convert(p);
     }
 
@@ -236,8 +242,10 @@ public class Sharing implements SharingPolicyServer {
 
     private SharingPolicyEntry convert(SharingPolicy p) {
         SharingPolicyTypeEntry t = convert(p.getPolicy());
+        int polDocCount = this.pol2uuidConverter.getNumberOfDocsInPolicyForOwner(p);
         SharingPolicyEntry e = new SharingPolicyEntry(p.getId(), new User(p.getFromUserID()), new User(
-                p.getWithUserID()), t, p.getPolicyCreationDate(), p.getSharedElementID());
+                p.getWithUserID()), t, p.getPolicyCreationDate(), p.getSharedElementID(), p.getName(),
+                p.getDescription(), polDocCount);
         return e;
     }
 

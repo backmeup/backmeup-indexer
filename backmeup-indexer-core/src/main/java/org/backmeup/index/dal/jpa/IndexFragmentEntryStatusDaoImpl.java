@@ -231,6 +231,12 @@ public class IndexFragmentEntryStatusDaoImpl extends BaseDaoImpl<IndexFragmentEn
     }
 
     @Override
+    public List<IndexFragmentEntryStatus> getByUserOwnedAndDocumentUUIDs(User user, List<UUID> documentUUIDs,
+            StatusType... types) {
+        return this.getAllByUserAndDocumentUUIDsByDocumentOwner(user, user, documentUUIDs, types);
+    }
+
+    @Override
     public IndexFragmentEntryStatus getByUserAndDocumentUUIDByDocumentOwner(User user, User actualDocOwner,
             UUID documentUUID, StatusType... types) {
         List<StatusType> lTypes = Arrays.asList(types);
@@ -242,6 +248,20 @@ public class IndexFragmentEntryStatusDaoImpl extends BaseDaoImpl<IndexFragmentEn
         q.setParameter("docUUID", documentUUID);
         q.setParameter("statusTypes", lTypes);
         return executeQuerySelectFirst(q);
+    }
+
+    @Override
+    public List<IndexFragmentEntryStatus> getAllByUserAndDocumentUUIDsByDocumentOwner(User user, User actualDocOwner,
+            List<UUID> documentUUIDs, StatusType... types) {
+        List<StatusType> lTypes = Arrays.asList(types);
+        TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM "
+                + TABLENAME
+                + " u WHERE u.userID = :userId and u.ownerID = :ownerId and u.statusType IN (:statusTypes) and u.documentUUID IN (:docUUIDs) ORDER BY u.id ASC");
+        q.setParameter("userId", user.id());
+        q.setParameter("ownerId", actualDocOwner.id());
+        q.setParameter("docUUIDs", documentUUIDs);
+        q.setParameter("statusTypes", lTypes);
+        return executeQuery(q);
     }
 
 }

@@ -27,21 +27,26 @@ public class SharingPolicy {
     private Date policyCreationDate;
     @Temporal(TemporalType.TIMESTAMP)
     private Date policyLastCheckedDate;
+    private String name;
+    private String description;
 
     public SharingPolicy() {
     }
 
-    public SharingPolicy(User fromUser, User withUser, SharingPolicies policy, String sharedElementID) {
-        this(fromUser, withUser, policy);
+    public SharingPolicy(User fromUser, User withUser, SharingPolicies policy, String sharedElementID, String name,
+            String description) {
+        this(fromUser, withUser, policy, name, description);
         this.sharedElementID = sharedElementID;
     }
 
-    public SharingPolicy(User fromUser, User withUser, SharingPolicies policy) {
+    public SharingPolicy(User fromUser, User withUser, SharingPolicies policy, String name, String description) {
         this.fromUserID = fromUser.id();
         this.withUserID = withUser.id();
         this.policy = policy;
         this.policyCreationDate = new Date();
         this.policyLastCheckedDate = null;
+        this.name = name;
+        this.description = description;
     }
 
     public Long getFromUserID() {
@@ -107,6 +112,22 @@ public class SharingPolicy {
 
     public void setId(Long id) {
         this.Id = id;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return this.description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
 }

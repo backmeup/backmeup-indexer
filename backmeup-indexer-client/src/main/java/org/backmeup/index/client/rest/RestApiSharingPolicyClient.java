@@ -32,8 +32,9 @@ public class RestApiSharingPolicyClient implements SharingPolicyClient {
     }
 
     @Override
-    public SharingPolicyEntry add(User sharingWith, SharingPolicyTypeEntry policy, String sharedElementID) {
-        return this.server.add(this.currUser, sharingWith, policy, sharedElementID);
+    public SharingPolicyEntry add(User sharingWith, SharingPolicyTypeEntry policy, String sharedElementID, String name,
+            String description) {
+        return this.server.add(this.currUser, sharingWith, policy, sharedElementID, name, description);
     }
 
     @Override

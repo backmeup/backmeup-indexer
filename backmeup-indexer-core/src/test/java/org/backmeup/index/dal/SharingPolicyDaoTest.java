@@ -100,8 +100,10 @@ public class SharingPolicyDaoTest {
         this.user2 = new User(2L);
         this.user3 = new User(3L);
 
-        this.pol1 = new SharingPolicy(this.user1, this.user2, SharingPolicies.SHARE_ALL_AFTER_NOW);
-        this.pol2 = new SharingPolicy(this.user1, this.user3, SharingPolicies.SHARE_INDEX_DOCUMENT);
+        this.pol1 = new SharingPolicy(this.user1, this.user2, SharingPolicies.SHARE_ALL_AFTER_NOW, "MyPolicy1",
+                "Description1");
+        this.pol2 = new SharingPolicy(this.user1, this.user3, SharingPolicies.SHARE_INDEX_DOCUMENT, "MyPolicy2",
+                "Description2");
         this.pol2.setSharedElementID(this.uuid1.toString());
 
         persistInTransaction(this.pol1);

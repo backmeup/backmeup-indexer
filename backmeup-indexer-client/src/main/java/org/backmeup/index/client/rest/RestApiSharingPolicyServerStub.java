@@ -50,9 +50,10 @@ public class RestApiSharingPolicyServerStub implements SharingPolicyServer {
     }
 
     @Override
-    public SharingPolicyEntry add(User currUser, User sharingWith, SharingPolicyTypeEntry policy, String sharedElementID) {
+    public SharingPolicyEntry add(User currUser, User sharingWith, SharingPolicyTypeEntry policy,
+            String sharedElementID, String name, String description) {
         try {
-            URI url = this.urls.forAdd(currUser, sharingWith, policy, sharedElementID);
+            URI url = this.urls.forAdd(currUser, sharingWith, policy, sharedElementID, name, description);
             String body = this.http.post(url, "", 200);
             return Json.deserialize(body, SharingPolicyEntry.class);
 

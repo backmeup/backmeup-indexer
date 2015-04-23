@@ -17,7 +17,8 @@ public interface SharingPolicyClient extends Closeable {
 
     Set<SharingPolicyEntry> getAllIncoming();
 
-    SharingPolicyEntry add(User sharingWith, SharingPolicyTypeEntry policy, String sharedElementID);
+    SharingPolicyEntry add(User sharingWith, SharingPolicyTypeEntry policy, String sharedElementID, String name,
+            String description);
 
     String removeOwned(Long policyID);
 

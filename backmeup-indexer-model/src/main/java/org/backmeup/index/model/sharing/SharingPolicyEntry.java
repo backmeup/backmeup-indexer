@@ -16,15 +16,21 @@ public class SharingPolicyEntry {
     private SharingPolicyTypeEntry policy;
     private String sharedElementID; //e.g. indexdocumentUUID or backupJobID dependent on policy
     private Date policyCreationDate;
+    private String name;
+    private String description;
+    private int numberOfSharedDocuments; //number of documents that this policy has currently shared
 
     public SharingPolicyEntry(Long id, User fromUser, User withUser, SharingPolicyTypeEntry policy,
-            Date policyCreationDate, String sharedElementID) {
+            Date policyCreationDate, String sharedElementID, String name, String description, int numberOfSharedDocs) {
         this.id = id;
         this.fromUserID = fromUser.id();
         this.withUserID = withUser.id();
         this.policy = policy;
         this.policyCreationDate = policyCreationDate;
         this.sharedElementID = sharedElementID;
+        this.name = name;
+        this.description = description;
+        this.numberOfSharedDocuments = numberOfSharedDocs;
     }
 
     public Long getFromUserID() {
@@ -53,11 +59,29 @@ public class SharingPolicyEntry {
     @Override
     public String toString() {
         return "id: '" + this.id + "', fromUserID: '" + this.fromUserID + "', withUserID: '" + this.withUserID
-                + "', policy: '" + this.policy + "', sharedElement: '" + this.sharedElementID + "'";
+                + "', policy: '" + this.policy + "', sharedElement: '" + this.sharedElementID + "', name: '"
+                + this.name + "', description: '" + this.description + "', numberOfSharedDocuments: '"
+                + this.numberOfSharedDocuments + "'";
     }
 
     public Long getId() {
         return this.id;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return this.description;
+    }
+
+    public int getNumberOfSharedDocuments() {
+        return this.numberOfSharedDocuments;
     }
 
 }

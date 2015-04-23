@@ -4,6 +4,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -219,6 +220,24 @@ public class IndexFragmentEntryStatusDaoTest {
         found = this.statusDao.getByUserAndDocumentUUIDByDocumentOwner(this.user3, this.user4, this.uuid4,
                 StatusType.WAITING_FOR_IMPORT);
         assertNotNull(found);
+    }
+
+    @Test
+    public void getAllByUserAndDocumentUUIDsByDocumentOwner() {
+        persistTestData();
+        List<UUID> l = new ArrayList<UUID>();
+        l.add(this.uuid1);
+        l.add(this.uuid2);
+        List<IndexFragmentEntryStatus> found = this.statusDao.getAllByUserAndDocumentUUIDsByDocumentOwner(this.user1,
+                this.user1, l, StatusType.WAITING_FOR_IMPORT);
+        assertNotNull(found);
+        assertTrue("should find one entry", found.size() == 1);
+
+        found = this.statusDao.getAllByUserAndDocumentUUIDsByDocumentOwner(this.user1, this.user1, l,
+                StatusType.WAITING_FOR_IMPORT, StatusType.WAITING_FOR_DELETION);
+        assertNotNull(found);
+        assertTrue("should find two entries", found.size() == 2);
+
     }
 
     @Test

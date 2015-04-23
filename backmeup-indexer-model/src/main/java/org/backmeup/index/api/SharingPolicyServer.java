@@ -16,7 +16,8 @@ public interface SharingPolicyServer {
 
     Set<SharingPolicyEntry> getAllIncoming(User forUser);
 
-    SharingPolicyEntry add(User owner, User sharingWith, SharingPolicyTypeEntry policy, String sharedElementID);
+    SharingPolicyEntry add(User owner, User sharingWith, SharingPolicyTypeEntry policy, String sharedElementID,
+            String name, String description);
 
     String removeOwned(User owner, Long policyID);
 

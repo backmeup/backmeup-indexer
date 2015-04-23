@@ -95,6 +95,18 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
     IndexFragmentEntryStatus getByUserAndDocumentUUID(User user, UUID documentUUID);
 
     /**
+     * Find Status on IndexFragment Entries that match the specified IndexDocument UUIDs for a given user and that match
+     * the given policy types.
+     * 
+     * @param user
+     * @param documentUUIDs
+     * @param types
+     * @return
+     */
+    List<IndexFragmentEntryStatus> getByUserOwnedAndDocumentUUIDs(User user, List<UUID> documentUUIDs,
+            StatusType... types);
+
+    /**
      * Is status on an IndexFragment Entry on a specific IndexDocument UUID for a given user existing in DB?
      * 
      * @param documentUUID
@@ -221,8 +233,21 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
      * @param types
      * @return
      */
-    IndexFragmentEntryStatus getByUserAndDocumentUUIDByDocumentOwner(User user, User actualDocOwner,
-            UUID documentUUID, StatusType... types);
+    IndexFragmentEntryStatus getByUserAndDocumentUUIDByDocumentOwner(User user, User actualDocOwner, UUID documentUUID,
+            StatusType... types);
+
+    /**
+     * Get the Status Entries for a user, matching the document uuids, the actual owner and the StatusType matches one
+     * of the given types
+     * 
+     * @param user
+     * @param actualDocOwner
+     * @param documentUUIDs
+     * @param types
+     * @return
+     */
+    public List<IndexFragmentEntryStatus> getAllByUserAndDocumentUUIDsByDocumentOwner(User user, User actualDocOwner,
+            List<UUID> documentUUIDs, StatusType... types);
 
     /**
      * Find all Status objects over all users that match a certain condition e.g. waiting_for_import.

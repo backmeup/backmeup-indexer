@@ -63,6 +63,16 @@ public class SharingPolicyCreationTest {
 
         assertTrue(p.getId() == p2.getId());
         assertTrue(this.shManager.getAllActivePoliciesOwnedByUser(this.owner).size() == 1);
+
+        this.database.entityManager.getTransaction().begin();
+        SharingPolicy p3 = this.shManager.createAndAddSharingPolicy(this.owner, this.sharedWith,
+                SharingPolicies.SHARE_ALL_AFTER_NOW, "some name", "some description");
+        this.database.entityManager.getTransaction().commit();
+
+        assertTrue(
+                "policies are treated as equal by their policyType, owner, partner and sharedElement, but ignore name and description",
+                p.getId() == p3.getId());
+        assertTrue(this.shManager.getAllActivePoliciesOwnedByUser(this.owner).size() == 1);
     }
 
     @Test
@@ -87,7 +97,7 @@ public class SharingPolicyCreationTest {
         this.database.entityManager.getTransaction().begin();
         //share all elements of backupJobID 1
         SharingPolicy p = this.shManager.createAndAddSharingPolicy(this.owner, this.sharedWith,
-                SharingPolicies.SHARE_BACKUP, "1");
+                SharingPolicies.SHARE_BACKUP, "1", "My Name", "My Description");
         this.database.entityManager.getTransaction().commit();
 
         List<SharingPolicy> ps = this.shManager.getAllActivePoliciesOwnedByUser(this.owner);
