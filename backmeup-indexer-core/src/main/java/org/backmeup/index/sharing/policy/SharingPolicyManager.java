@@ -88,15 +88,19 @@ public class SharingPolicyManager {
                 if ((shPolicy.getSharedElementID() != null) && (pol.getSharedElementID() != null)) {
                     //identical policies, both with the same sharedelement value
                     if (shPolicy.getSharedElementID().equals(pol.getSharedElementID())) {
+                        this.log.debug("adding SharingPolicy " + pol.toString());
                         return pol;
                     }
                 } else if ((shPolicy.getSharedElementID() == null) && (pol.getSharedElementID() == null)) {
                     //identical policies, both without sharedelement value
+                    this.log.debug("adding SharingPolicy " + pol.toString());
                     return pol;
                 }
             }
             //we didn't find it, so let's create it
-            return shPolicy = this.sharingPolicyDao.save(shPolicy);
+            shPolicy = this.sharingPolicyDao.save(shPolicy);
+            this.log.debug("adding SharingPolicy " + shPolicy.toString());
+            return shPolicy;
         }
         return null;
     }

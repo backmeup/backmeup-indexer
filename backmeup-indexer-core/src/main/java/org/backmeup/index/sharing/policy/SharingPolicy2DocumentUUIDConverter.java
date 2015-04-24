@@ -63,8 +63,9 @@ public class SharingPolicy2DocumentUUIDConverter {
             return this.entryStatusDao.getAllByUserOwnedAndBackupJob(currUser, backupJobID, StatusType.IMPORTED).size();
         } else if (policy.getPolicy() == SharingPolicies.SHARE_INDEX_DOCUMENT) {
             UUID documentUUID = UUID.fromString(policy.getSharedElementID());
-            this.entryStatusDao.getByUserOwnedAndDocumentUUID(currUser, documentUUID, StatusType.IMPORTED);
-            if (documentUUID != null) {
+            IndexFragmentEntryStatus status = this.entryStatusDao.getByUserOwnedAndDocumentUUID(currUser, documentUUID,
+                    StatusType.IMPORTED);
+            if (status != null) {
                 return 1;
             } else {
                 return 0;
