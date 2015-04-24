@@ -29,8 +29,9 @@ public class RestApiIndexClient implements IndexClient {
 
     @Override
     public SearchResultAccumulator queryBackup(String query, String filterBySource, String filterByType,
-            String filterByJob, String username) {
-        return this.server.query(this.userId, query, filterBySource, filterByType, filterByJob, username);
+            String filterByJob, String filterByOwner, String username) {
+        return this.server
+                .query(this.userId, query, filterBySource, filterByType, filterByJob, filterByOwner, username);
     }
 
     @Override

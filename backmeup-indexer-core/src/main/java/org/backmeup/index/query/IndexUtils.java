@@ -16,6 +16,8 @@ import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.SearchEntry;
 import org.backmeup.index.model.User;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.index.query.MissingFilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -219,6 +221,10 @@ class IndexUtils {
         return groupByContentJob(esResponse);
     }
 
+    public static List<CountedEntry> getByOwner(org.elasticsearch.action.search.SearchResponse esResponse) {
+        return groupByContentOwner(esResponse);
+    }
+
     private static List<CountedEntry> groupBySource(org.elasticsearch.action.search.SearchResponse esResponse) {
         // Now where's my Scala groupBy!? *heul*
         Map<String, Integer> groupedHits = new HashMap<>();
@@ -304,6 +310,39 @@ class IndexUtils {
             countedEntries.add(new CountedEntry(entry.getKey(), entry.getValue().intValue()));
         }
 
+        return countedEntries;
+    }
+
+    private static List<CountedEntry> groupByContentOwner(org.elasticsearch.action.search.SearchResponse esResponse) {
+        Map<String, Integer> groupedHits = new HashMap<>();
+        for (SearchHit hit : esResponse.getHits()) {
+            if (hit.getSource().get(IndexFields.FIELD_JOB_ID) != null) {
+                String backupByUserId, label;
+                if (hit.getSource().get(IndexFields.FIELD_SHARED_BY_USER_ID) == null) {
+                    //in this case its a record that's not shared but user owns himself
+                    backupByUserId = hit.getSource().get(IndexFields.FIELD_OWNER_ID).toString();
+                    String ownerName = hit.getSource().get(IndexFields.FIELD_OWNER_NAME).toString();
+                    label = "my data (" + ownerName + "): " + backupByUserId;
+                } else {
+                    //this record is one that's shared by another user
+                    backupByUserId = hit.getSource().get(IndexFields.FIELD_SHARED_BY_USER_ID).toString();
+                    label = "shared data user: " + backupByUserId;
+                }
+
+                Integer count = groupedHits.get(label);
+                if (count == null) {
+                    count = Integer.valueOf(1);
+                } else {
+                    count = Integer.valueOf(count.intValue() + 1);
+                }
+                groupedHits.put(label, count);
+            }
+        }
+        // ...and .map
+        List<CountedEntry> countedEntries = new ArrayList<>();
+        for (Entry<String, Integer> entry : groupedHits.entrySet()) {
+            countedEntries.add(new CountedEntry(entry.getKey(), entry.getValue().intValue()));
+        }
         return countedEntries;
     }
 
@@ -429,6 +468,7 @@ class IndexUtils {
         BoolQueryBuilder typematches = buildTypeQuery(filters);
         BoolQueryBuilder sourcematches = buildSourceQuery(filters);
         BoolQueryBuilder jobmatches = buildJobQuery(filters);
+        BoolQueryBuilder ownermatches = buildOwnerQuery(filters);
 
         if (typematches != null) {
             qBuilder.must(typematches);
@@ -438,6 +478,9 @@ class IndexUtils {
         }
         if (jobmatches != null) {
             qBuilder.must(jobmatches);
+        }
+        if (ownermatches != null) {
+            qBuilder.must(ownermatches);
         }
 
         return qBuilder;
@@ -528,6 +571,42 @@ class IndexUtils {
                 BoolQueryBuilder tempbuilder = new BoolQueryBuilder();
                 tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_BACKUP_AT, timestamp));
                 tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_JOB_NAME, jobname));
+
+                // tempbuilder1 or tempbulder2 or ...
+                jobmatches.should(tempbuilder);
+            }
+        }
+
+        return jobmatches;
+    }
+
+    private static BoolQueryBuilder buildOwnerQuery(Map<String, List<String>> filters) {
+        BoolQueryBuilder jobmatches = null;
+
+        if (filters.containsKey("owner")) {
+            jobmatches = new BoolQueryBuilder();
+            // minimum 1 of the should conditions must match
+            jobmatches.minimumNumberShouldMatch(1);
+
+            // something like this will come either "my data (" + ownerName+"): "+ userID or "shared data user: " + userID
+            for (String filter : filters.get("owner")) {
+                BoolQueryBuilder tempbuilder = new BoolQueryBuilder();
+
+                // get out the owner id
+                String dataOwnerId = filter.substring(filter.indexOf(":") + 2, filter.length());
+
+                // decide either own data or shared data which has different Fields within the ES index
+                if (filter.startsWith("my data")) {
+                    //it's a user owned data element
+                    tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_OWNER_ID, dataOwnerId));
+                    //as owner is set for all entities within the index we need to check that shared_by is not set
+                    MissingFilterBuilder noFieldSharedBy = FilterBuilders
+                            .missingFilter(IndexFields.FIELD_SHARED_BY_USER_ID);
+                    tempbuilder.must(QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(), noFieldSharedBy));
+                } else {
+                    //it's a shared data element
+                    tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_SHARED_BY_USER_ID, dataOwnerId));
+                }
 
                 // tempbuilder1 or tempbulder2 or ...
                 jobmatches.should(tempbuilder);

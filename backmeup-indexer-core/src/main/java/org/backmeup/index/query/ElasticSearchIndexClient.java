@@ -110,15 +110,16 @@ public class ElasticSearchIndexClient implements IndexClient {
     }
 
     @Override
-    public SearchResultAccumulator queryBackup(String query, String source, String type, String job, String username) {
-        Map<String, List<String>> filters = createFiltersFor(source, type, job);
+    public SearchResultAccumulator queryBackup(String query, String source, String type, String job, String owner,
+            String username) {
+        Map<String, List<String>> filters = createFiltersFor(source, type, job, owner);
         return queryBackup(query, filters, username);
     }
 
-    private Map<String, List<String>> createFiltersFor(String source, String type, String job) {
+    private Map<String, List<String>> createFiltersFor(String source, String type, String job, String owner) {
         Map<String, List<String>> filters = null;
 
-        if (source != null || type != null || job != null) {
+        if (source != null || type != null || job != null || owner != null) {
             filters = new HashMap<>();
         }
 
@@ -140,6 +141,12 @@ public class ElasticSearchIndexClient implements IndexClient {
             filters.put("job", filtervalue);
         }
 
+        if (owner != null) {
+            List<String> filtervalue = new LinkedList<>();
+            filtervalue.add(owner);
+            filters.put("owner", filtervalue);
+        }
+
         return filters;
     }
 
@@ -150,6 +157,7 @@ public class ElasticSearchIndexClient implements IndexClient {
         result.setBySource(IndexUtils.getBySource(esResponse));
         result.setByType(IndexUtils.getByType(esResponse));
         result.setByJob(IndexUtils.getByJob(esResponse));
+        result.setByOwner(IndexUtils.getByOwner(esResponse));
         return result;
     }
 

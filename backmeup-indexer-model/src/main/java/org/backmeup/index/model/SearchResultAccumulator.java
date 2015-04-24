@@ -8,9 +8,10 @@ public class SearchResultAccumulator {
     private List<CountedEntry> byType;
     private List<CountedEntry> byJob;
     private List<SearchEntry> files;
+    private List<CountedEntry> byOwner;
 
     public List<CountedEntry> getBySource() {
-        return bySource;
+        return this.bySource;
     }
 
     public void setBySource(List<CountedEntry> bySource) {
@@ -18,7 +19,7 @@ public class SearchResultAccumulator {
     }
 
     public List<CountedEntry> getByType() {
-        return byType;
+        return this.byType;
     }
 
     public void setByType(List<CountedEntry> byType) {
@@ -26,15 +27,23 @@ public class SearchResultAccumulator {
     }
 
     public List<CountedEntry> getByJob() {
-        return byJob;
+        return this.byJob;
     }
 
     public void setByJob(List<CountedEntry> byJob) {
         this.byJob = byJob;
     }
 
+    public List<CountedEntry> getByOwner() {
+        return this.byOwner;
+    }
+
+    public void setByOwner(List<CountedEntry> byOwner) {
+        this.byOwner = byOwner;
+    }
+
     public List<SearchEntry> getFiles() {
-        return files;
+        return this.files;
     }
 
     public void setFiles(List<SearchEntry> files) {
