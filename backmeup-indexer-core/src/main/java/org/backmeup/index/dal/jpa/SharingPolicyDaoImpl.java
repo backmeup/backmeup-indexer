@@ -11,6 +11,7 @@ import org.backmeup.index.dal.SharingPolicyDao;
 import org.backmeup.index.model.User;
 import org.backmeup.index.sharing.policy.SharingPolicies;
 import org.backmeup.index.sharing.policy.SharingPolicy;
+import org.backmeup.index.sharing.policy.SharingPolicy.ActivityState;
 
 @RequestScoped
 public class SharingPolicyDaoImpl extends BaseDaoImpl<SharingPolicy> implements SharingPolicyDao {
@@ -49,10 +50,30 @@ public class SharingPolicyDaoImpl extends BaseDaoImpl<SharingPolicy> implements 
     }
 
     @Override
+    public List<SharingPolicy> getAllSharingPoliciesFromUserInState(User fromUser, ActivityState... state) {
+        List<ActivityState> lState = Arrays.asList(state);
+        TypedQuery<SharingPolicy> q = createTypedQuery("SELECT u FROM " + TABLENAME
+                + " u WHERE u.fromUserID = :fromUserID and u.state IN (:activeState) ORDER BY u.Id ASC");
+        q.setParameter("fromUserID", fromUser.id());
+        q.setParameter("activeState", lState);
+        return executeQuery(q);
+    }
+
+    @Override
     public List<SharingPolicy> getAllSharingPoliciesWithUser(User withUser) {
         TypedQuery<SharingPolicy> q = createTypedQuery("SELECT u FROM " + TABLENAME
                 + " u WHERE u.withUserID = :withUserID ORDER BY u.Id ASC");
         q.setParameter("withUserID", withUser.id());
+        return executeQuery(q);
+    }
+
+    @Override
+    public List<SharingPolicy> getAllSharingPoliciesWithUserInState(User withUser, ActivityState... state) {
+        List<ActivityState> lState = Arrays.asList(state);
+        TypedQuery<SharingPolicy> q = createTypedQuery("SELECT u FROM " + TABLENAME
+                + " u WHERE u.withUserID = :withUserID and u.state IN (:activeState) ORDER BY u.Id ASC");
+        q.setParameter("withUserID", withUser.id());
+        q.setParameter("activeState", lState);
         return executeQuery(q);
     }
 
@@ -62,6 +83,19 @@ public class SharingPolicyDaoImpl extends BaseDaoImpl<SharingPolicy> implements 
                 + " u WHERE u.withUserID = :withUserID and u.fromUserID = :fromUserID ORDER BY u.Id ASC");
         q.setParameter("withUserID", withUser.id());
         q.setParameter("fromUserID", fromUser.id());
+        return executeQuery(q);
+    }
+
+    @Override
+    public List<SharingPolicy> getAllSharingPoliciesBetweenUserInState(User fromUser, User withUser,
+            ActivityState... state) {
+        List<ActivityState> lState = Arrays.asList(state);
+        TypedQuery<SharingPolicy> q = createTypedQuery("SELECT u FROM "
+                + TABLENAME
+                + " u WHERE u.withUserID = :withUserID and u.fromUserID = :fromUserID and u.state IN (:activeState) ORDER BY u.Id ASC");
+        q.setParameter("withUserID", withUser.id());
+        q.setParameter("fromUserID", fromUser.id());
+        q.setParameter("activeState", lState);
         return executeQuery(q);
     }
 

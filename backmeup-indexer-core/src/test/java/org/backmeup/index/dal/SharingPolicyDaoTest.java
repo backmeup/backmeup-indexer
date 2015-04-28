@@ -9,6 +9,7 @@ import java.util.UUID;
 import org.backmeup.index.model.User;
 import org.backmeup.index.sharing.policy.SharingPolicies;
 import org.backmeup.index.sharing.policy.SharingPolicy;
+import org.backmeup.index.sharing.policy.SharingPolicy.ActivityState;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,6 +50,26 @@ public class SharingPolicyDaoTest {
     }
 
     @Test
+    public void getOutgoingPoliciesForUserWaitingForDeletion() {
+        List<SharingPolicy> lPolicies = this.sharingPolicyDao.getAllSharingPoliciesFromUser(this.user1);
+        assertNotNull(lPolicies);
+        assertTrue(lPolicies.size() == 2);
+
+        SharingPolicy p1 = lPolicies.get(0);
+        p1.setState(ActivityState.WAITING_FOR_DELETION);
+        this.mergeInTransaction(p1);
+
+        lPolicies = this.sharingPolicyDao.getAllSharingPoliciesFromUser(this.user1);
+        assertNotNull(lPolicies);
+        assertTrue(lPolicies.size() == 2);
+
+        lPolicies = this.sharingPolicyDao.getAllSharingPoliciesFromUserInState(this.user1,
+                ActivityState.WAITING_FOR_DELETION);
+        assertNotNull(lPolicies);
+        assertTrue(lPolicies.size() == 1);
+    }
+
+    @Test
     public void getIncomingPoliciesForAUser() {
         List<SharingPolicy> lPolicies = this.sharingPolicyDao.getAllSharingPoliciesWithUser(this.user2);
         assertNotNull(lPolicies);
@@ -56,8 +77,48 @@ public class SharingPolicyDaoTest {
     }
 
     @Test
+    public void getIncomingPoliciesForUserWaitingForDeletion() {
+        List<SharingPolicy> lPolicies = this.sharingPolicyDao.getAllSharingPoliciesWithUser(this.user2);
+        assertNotNull(lPolicies);
+        assertTrue(lPolicies.size() == 1);
+
+        SharingPolicy p1 = lPolicies.get(0);
+        p1.setState(ActivityState.WAITING_FOR_DELETION);
+        this.mergeInTransaction(p1);
+
+        lPolicies = this.sharingPolicyDao.getAllSharingPoliciesWithUser(this.user2);
+        assertNotNull(lPolicies);
+        assertTrue(lPolicies.size() == 1);
+
+        lPolicies = this.sharingPolicyDao.getAllSharingPoliciesWithUserInState(this.user2,
+                ActivityState.WAITING_FOR_DELETION);
+        assertNotNull(lPolicies);
+        assertTrue(lPolicies.size() == 1);
+    }
+
+    @Test
     public void getPoliciesBetweenTwoUser() {
         List<SharingPolicy> lPolicies = this.sharingPolicyDao.getAllSharingPoliciesBetweenUsers(this.user1, this.user2);
+        assertNotNull(lPolicies);
+        assertTrue(lPolicies.size() == 1);
+    }
+
+    @Test
+    public void getPoliciesBetweenTwoUserWaitingForDeletion() {
+        List<SharingPolicy> lPolicies = this.sharingPolicyDao.getAllSharingPoliciesBetweenUsers(this.user1, this.user2);
+        assertNotNull(lPolicies);
+        assertTrue(lPolicies.size() == 1);
+
+        SharingPolicy p1 = lPolicies.get(0);
+        p1.setState(ActivityState.WAITING_FOR_DELETION);
+        this.mergeInTransaction(p1);
+
+        lPolicies = this.sharingPolicyDao.getAllSharingPoliciesBetweenUsers(this.user1, this.user2);
+        assertNotNull(lPolicies);
+        assertTrue(lPolicies.size() == 1);
+
+        lPolicies = this.sharingPolicyDao.getAllSharingPoliciesBetweenUserInState(this.user1, this.user2,
+                ActivityState.WAITING_FOR_DELETION);
         assertNotNull(lPolicies);
         assertTrue(lPolicies.size() == 1);
     }
@@ -92,6 +153,13 @@ public class SharingPolicyDaoTest {
         // need manual transaction in test because transactional interceptor is not installed in tests
         this.database.entityManager.getTransaction().begin();
         this.sharingPolicyDao.save(policy);
+        this.database.entityManager.getTransaction().commit();
+    }
+
+    private void mergeInTransaction(SharingPolicy policy) {
+        // need manual transaction in test because transactional interceptor is not installed in tests
+        this.database.entityManager.getTransaction().begin();
+        this.sharingPolicyDao.merge(policy);
         this.database.entityManager.getTransaction().commit();
     }
 

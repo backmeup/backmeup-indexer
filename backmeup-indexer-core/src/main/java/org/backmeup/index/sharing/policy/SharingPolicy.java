@@ -15,6 +15,12 @@ import org.backmeup.index.model.User;
 @Entity
 public class SharingPolicy {
 
+    public enum ActivityState {
+        CREATED_AND_WAITING_FOR_HANDSHAKE, //after created by the owner
+        ACCEPTED_AND_ACTIVE, //accepted by the sharing partner
+        WAITING_FOR_DELETION; //deleted by the owner
+    }
+
     @Id
     @GeneratedValue
     private Long Id;
@@ -29,6 +35,8 @@ public class SharingPolicy {
     private Date policyLastCheckedDate;
     private String name;
     private String description;
+    @Enumerated(EnumType.STRING)
+    private ActivityState state;
 
     public SharingPolicy() {
     }
@@ -47,6 +55,7 @@ public class SharingPolicy {
         this.policyLastCheckedDate = null;
         this.name = name;
         this.description = description;
+        this.state = ActivityState.ACCEPTED_AND_ACTIVE;
     }
 
     public Long getFromUserID() {
@@ -95,7 +104,8 @@ public class SharingPolicy {
     @Override
     public String toString() {
         return "id: '" + this.Id + "', fromUserID: '" + this.fromUserID + "', withUserID: '" + this.withUserID
-                + "', policy: '" + this.policy + "', sharedElement: '" + this.sharedElementID + "'";
+                + "', policy: '" + this.policy + "', sharedElement: '" + this.sharedElementID + "', state: '"
+                + this.state + "'";
     }
 
     public Date getPolicyLastCheckedDate() {
@@ -128,6 +138,14 @@ public class SharingPolicy {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public ActivityState getState() {
+        return this.state;
+    }
+
+    public void setState(ActivityState state) {
+        this.state = state;
     }
 
 }

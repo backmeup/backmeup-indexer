@@ -6,6 +6,7 @@ import javax.inject.Inject;
 
 import org.backmeup.index.dal.SharingPolicyDao;
 import org.backmeup.index.model.User;
+import org.backmeup.index.sharing.policy.SharingPolicy.ActivityState;
 import org.backmeup.index.utils.cdi.RunRequestScoped;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,9 +109,11 @@ public class SharingPolicyManager {
     public void removeSharingPolicy(Long policyID) {
         SharingPolicy p = this.sharingPolicyDao.getByEntityId(policyID);
         removeSharingPolicy(p);
+        this.log.debug("removed SharingPolicy " + p.toString());
     }
 
     public void removeSharingPolicy(SharingPolicy p) {
+        p.setState(ActivityState.WAITING_FOR_DELETION);
         this.sharingPolicyDao.delete(p);
     }
 
