@@ -493,7 +493,7 @@ public class SharingPolicy2DocumentUUIDConverter {
                 //we're excluding/skipping this policy
             } else {
                 //iterate over all policies and add the uuids
-                List<UUID> docUUIDs = getDocsInPolicyForOwner(policy);
+                List<UUID> docUUIDs = getDocsInPolicyForOwner(p);
                 for (UUID docUUID : docUUIDs) {
                     if (!ret.contains(docUUID)) {
                         //add to the return list if now already contained
