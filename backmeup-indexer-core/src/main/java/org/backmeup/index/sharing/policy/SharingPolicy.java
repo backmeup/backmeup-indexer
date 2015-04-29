@@ -18,7 +18,8 @@ public class SharingPolicy {
     public enum ActivityState {
         CREATED_AND_WAITING_FOR_HANDSHAKE, //after created by the owner
         ACCEPTED_AND_ACTIVE, //accepted by the sharing partner
-        WAITING_FOR_DELETION; //deleted by the owner
+        WAITING_FOR_DELETION, //waiting for items to get deleted
+        DELETED; //deleted and no longer checked
     }
 
     @Id

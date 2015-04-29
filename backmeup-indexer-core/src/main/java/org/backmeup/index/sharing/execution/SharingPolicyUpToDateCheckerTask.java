@@ -95,7 +95,7 @@ public class SharingPolicyUpToDateCheckerTask implements Runnable {
                 List<UUID> missingDeletions = this.pol2uuidConverter.getMissingDeltaToDeleteForSharingPartner(policy);
                 this.log.debug("found a delta of: " + missingDeletions.size() + " missing deletions for policy: "
                         + policy.toString());
-                //iterate over missing elements required for deletion
+                //iterate over missing elements required for deletion for this policy
                 for (UUID missingUUID : missingDeletions) {
                     try {
                         //check the different sharing policies and create according deletion tasks
@@ -105,6 +105,8 @@ public class SharingPolicyUpToDateCheckerTask implements Runnable {
                         this.log.debug("failed to execute item: " + missingUUID + " for policy:" + policy.toString(), e);
                     }
                 }
+                //once all items are marked for deletion: delete the policy itself
+                this.manager.markPolicyAsDeleted(policy);
             }
         }
     }
