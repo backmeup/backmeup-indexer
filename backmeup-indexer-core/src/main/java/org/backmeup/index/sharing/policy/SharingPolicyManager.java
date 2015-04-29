@@ -49,6 +49,11 @@ public class SharingPolicyManager {
         return this.sharingPolicyDao.getAllSharingPoliciesWithUserInState(user, ActivityState.ACCEPTED_AND_ACTIVE);
     }
 
+    public List<SharingPolicy> getAllActivePoliciesBetweenUsers(User fromUser, User sharingP) {
+        return this.sharingPolicyDao.getAllSharingPoliciesBetweenUserInState(fromUser, sharingP,
+                ActivityState.ACCEPTED_AND_ACTIVE);
+    }
+
     public List<SharingPolicy> getAllWaitingForDeletionPoliciesOwnedByUser(User user) {
         return this.sharingPolicyDao.getAllSharingPoliciesFromUserInState(user, ActivityState.WAITING_FOR_DELETION);
     }

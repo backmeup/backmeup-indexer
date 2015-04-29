@@ -12,6 +12,8 @@ import org.backmeup.index.core.model.IndexFragmentEntryStatus;
 import org.backmeup.index.core.model.IndexFragmentEntryStatus.StatusType;
 import org.backmeup.index.dal.IndexFragmentEntryStatusDao;
 import org.backmeup.index.model.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Translates SharingPolicies into actual IndexFragment UUIDs. e.g. share_all user1 with user2 checks which UUIDs of
@@ -21,8 +23,12 @@ import org.backmeup.index.model.User;
 @ApplicationScoped
 public class SharingPolicy2DocumentUUIDConverter {
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     @Inject
     private IndexFragmentEntryStatusDao entryStatusDao;
+    @Inject
+    private SharingPolicyManager shPolManager;
 
     public List<UUID> getMissingDeltaToImportForSharingPartner(SharingPolicy policy) {
 
@@ -47,34 +53,55 @@ public class SharingPolicy2DocumentUUIDConverter {
         return lMissingForSharingPartner;
     }
 
-    public int getNumberOfDocsInPolicyForOwner(SharingPolicy policy) {
-
+    /**
+     * Translates a sharing policy into acutal required documents for the current user as document owner
+     * 
+     * @param policy
+     * @return
+     */
+    public List<UUID> getDocsInPolicyForOwner(SharingPolicy policy) {
         User currUser = new User(policy.getFromUserID());
 
         //translate policy to documents
         if (policy.getPolicy() == SharingPolicies.SHARE_ALL_INKLUDING_OLD) {
-            return this.entryStatusDao.getAllFromUserInOneOfTheTypesAndByUserAsDocumentOwner(currUser,
-                    StatusType.IMPORTED).size();
+            return convert(this.entryStatusDao.getAllFromUserInOneOfTheTypesAndByUserAsDocumentOwner(currUser,
+                    StatusType.IMPORTED));
         } else if (policy.getPolicy() == SharingPolicies.SHARE_ALL_AFTER_NOW) {
-            return this.entryStatusDao.getAllByUserOwnedAndAfterBackupDate(currUser, policy.getPolicyCreationDate(),
-                    StatusType.IMPORTED).size();
+            return convert(this.entryStatusDao.getAllByUserOwnedAndAfterBackupDate(currUser,
+                    policy.getPolicyCreationDate(), StatusType.IMPORTED));
         } else if (policy.getPolicy() == SharingPolicies.SHARE_BACKUP) {
             Long backupJobID = Long.valueOf(policy.getSharedElementID());
-            return this.entryStatusDao.getAllByUserOwnedAndBackupJob(currUser, backupJobID, StatusType.IMPORTED).size();
+            return convert(this.entryStatusDao
+                    .getAllByUserOwnedAndBackupJob(currUser, backupJobID, StatusType.IMPORTED));
         } else if (policy.getPolicy() == SharingPolicies.SHARE_INDEX_DOCUMENT) {
+            List<IndexFragmentEntryStatus> ret = new ArrayList<IndexFragmentEntryStatus>();
             UUID documentUUID = UUID.fromString(policy.getSharedElementID());
             IndexFragmentEntryStatus status = this.entryStatusDao.getByUserOwnedAndDocumentUUID(currUser, documentUUID,
                     StatusType.IMPORTED);
             if (status != null) {
-                return 1;
-            } else {
-                return 0;
+                ret.add(status);
             }
+            return convert(ret);
         } else if (policy.getPolicy() == SharingPolicies.SHARE_INDEX_DOCUMENT_GROUP) {
             List<UUID> uuidsInPolicy = getUUIDsFromPolicyShareDocumentGroup(policy);
             //a list of documents the current user has imported, which she/he owns, matching the policy.
-            return this.entryStatusDao.getAllByUserAndDocumentUUIDsByDocumentOwner(currUser, currUser, uuidsInPolicy,
-                    StatusType.IMPORTED).size();
+            return convert(this.entryStatusDao.getAllByUserAndDocumentUUIDsByDocumentOwner(currUser, currUser,
+                    uuidsInPolicy, StatusType.IMPORTED));
+        }
+        this.log.warn("should never reach this line. Check if policy is missing missing?");
+        return null;
+    }
+
+    /**
+     * Returns the number of documents in a sharing policy for the current user as document owner
+     * 
+     * @param policy
+     * @return
+     */
+    public int getNumberOfDocsInPolicyForOwner(SharingPolicy policy) {
+        List<UUID> entries = getDocsInPolicyForOwner(policy);
+        if (entries != null) {
+            return entries.size();
         }
         return -1;
     }
@@ -99,7 +126,7 @@ public class SharingPolicy2DocumentUUIDConverter {
                         StatusType.WAITING_FOR_IMPORT);
 
         //calculate delta - remove all elements that have already been imported
-        ret = removeDelta(currUserUUIDs, sharingPUUIDs);
+        ret = removeImportDelta(currUserUUIDs, sharingPUUIDs);
         return ret;
     }
 
@@ -125,7 +152,7 @@ public class SharingPolicy2DocumentUUIDConverter {
                         policy.getPolicyCreationDate(), StatusType.IMPORTED, StatusType.WAITING_FOR_IMPORT);
 
         //calculate delta - remove all elements that have already been imported
-        ret = removeDelta(currUserUUIDs, sharingPUUIDs);
+        ret = removeImportDelta(currUserUUIDs, sharingPUUIDs);
         return ret;
     }
 
@@ -150,7 +177,7 @@ public class SharingPolicy2DocumentUUIDConverter {
                 sharingPartner, currentUser, backupJobID, StatusType.IMPORTED, StatusType.WAITING_FOR_IMPORT);
 
         //calculate delta - remove all elements that have already been imported
-        ret = removeDelta(currUserUUIDs, sharingPUUIDs);
+        ret = removeImportDelta(currUserUUIDs, sharingPUUIDs);
         return ret;
     }
 
@@ -162,7 +189,7 @@ public class SharingPolicy2DocumentUUIDConverter {
      * @param sharedUserUUIDs
      * @return
      */
-    private List<UUID> removeDelta(List<IndexFragmentEntryStatus> currUserUUIDs,
+    private List<UUID> removeImportDelta(List<IndexFragmentEntryStatus> currUserUUIDs,
             List<IndexFragmentEntryStatus> sharedUserUUIDs) {
         List<UUID> ret = new ArrayList<UUID>();
         //add all and then remove existing ones
@@ -180,6 +207,31 @@ public class SharingPolicy2DocumentUUIDConverter {
             }
         }
 
+        return ret;
+    }
+
+    /**
+     * Calculates the Delta by UUID key comparison and removes elements from a that already are contained in b and
+     * returns the delta as list
+     * 
+     * @param currUserUUIDs
+     * @param sharedUserUUIDs
+     * @return
+     */
+    private List<UUID> removeDeletionDelta(List<IndexFragmentEntryStatus> a, List<UUID> b) {
+        List<UUID> ret = new ArrayList<UUID>();
+        List<UUID> lAUUUIDs = new ArrayList<UUID>();
+        //add all and then remove existing ones
+        for (IndexFragmentEntryStatus status : a) {
+            ret.add(status.getDocumentUUID());
+            lAUUUIDs.add(status.getDocumentUUID());
+        }
+        for (UUID bUUID : b) {
+            if (lAUUUIDs.contains(bUUID)) {
+                //UUID comparison, if already existing exclude from delta 
+                ret.remove(bUUID);
+            }
+        }
         return ret;
     }
 
@@ -238,7 +290,7 @@ public class SharingPolicy2DocumentUUIDConverter {
                 sharingPartner, currentUser, uuidsInPolicy, StatusType.IMPORTED, StatusType.WAITING_FOR_IMPORT);
 
         //calculate delta - remove all elements that have already been imported
-        ret = removeDelta(currUserUUIDs, sharingPUUIDs);
+        ret = removeImportDelta(currUserUUIDs, sharingPUUIDs);
         return ret;
     }
 
@@ -269,7 +321,7 @@ public class SharingPolicy2DocumentUUIDConverter {
         //translate policy to documents that require deletion by sharing partner
         List<UUID> lMissingForSharingPartner = new ArrayList<UUID>();
         if (policy.getPolicy() == SharingPolicies.SHARE_ALL_INKLUDING_OLD) {
-            lMissingForSharingPartner = calculateDeletionDeltaPolicyShareAllInkOld(currUser, sharingP);
+            lMissingForSharingPartner = calculateDeletionDeltaPolicyShareAllInkOld(currUser, sharingP, policy);
         } else if (policy.getPolicy() == SharingPolicies.SHARE_ALL_AFTER_NOW) {
             lMissingForSharingPartner = calculateDeletionDeltaPolicyShareAllAfterPolicyCreationDate(currUser, sharingP,
                     policy);
@@ -292,14 +344,17 @@ public class SharingPolicy2DocumentUUIDConverter {
      * @param sharingPartner
      * @return
      */
-    private List<UUID> calculateDeletionDeltaPolicyShareAllInkOld(User currentUser, User sharingPartner) {
+    private List<UUID> calculateDeletionDeltaPolicyShareAllInkOld(User currentUser, User sharingPartner, SharingPolicy p) {
         //a list of documents the sharing partner for this user has currently imported or will import
         List<IndexFragmentEntryStatus> sharingPUUIDs = this.entryStatusDao
                 .getAllFromUserInOneOfTheTypesAndByDocumentOwner(sharingPartner, currentUser, StatusType.IMPORTED,
                         StatusType.WAITING_FOR_IMPORT);
 
+        //some of those documents may still be shared by a different policy.
+        List<UUID> stillRequired = getDocumentsRequiredForUserExludingAGivenPolicy(currentUser, sharingPartner, p);
+
         //return the uuids
-        return convert(sharingPUUIDs);
+        return removeDeletionDelta(sharingPUUIDs, stillRequired);
     }
 
     /**
@@ -318,8 +373,11 @@ public class SharingPolicy2DocumentUUIDConverter {
                 .getAllByUserAndAfterBackupDateAndByDocumentOwner(sharingPartner, currentUser,
                         policy.getPolicyCreationDate(), StatusType.IMPORTED, StatusType.WAITING_FOR_IMPORT);
 
+        //get a list of documents still required by all other policies
+        List<UUID> stillRequired = getDocumentsRequiredForUserExludingAGivenPolicy(currentUser, sharingPartner, policy);
+
         //return the uuids
-        return convert(sharingPUUIDs);
+        return removeDeletionDelta(sharingPUUIDs, stillRequired);
     }
 
     /**
@@ -338,8 +396,11 @@ public class SharingPolicy2DocumentUUIDConverter {
         List<IndexFragmentEntryStatus> sharingPUUIDs = this.entryStatusDao.getAllByUserAndBackupJobAndByDocumentOwner(
                 sharingPartner, currentUser, backupJobID, StatusType.IMPORTED, StatusType.WAITING_FOR_IMPORT);
 
+        //get a list of documents still required by all other policies
+        List<UUID> stillRequired = getDocumentsRequiredForUserExludingAGivenPolicy(currentUser, sharingPartner, policy);
+
         //return the uuids
-        return convert(sharingPUUIDs);
+        return removeDeletionDelta(sharingPUUIDs, stillRequired);
     }
 
     /**
@@ -365,8 +426,16 @@ public class SharingPolicy2DocumentUUIDConverter {
             //a list of documents the sharing partner for this user has currently imported or will import
             sharingPStatus = this.entryStatusDao.getByUserAndDocumentUUIDByDocumentOwner(sharingPartner, currentUser,
                     documentUUID, StatusType.IMPORTED, StatusType.WAITING_FOR_IMPORT);
-            ret.add(sharingPStatus.getDocumentUUID());
+
+            //get a list of documents still required by all other policies
+            List<UUID> stillRequired = getDocumentsRequiredForUserExludingAGivenPolicy(currentUser, sharingPartner,
+                    policy);
+
+            if (!stillRequired.contains(sharingPStatus.getDocumentUUID())) {
+                ret.add(sharingPStatus.getDocumentUUID());
+            }
         }
+
         return ret;
     }
 
@@ -388,8 +457,11 @@ public class SharingPolicy2DocumentUUIDConverter {
         List<IndexFragmentEntryStatus> sharingPUUIDs = this.entryStatusDao.getAllByUserAndDocumentUUIDsByDocumentOwner(
                 sharingPartner, currentUser, uuidsInPolicy, StatusType.IMPORTED, StatusType.WAITING_FOR_IMPORT);
 
+        //get a list of documents still required by all other policies
+        List<UUID> stillRequired = getDocumentsRequiredForUserExludingAGivenPolicy(currentUser, sharingPartner, policy);
+
         //return the uuids
-        return convert(sharingPUUIDs);
+        return removeDeletionDelta(sharingPUUIDs, stillRequired);
     }
 
     /**
@@ -403,6 +475,32 @@ public class SharingPolicy2DocumentUUIDConverter {
         for (IndexFragmentEntryStatus entry : lEntryStatus) {
             UUID shUUID = entry.getDocumentUUID();
             ret.add(shUUID);
+        }
+        return ret;
+    }
+
+    /**
+     * Returns a list of all document uuids required by all available policies exluding the provided one
+     * 
+     * @param policies
+     * @return
+     */
+    public List<UUID> getDocumentsRequiredForUserExludingAGivenPolicy(User fromUser, User withUser, SharingPolicy policy) {
+        List<UUID> ret = new ArrayList<UUID>();
+        List<SharingPolicy> lPolicies = this.shPolManager.getAllActivePoliciesBetweenUsers(fromUser, withUser);
+        for (SharingPolicy p : lPolicies) {
+            if (p.getId() == policy.getId()) {
+                //we're excluding/skipping this policy
+            } else {
+                //iterate over all policies and add the uuids
+                List<UUID> docUUIDs = getDocsInPolicyForOwner(policy);
+                for (UUID docUUID : docUUIDs) {
+                    if (!ret.contains(docUUID)) {
+                        //add to the return list if now already contained
+                        ret.add(docUUID);
+                    }
+                }
+            }
         }
         return ret;
     }
