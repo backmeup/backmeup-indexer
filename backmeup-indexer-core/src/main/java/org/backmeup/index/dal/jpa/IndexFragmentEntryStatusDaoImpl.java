@@ -42,9 +42,9 @@ public class IndexFragmentEntryStatusDaoImpl extends BaseDaoImpl<IndexFragmentEn
         return new ArrayList<>();
     }
 
-    private IndexFragmentEntryStatus executeQuerySelectFirst(TypedQuery<IndexFragmentEntryStatus> q) {
+    private IndexFragmentEntryStatus executeQuerySelectLast(TypedQuery<IndexFragmentEntryStatus> q) {
         List<IndexFragmentEntryStatus> status = executeQuery(q);
-        return status.size() > 0 ? status.get(0) : null;
+        return status.size() > 0 ? status.get(status.size() - 1) : null;
     }
 
     @Override
@@ -114,7 +114,7 @@ public class IndexFragmentEntryStatusDaoImpl extends BaseDaoImpl<IndexFragmentEn
         TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM " + TABLENAME
                 + " u WHERE u.Id = :entityId");
         q.setParameter("entityId", entityId);
-        return executeQuerySelectFirst(q);
+        return executeQuerySelectLast(q);
     }
 
     @Override
@@ -128,7 +128,7 @@ public class IndexFragmentEntryStatusDaoImpl extends BaseDaoImpl<IndexFragmentEn
                 + " u WHERE u.userID = :userId and u.documentUUID = :documentUUID ORDER BY u.id ASC");
         q.setParameter("documentUUID", documentUUID);
         q.setParameter("userId", user.id());
-        return executeQuerySelectFirst(q);
+        return executeQuerySelectLast(q);
     }
 
     @Override
@@ -247,7 +247,7 @@ public class IndexFragmentEntryStatusDaoImpl extends BaseDaoImpl<IndexFragmentEn
         q.setParameter("ownerId", actualDocOwner.id());
         q.setParameter("docUUID", documentUUID);
         q.setParameter("statusTypes", lTypes);
-        return executeQuerySelectFirst(q);
+        return executeQuerySelectLast(q);
     }
 
     @Override
