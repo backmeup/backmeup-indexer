@@ -10,6 +10,7 @@ import java.util.List;
 import org.backmeup.index.dal.DerbyDatabase;
 import org.backmeup.index.model.User;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.internal.util.reflection.Whitebox;
@@ -45,6 +46,7 @@ public class SharingPolicyCreationTest {
     }
 
     @Test
+    @Ignore("Items can now be created more than once - not checked for duplicates")
     public void addPolicyTwice() {
         this.database.entityManager.getTransaction().begin();
         SharingPolicy p = this.shManager.createAndAddSharingPolicy(this.owner, this.sharedWith,

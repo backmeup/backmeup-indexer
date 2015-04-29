@@ -86,36 +86,20 @@ public class SharingPolicyManager {
         return addSharingPolicy(shPol);
     }
 
+    /**
+     * Does not filter out duplicates. The same policy can be added more than once
+     * 
+     * @param shPolicy
+     * @return
+     */
     public SharingPolicy addSharingPolicy(SharingPolicy shPolicy) {
-        List<SharingPolicy> existingPols = this.sharingPolicyDao.getAllSharingPoliciesBetweenUsersInType(new User(
-                shPolicy.getFromUserID()), new User(shPolicy.getWithUserID()), shPolicy.getPolicy());
 
         //TODO For now just set policy to active without approving handshake
         shPolicy.setState(ActivityState.ACCEPTED_AND_ACTIVE);
 
-        if (existingPols.size() == 0) {
-            return shPolicy = this.sharingPolicyDao.save(shPolicy);
-        } else if (existingPols.size() > 0) {
-            //in this case we need to check on the sharedElement ID and see if it already exists
-            for (SharingPolicy pol : existingPols) {
-                if ((shPolicy.getSharedElementID() != null) && (pol.getSharedElementID() != null)) {
-                    //identical policies, both with the same sharedelement value
-                    if (shPolicy.getSharedElementID().equals(pol.getSharedElementID())) {
-                        this.log.debug("adding SharingPolicy " + pol.toString());
-                        return pol;
-                    }
-                } else if ((shPolicy.getSharedElementID() == null) && (pol.getSharedElementID() == null)) {
-                    //identical policies, both without sharedelement value
-                    this.log.debug("adding SharingPolicy " + pol.toString());
-                    return pol;
-                }
-            }
-            //we didn't find it, so let's create it
-            shPolicy = this.sharingPolicyDao.save(shPolicy);
-            this.log.debug("adding SharingPolicy " + shPolicy.toString());
-            return shPolicy;
-        }
-        return null;
+        shPolicy = this.sharingPolicyDao.save(shPolicy);
+        this.log.debug("adding SharingPolicy " + shPolicy.toString());
+        return shPolicy;
     }
 
     public void removeSharingPolicy(Long policyID) {
@@ -134,5 +118,15 @@ public class SharingPolicyManager {
         for (SharingPolicy policy : this.sharingPolicyDao.getAllSharingPoliciesFromUser(owner)) {
             this.removeSharingPolicy(policy);
         }
+    }
+
+    /**
+     * Once all document removal operations took place the policy is set as deleted and will no longer be checked
+     * 
+     * @param p
+     */
+    public void markPolicyAsDeleted(SharingPolicy p) {
+        p.setState(ActivityState.DELETED);
+        this.sharingPolicyDao.merge(p);
     }
 }
