@@ -90,10 +90,25 @@ public class SharingPolicyExecution {
             //if element does not exist for user -> it is to import
             return true;
         } else if (status.getStatusType() == StatusType.WAITING_FOR_IMPORT) {
-            //we've already have a waiting for import statement for this element for this user, don't need to import again
+            //we've already a waiting for import statement for this element for this user, don't need to import again
             return false;
         } else if (status.getStatusType() == StatusType.IMPORTED) {
             //we've already an imported element for this user
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isElementToDelete(User user, UUID docUUID) {
+        IndexFragmentEntryStatus status = this.entryStatusDao.getByUserAndDocumentUUID(user, docUUID);
+        if (status == null) {
+            //if element does not exist for user -> not imported, do nothing
+            return false;
+        } else if (status.getStatusType() == StatusType.WAITING_FOR_DELETION) {
+            //we've already a waiting for deletion statement for this element
+            return false;
+        } else if (status.getStatusType() == StatusType.DELETED) {
+            //we've already deleted this element for this user
             return false;
         }
         return true;
@@ -185,6 +200,26 @@ public class SharingPolicyExecution {
         this.entryStatusDao.save(status);
     }
 
-    //TODO AL continue with deletion of elements
+    public void executeDeletionSharingParnter(SharingPolicy policy, UUID docUUID) throws IOException {
+        User shareWithUser = new User(policy.getWithUserID());
+        //check if we actually need to delete this document for this user
+        if (isElementToDelete(shareWithUser, docUUID)) {
+            createWaitingForDeletionEntry(docUUID, shareWithUser);
+            this.log.debug("marked IndexFragment for deletion: " + docUUID.toString() + " for userID: "
+                    + shareWithUser.id() + " policy: " + policy.toString());
+        }
+    }
+
+    private void createWaitingForDeletionEntry(UUID docUUID, User shareWithUser) {
+        IndexFragmentEntryStatus status = this.entryStatusDao.getByUserAndDocumentUUID(shareWithUser, docUUID);
+        if (status == null) {
+            String s = "missing status entry for user: " + shareWithUser.id() + " and document: " + docUUID;
+            this.log.warn(s);
+        } else {
+            status.setStatusType(StatusType.WAITING_FOR_DELETION);
+            //update the status entry in db
+            this.entryStatusDao.merge(status);
+        }
+    }
 
 }

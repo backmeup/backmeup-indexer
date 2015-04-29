@@ -42,16 +42,19 @@ public class SharingPolicyManager {
     }
 
     public List<SharingPolicy> getAllActivePoliciesOwnedByUser(User user) {
-        return this.sharingPolicyDao.getAllSharingPoliciesFromUser(user);
+        return this.sharingPolicyDao.getAllSharingPoliciesFromUserInState(user, ActivityState.ACCEPTED_AND_ACTIVE);
     }
 
     public List<SharingPolicy> getAllActivePoliciesSharedWithUser(User user) {
-        return this.sharingPolicyDao.getAllSharingPoliciesWithUser(user);
+        return this.sharingPolicyDao.getAllSharingPoliciesWithUserInState(user, ActivityState.ACCEPTED_AND_ACTIVE);
     }
 
-    public List<SharingPolicy> getAllDeletedPoliciesForUser(User user) {
-        //TODO implement need to keep a list of deleted policies so that we can perform content updates
-        return null;
+    public List<SharingPolicy> getAllWaitingForDeletionPoliciesOwnedByUser(User user) {
+        return this.sharingPolicyDao.getAllSharingPoliciesFromUserInState(user, ActivityState.WAITING_FOR_DELETION);
+    }
+
+    public List<SharingPolicy> getAllWaitingForDeletionPoliciesSharedWithUser(User user) {
+        return this.sharingPolicyDao.getAllSharingPoliciesWithUserInState(user, ActivityState.WAITING_FOR_DELETION);
     }
 
     public SharingPolicy createAndAddSharingPolicy(User owner, User sharingWith, SharingPolicies policy) {
@@ -81,6 +84,10 @@ public class SharingPolicyManager {
     public SharingPolicy addSharingPolicy(SharingPolicy shPolicy) {
         List<SharingPolicy> existingPols = this.sharingPolicyDao.getAllSharingPoliciesBetweenUsersInType(new User(
                 shPolicy.getFromUserID()), new User(shPolicy.getWithUserID()), shPolicy.getPolicy());
+
+        //TODO For now just set policy to active without approving handshake
+        shPolicy.setState(ActivityState.ACCEPTED_AND_ACTIVE);
+
         if (existingPols.size() == 0) {
             return shPolicy = this.sharingPolicyDao.save(shPolicy);
         } else if (existingPols.size() > 0) {
@@ -109,12 +116,13 @@ public class SharingPolicyManager {
     public void removeSharingPolicy(Long policyID) {
         SharingPolicy p = this.sharingPolicyDao.getByEntityId(policyID);
         removeSharingPolicy(p);
-        this.log.debug("removed SharingPolicy " + p.toString());
+        this.log.debug("updated SharingPolicy for deletion: " + p.toString());
     }
 
     public void removeSharingPolicy(SharingPolicy p) {
+        //just set the state, deletion from dao will be handled by the SharingPolicyUp2DateCheckerTask
         p.setState(ActivityState.WAITING_FOR_DELETION);
-        this.sharingPolicyDao.delete(p);
+        this.sharingPolicyDao.merge(p);
     }
 
     public void removeAllSharingPoliciesForUser(User owner) {

@@ -55,7 +55,7 @@ public class SharingPolicy {
         this.policyLastCheckedDate = null;
         this.name = name;
         this.description = description;
-        this.state = ActivityState.ACCEPTED_AND_ACTIVE;
+        this.state = ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE;
     }
 
     public Long getFromUserID() {

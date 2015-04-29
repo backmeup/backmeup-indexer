@@ -67,7 +67,7 @@ public class IndexContentManager {
             this.entryStatusDao.merge(importTask);
             //4. finally move the serialized Index Document to the encrypted partition
             moveFragmentToEncryptedUserStorage(doc, user, importTask.isUserOwned());
-            this.log.debug("Import index fragment " + importTask.getDocumentUUID() + " for user " + user.id()
+            this.log.debug("Content Import index fragment " + importTask.getDocumentUUID() + " for user " + user.id()
                     + " completed");
 
         } catch (ContentUpdateException | SearchInstanceException e) {
@@ -77,8 +77,20 @@ public class IndexContentManager {
     }
 
     private void deleteIndexFragment(User user, IndexFragmentEntryStatus deletionTask) {
-        //TODO CONTINUE AL
-        //this.deleteFromESIndex(docUUID);
+        try {
+            //1. remove from ElasticSearch
+            this.deleteFromESIndex(deletionTask.getDocumentUUID(), user);
+            //2. update status in database
+            deletionTask.setStatusType(StatusType.DELETED);
+            this.entryStatusDao.merge(deletionTask);
+            //3. finally delete the serialized Index Document from the encrypted partition
+            deleteFragmentFromEncryptedUserStorage(deletionTask.getDocumentUUID(), user, deletionTask.isUserOwned());
+            this.log.debug("Content Deletion of index fragment " + deletionTask.getDocumentUUID() + " for user "
+                    + user.id() + " completed");
+
+        } catch (ContentUpdateException | SearchInstanceException e) {
+            this.log.debug("Failed to execute content deletion task", e);
+        }
     }
 
     /**
@@ -173,6 +185,21 @@ public class IndexContentManager {
             }
         } catch (Exception e) {
             throw new ContentUpdateException("Copying index fragment to encrypted user partition failed", e);
+        }
+    }
+
+    private void deleteFragmentFromEncryptedUserStorage(UUID docUUID, User user, boolean userOwned) {
+        try {
+            if (userOwned) {
+                ThemisEncryptedPartition.deleteIndexFragment(docUUID, user,
+                        ThemisEncryptedPartition.IndexFragmentType.IMPORTED_USER_OWNED, getMountedTCDriveLetter(user));
+            } else {
+                ThemisEncryptedPartition.deleteIndexFragment(docUUID, user,
+                        ThemisEncryptedPartition.IndexFragmentType.IMPORTED_SHARED_WITH_USER,
+                        getMountedTCDriveLetter(user));
+            }
+        } catch (Exception e) {
+            throw new ContentUpdateException("deleting index fragment from encrypted user partition failed", e);
         }
     }
 

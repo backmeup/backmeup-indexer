@@ -113,6 +113,29 @@ public class ThemisEncryptedPartition {
                 + ".serindexdocument");
     }
 
+    /**
+     * Retrieves an IndexDocument within the user's mounted storage partition. Distinguishes between owned and shared
+     * IndexDocuments
+     * 
+     * @param objectID
+     * @param user
+     * @param type
+     * @return
+     * @throws IOException
+     */
+    public static void deleteIndexFragment(UUID objectID, User user, IndexFragmentType type, String mountedDrive)
+            throws IOException {
+        File f = getIndexFragmentFile(objectID, user, type, mountedDrive);
+
+        if (user.id() > -1 && (f.exists() && f.canRead())) {
+            f.delete();
+        } else {
+            throw new IOException("Error deleting index fragment: " + getIndexFragmentStorageZone(mountedDrive) + "/"
+                    + type.getStorageLocation() + objectID + ".serindexdocument" + ", file exists? " + f.exists()
+                    + ", file is readable? " + f.canRead());
+        }
+    }
+
     private static String getIndexFragmentStorageZone(String driveLetter) throws IOException {
         return getMountedDriveRoot(driveLetter) + "/storagezone";
     }

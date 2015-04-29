@@ -88,7 +88,25 @@ public class SharingPolicyUpToDateCheckerTask implements Runnable {
     }
 
     private void checkDeletionSharings() {
-        //TODO Need to implement
+        //get the list of active users
+        for (User activeUser : this.activeUsers.getActiveUsers()) {
+            //iterate over all policies for this given user
+            for (SharingPolicy policy : this.manager.getAllWaitingForDeletionPoliciesOwnedByUser(activeUser)) {
+                List<UUID> missingDeletions = this.pol2uuidConverter.getMissingDeltaToDeleteForSharingPartner(policy);
+                this.log.debug("found a delta of: " + missingDeletions.size() + " missing deletions for policy: "
+                        + policy.toString());
+                //iterate over missing elements required for deletion
+                for (UUID missingUUID : missingDeletions) {
+                    try {
+                        //check the different sharing policies and create according deletion tasks
+                        this.policyExecution.executeDeletionSharingParnter(policy, missingUUID);
+
+                    } catch (IOException e) {
+                        this.log.debug("failed to execute item: " + missingUUID + " for policy:" + policy.toString(), e);
+                    }
+                }
+            }
+        }
     }
 
 }

@@ -261,4 +261,149 @@ public class SharingPolicy2DocumentUUIDConverter {
         return uuidsInPolicy;
     }
 
+    public List<UUID> getMissingDeltaToDeleteForSharingPartner(SharingPolicy policy) {
+
+        User currUser = new User(policy.getFromUserID());
+        User sharingP = new User(policy.getWithUserID());
+
+        //translate policy to documents that require deletion by sharing partner
+        List<UUID> lMissingForSharingPartner = new ArrayList<UUID>();
+        if (policy.getPolicy() == SharingPolicies.SHARE_ALL_INKLUDING_OLD) {
+            lMissingForSharingPartner = calculateDeletionDeltaPolicyShareAllInkOld(currUser, sharingP);
+        } else if (policy.getPolicy() == SharingPolicies.SHARE_ALL_AFTER_NOW) {
+            lMissingForSharingPartner = calculateDeletionDeltaPolicyShareAllAfterPolicyCreationDate(currUser, sharingP,
+                    policy);
+        } else if (policy.getPolicy() == SharingPolicies.SHARE_BACKUP) {
+            lMissingForSharingPartner = calculateDeletionDeltaPolicyShareBackup(currUser, sharingP, policy);
+        } else if (policy.getPolicy() == SharingPolicies.SHARE_INDEX_DOCUMENT) {
+            lMissingForSharingPartner = calculateDeletionDeltaPolicyShareIndexDocument(currUser, sharingP, policy);
+        } else if (policy.getPolicy() == SharingPolicies.SHARE_INDEX_DOCUMENT_GROUP) {
+            lMissingForSharingPartner = calculateDeletionDeltaPolicyShareIndexDocumentGroup(currUser, sharingP, policy);
+        }
+
+        return lMissingForSharingPartner;
+    }
+
+    /**
+     * Calculate the missing entries which have been imported but revoked by removing a the sharing policy and therefore
+     * require deletion at the sharing partners side, according to the Policy ShareAllInkOld
+     * 
+     * @param currentUser
+     * @param sharingPartner
+     * @return
+     */
+    private List<UUID> calculateDeletionDeltaPolicyShareAllInkOld(User currentUser, User sharingPartner) {
+        //a list of documents the sharing partner for this user has currently imported or will import
+        List<IndexFragmentEntryStatus> sharingPUUIDs = this.entryStatusDao
+                .getAllFromUserInOneOfTheTypesAndByDocumentOwner(sharingPartner, currentUser, StatusType.IMPORTED,
+                        StatusType.WAITING_FOR_IMPORT);
+
+        //return the uuids
+        return convert(sharingPUUIDs);
+    }
+
+    /**
+     * Calculate the entries which require deletion for the sharing partner according to removal of the Policy
+     * ShareAllAllAferPolicyCreationDate
+     * 
+     * @param currentUser
+     * @param sharingPartner
+     * @param policy
+     * @return
+     */
+    private List<UUID> calculateDeletionDeltaPolicyShareAllAfterPolicyCreationDate(User currentUser,
+            User sharingPartner, SharingPolicy policy) {
+        //a list of documents the sharing partner for this user has currently imported or will import
+        List<IndexFragmentEntryStatus> sharingPUUIDs = this.entryStatusDao
+                .getAllByUserAndAfterBackupDateAndByDocumentOwner(sharingPartner, currentUser,
+                        policy.getPolicyCreationDate(), StatusType.IMPORTED, StatusType.WAITING_FOR_IMPORT);
+
+        //return the uuids
+        return convert(sharingPUUIDs);
+    }
+
+    /**
+     * Calculate the entries which require deletion for the sharing partner according to removal of the Sharing Policy
+     * ShareBackup
+     * 
+     * @param currentUser
+     * @param sharingPartner
+     * @param policy
+     * @return
+     */
+    private List<UUID> calculateDeletionDeltaPolicyShareBackup(User currentUser, User sharingPartner,
+            SharingPolicy policy) {
+        Long backupJobID = Long.valueOf(policy.getSharedElementID());
+        //a list of documents the sharing partner for this user has currently imported or will import
+        List<IndexFragmentEntryStatus> sharingPUUIDs = this.entryStatusDao.getAllByUserAndBackupJobAndByDocumentOwner(
+                sharingPartner, currentUser, backupJobID, StatusType.IMPORTED, StatusType.WAITING_FOR_IMPORT);
+
+        //return the uuids
+        return convert(sharingPUUIDs);
+    }
+
+    /**
+     * Calculate the entries which require deletion for the sharing partner according to the removal of the Sharing
+     * Policy ShareIndexDocument
+     * 
+     * @param currentUser
+     * @param sharingPartner
+     * @param policy
+     * @return
+     */
+    private List<UUID> calculateDeletionDeltaPolicyShareIndexDocument(User currentUser, User sharingPartner,
+            SharingPolicy policy) {
+        List<UUID> ret = new ArrayList<UUID>();
+        UUID documentUUID = UUID.fromString(policy.getSharedElementID());
+        //a list of documents the current user has imported, which she/he owns, matching the policy.
+        IndexFragmentEntryStatus sharingPStatus = this.entryStatusDao.getByUserAndDocumentUUIDByDocumentOwner(
+                sharingPartner, currentUser, documentUUID, StatusType.IMPORTED, StatusType.WAITING_FOR_IMPORT);
+
+        if (sharingPStatus == null) {
+            return ret;
+        } else {
+            //a list of documents the sharing partner for this user has currently imported or will import
+            sharingPStatus = this.entryStatusDao.getByUserAndDocumentUUIDByDocumentOwner(sharingPartner, currentUser,
+                    documentUUID, StatusType.IMPORTED, StatusType.WAITING_FOR_IMPORT);
+            ret.add(sharingPStatus.getDocumentUUID());
+        }
+        return ret;
+    }
+
+    /**
+     * Calculate the entries which require deletion for the sharing partner according to the removal of the Sharing
+     * Policy ShareIndexDocumentGroup
+     * 
+     * @param currentUser
+     * @param sharingPartner
+     * @param policy
+     * @return
+     */
+    private List<UUID> calculateDeletionDeltaPolicyShareIndexDocumentGroup(User currentUser, User sharingPartner,
+            SharingPolicy policy) {
+        //get the sharedElementID which is list of documentUUIDs which were persisted via List.toString();
+        List<UUID> uuidsInPolicy = getUUIDsFromPolicyShareDocumentGroup(policy);
+
+        //a list of documents the sharing partner for this user has currently imported or will import
+        List<IndexFragmentEntryStatus> sharingPUUIDs = this.entryStatusDao.getAllByUserAndDocumentUUIDsByDocumentOwner(
+                sharingPartner, currentUser, uuidsInPolicy, StatusType.IMPORTED, StatusType.WAITING_FOR_IMPORT);
+
+        //return the uuids
+        return convert(sharingPUUIDs);
+    }
+
+    /**
+     * Extracts and returns the UUIDs from the IndexFragmentEntryStatus list
+     * 
+     * @param lEntryStatus
+     * @return
+     */
+    private List<UUID> convert(List<IndexFragmentEntryStatus> lEntryStatus) {
+        List<UUID> ret = new ArrayList<UUID>();
+        for (IndexFragmentEntryStatus entry : lEntryStatus) {
+            UUID shUUID = entry.getDocumentUUID();
+            ret.add(shUUID);
+        }
+        return ret;
+    }
 }
