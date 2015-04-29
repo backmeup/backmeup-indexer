@@ -145,7 +145,7 @@ public class SharingPolicyExecution {
             User actualDocOwner) throws IOException {
         //check if we're sharing this specific backupjob
         if ((policy.getSharedElementID() != null)
-                && (policy.getSharedElementID().equals(doc.getFields().get(IndexFields.FIELD_JOB_ID)))) {
+                && (policy.getSharedElementID().equals(doc.getFields().get(IndexFields.FIELD_JOB_ID).toString()))) {
             //drop off document in public user drop off zone
             ThemisDataSink.saveIndexFragment(doc, shareWithUser, IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
             //create a status object
@@ -177,7 +177,7 @@ public class SharingPolicyExecution {
 
             //iterate over all documentUUIDs in document group from the policy and check if we're sharing this specific element
             for (String docInPol : docsInPolicy) {
-                if (docInPol.equals(doc.getFields().get(IndexFields.FIELD_JOB_ID))) {
+                if (docInPol.equals(doc.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString())) {
                     //drop off document in public user drop off zone
                     ThemisDataSink.saveIndexFragment(doc, shareWithUser, IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
                     //create a status object
