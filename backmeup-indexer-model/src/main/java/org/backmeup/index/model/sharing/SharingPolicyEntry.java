@@ -19,9 +19,11 @@ public class SharingPolicyEntry {
     private String name;
     private String description;
     private int numberOfSharedDocuments; //number of documents that this policy has currently shared
+    private boolean approvedBySharingpartner; //indicates if the sharing partner has already accepted it
 
     public SharingPolicyEntry(Long id, User fromUser, User withUser, SharingPolicyTypeEntry policy,
-            Date policyCreationDate, String sharedElementID, String name, String description, int numberOfSharedDocs) {
+            Date policyCreationDate, String sharedElementID, String name, String description, int numberOfSharedDocs,
+            boolean approvedBySharingpartner) {
         this.id = id;
         this.fromUserID = fromUser.id();
         this.withUserID = withUser.id();
@@ -31,6 +33,7 @@ public class SharingPolicyEntry {
         this.name = name;
         this.description = description;
         this.numberOfSharedDocuments = numberOfSharedDocs;
+        this.approvedBySharingpartner = approvedBySharingpartner;
     }
 
     public Long getFromUserID() {
@@ -61,7 +64,7 @@ public class SharingPolicyEntry {
         return "id: '" + this.id + "', fromUserID: '" + this.fromUserID + "', withUserID: '" + this.withUserID
                 + "', policy: '" + this.policy + "', sharedElement: '" + this.sharedElementID + "', name: '"
                 + this.name + "', description: '" + this.description + "', numberOfSharedDocuments: '"
-                + this.numberOfSharedDocuments + "'";
+                + this.numberOfSharedDocuments + "', approvedBySharingPartner: '" + this.approvedBySharingpartner + "'";
     }
 
     public Long getId() {
@@ -82,6 +85,10 @@ public class SharingPolicyEntry {
 
     public int getNumberOfSharedDocuments() {
         return this.numberOfSharedDocuments;
+    }
+
+    public boolean getApprovedBySharingpartner() {
+        return this.approvedBySharingpartner;
     }
 
 }

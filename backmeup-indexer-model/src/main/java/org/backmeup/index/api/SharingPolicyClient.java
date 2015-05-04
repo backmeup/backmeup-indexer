@@ -24,6 +24,10 @@ public interface SharingPolicyClient extends Closeable {
 
     String removeAllOwned();
 
+    String acceptIncomingSharing(Long policyID);
+
+    String declineIncomingSharing(Long policyID);
+
     @Override
     void close();
 

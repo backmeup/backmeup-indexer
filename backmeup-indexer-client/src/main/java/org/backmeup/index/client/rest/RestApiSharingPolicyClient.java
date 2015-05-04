@@ -48,6 +48,16 @@ public class RestApiSharingPolicyClient implements SharingPolicyClient {
     }
 
     @Override
+    public String acceptIncomingSharing(Long policyID) {
+        return this.server.acceptIncomingSharing(this.currUser, policyID);
+    }
+
+    @Override
+    public String declineIncomingSharing(Long policyID) {
+        return this.server.declineIncomingSharing(this.currUser, policyID);
+    }
+
+    @Override
     public void close() {
     }
 

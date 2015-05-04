@@ -95,7 +95,7 @@ public class SharingPolicyManager {
     public SharingPolicy addSharingPolicy(SharingPolicy shPolicy) {
 
         //TODO For now just set policy to active without approving handshake
-        shPolicy.setState(ActivityState.ACCEPTED_AND_ACTIVE);
+        shPolicy.setState(ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
 
         shPolicy = this.sharingPolicyDao.save(shPolicy);
         this.log.debug("adding SharingPolicy " + shPolicy.toString());
@@ -128,5 +128,49 @@ public class SharingPolicyManager {
     public void markPolicyAsDeleted(SharingPolicy p) {
         p.setState(ActivityState.DELETED);
         this.sharingPolicyDao.merge(p);
+    }
+
+    /**
+     * User accepts the incoming sharing he/she received
+     * 
+     * @param user
+     *            the user which received the incoming sharing
+     * @param policyID
+     *            the sharingpolicy ID that contains the sharing for the user as sharedWith
+     */
+    public void approveIncomingSharing(User user, Long policyID) {
+        SharingPolicy p = this.sharingPolicyDao.getAllSharingPoliciesWithUserAndPolicyID(user, policyID);
+        if (p != null) {
+            p.setState(ActivityState.ACCEPTED_AND_ACTIVE);
+            this.sharingPolicyDao.merge(p);
+            this.log.debug("approved incoming sharing for user: " + user.id() + " and SharingPolicy " + p.getId());
+        } else {
+            String s = "unable to approve incoming sharing for user: " + user.id() + " and SharingPolicy " + policyID
+                    + " - policy does not exist";
+            this.log.debug(s);
+            throw new IllegalArgumentException(s);
+        }
+    }
+
+    /**
+     * User declines the incoming sharing he/she received
+     * 
+     * @param user
+     *            the user which received the incoming sharing
+     * @param policyID
+     *            the sharingpolicy ID that contains the sharing for the user as sharedWith
+     */
+    public void declineIncomingSharing(User user, Long policyID) {
+        SharingPolicy p = this.sharingPolicyDao.getAllSharingPoliciesWithUserAndPolicyID(user, policyID);
+        if (p != null) {
+            p.setState(ActivityState.WAITING_FOR_DELETION);
+            this.sharingPolicyDao.merge(p);
+            this.log.debug("declined incoming sharing for user: " + user.id() + " and SharingPolicy " + p.getId());
+        } else {
+            String s = "unable to decline incoming sharing for user: " + user.id() + " and SharingPolicy " + policyID
+                    + " - policy does not exist";
+            this.log.debug(s);
+            throw new IllegalArgumentException(s);
+        }
     }
 }

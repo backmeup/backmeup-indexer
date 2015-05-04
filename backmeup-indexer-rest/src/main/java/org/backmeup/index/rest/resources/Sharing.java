@@ -25,6 +25,7 @@ import org.backmeup.index.model.sharing.SharingPolicyEntry;
 import org.backmeup.index.model.sharing.SharingPolicyEntry.SharingPolicyTypeEntry;
 import org.backmeup.index.sharing.policy.SharingPolicies;
 import org.backmeup.index.sharing.policy.SharingPolicy;
+import org.backmeup.index.sharing.policy.SharingPolicy.ActivityState;
 import org.backmeup.index.sharing.policy.SharingPolicy2DocumentUUIDConverter;
 import org.backmeup.index.sharing.policy.SharingPolicyManager;
 
@@ -124,6 +125,50 @@ public class Sharing implements SharingPolicyServer {
             @PathParam("fromUserId") User owner) {
         mandatory("fromUserId", owner);
         return status(Response.Status.OK, removeAllOwned(owner));
+    }
+
+    @POST
+    @Path("/{currUserId}/acceptIncoming")
+    public Response acceptIncomingSharingRS(//
+            @PathParam("currUserId") User user, //
+            @QueryParam("policyID") Long policyID) {
+
+        mandatory("currUserId", user);
+        mandatory("policyID", policyID);
+
+        try {
+            return status(Response.Status.OK, acceptIncomingSharing(user, policyID));
+        } catch (IllegalArgumentException e) {
+            return status(Response.Status.NOT_ACCEPTABLE, "failed to approve incoming sharing");
+        }
+    }
+
+    @POST
+    @Path("/{currUserId}/declineIncoming")
+    public Response declineIncomingSharingRS(// 
+            @PathParam("currUserId") User user, //
+            @QueryParam("policyID") Long policyID) {
+
+        mandatory("currUserId", user);
+        mandatory("policyID", policyID);
+
+        try {
+            return status(Response.Status.OK, declineIncomingSharing(user, policyID));
+        } catch (IllegalArgumentException e) {
+            return status(Response.Status.NOT_ACCEPTABLE, "failed to decline incoming sharing");
+        }
+    }
+
+    @Override
+    public String acceptIncomingSharing(User user, Long policyID) {
+        this.sharingManager.approveIncomingSharing(user, policyID);
+        return "incoming sharing accepted";
+    }
+
+    @Override
+    public String declineIncomingSharing(User user, Long policyID) {
+        this.sharingManager.declineIncomingSharing(user, policyID);
+        return "incoming sharing declined";
     }
 
     private void mandatory(String name, String value) {
@@ -243,9 +288,13 @@ public class Sharing implements SharingPolicyServer {
     private SharingPolicyEntry convert(SharingPolicy p) {
         SharingPolicyTypeEntry t = convert(p.getPolicy());
         int polDocCount = this.pol2uuidConverter.getNumberOfDocsInPolicyForOwner(p);
+        boolean incomingSharingAccepted = false;
+        if (p.getState().equals(ActivityState.ACCEPTED_AND_ACTIVE)) {
+            incomingSharingAccepted = true;
+        }
         SharingPolicyEntry e = new SharingPolicyEntry(p.getId(), new User(p.getFromUserID()), new User(
                 p.getWithUserID()), t, p.getPolicyCreationDate(), p.getSharedElementID(), p.getName(),
-                p.getDescription(), polDocCount);
+                p.getDescription(), polDocCount, incomingSharingAccepted);
         return e;
     }
 
@@ -258,4 +307,5 @@ public class Sharing implements SharingPolicyServer {
         }
         return ret;
     }
+
 }

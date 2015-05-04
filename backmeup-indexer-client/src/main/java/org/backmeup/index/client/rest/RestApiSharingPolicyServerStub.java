@@ -90,4 +90,28 @@ public class RestApiSharingPolicyServerStub implements SharingPolicyServer {
         return new IndexClientException("faled to contact sharing policy management server", problem);
     }
 
+    @Override
+    public String acceptIncomingSharing(User user, Long policyID) {
+        try {
+            URI url = this.urls.forAcceptIncomingSharing(user, policyID);
+            String body = this.http.post(url, "", 200);
+            return body;
+
+        } catch (IOException | URISyntaxException e) {
+            throw failedToContactServer(e);
+        }
+    }
+
+    @Override
+    public String declineIncomingSharing(User user, Long policyID) {
+        try {
+            URI url = this.urls.forDeclineIncomingSharing(user, policyID);
+            String body = this.http.post(url, "", 200);
+            return body;
+
+        } catch (IOException | URISyntaxException e) {
+            throw failedToContactServer(e);
+        }
+    }
+
 }

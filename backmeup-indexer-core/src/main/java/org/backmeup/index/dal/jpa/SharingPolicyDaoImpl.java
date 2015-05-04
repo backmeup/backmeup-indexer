@@ -68,6 +68,15 @@ public class SharingPolicyDaoImpl extends BaseDaoImpl<SharingPolicy> implements 
     }
 
     @Override
+    public SharingPolicy getAllSharingPoliciesWithUserAndPolicyID(User withUser, Long policyID) {
+        TypedQuery<SharingPolicy> q = createTypedQuery("SELECT u FROM " + TABLENAME
+                + " u WHERE u.withUserID = :withUserID and u.Id = :policyId ORDER BY u.Id ASC");
+        q.setParameter("withUserID", withUser.id());
+        q.setParameter("policyId", policyID);
+        return executeQuerySelectFirst(q);
+    }
+
+    @Override
     public List<SharingPolicy> getAllSharingPoliciesWithUserInState(User withUser, ActivityState... state) {
         List<ActivityState> lState = Arrays.asList(state);
         TypedQuery<SharingPolicy> q = createTypedQuery("SELECT u FROM " + TABLENAME

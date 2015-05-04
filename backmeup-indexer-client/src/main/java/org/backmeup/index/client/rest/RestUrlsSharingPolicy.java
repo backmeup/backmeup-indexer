@@ -65,6 +65,18 @@ public class RestUrlsSharingPolicy {
         return urlBuilder.build();
     }
 
+    public URI forAcceptIncomingSharing(User user, Long policyID) throws URISyntaxException {
+        URIBuilder urlBuilder = startWithBaseUrl(user, "acceptIncoming");
+        addMandatoryParameter(urlBuilder, "policyID", policyID);
+        return urlBuilder.build();
+    }
+
+    public URI forDeclineIncomingSharing(User user, Long policyID) throws URISyntaxException {
+        URIBuilder urlBuilder = startWithBaseUrl(user, "declineIncoming");
+        addMandatoryParameter(urlBuilder, "policyID", policyID);
+        return urlBuilder.build();
+    }
+
     // private
 
     private URIBuilder startWithBaseUrl(User userId, String path) throws URISyntaxException {

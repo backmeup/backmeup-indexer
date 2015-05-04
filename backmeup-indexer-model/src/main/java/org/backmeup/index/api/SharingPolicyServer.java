@@ -12,7 +12,7 @@ import org.backmeup.index.model.sharing.SharingPolicyEntry.SharingPolicyTypeEntr
  */
 public interface SharingPolicyServer {
 
-    Set<SharingPolicyEntry> getAllOwned(User owner);
+    Set<SharingPolicyEntry> getAllOwned(User forUser);
 
     Set<SharingPolicyEntry> getAllIncoming(User forUser);
 
@@ -22,5 +22,9 @@ public interface SharingPolicyServer {
     String removeOwned(User owner, Long policyID);
 
     String removeAllOwned(User owner);
+
+    String acceptIncomingSharing(User user, Long policyID);
+
+    String declineIncomingSharing(User user, Long policyID);
 
 }
