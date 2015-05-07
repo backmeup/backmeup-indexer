@@ -10,6 +10,7 @@ import org.backmeup.index.dal.jpa.JPAEntityManagerFactoryProducer;
 import org.backmeup.index.dal.jpa.QueuedIndexDocumentDaoImpl;
 import org.backmeup.index.dal.jpa.RunningIndexUserConfigDaoImpl;
 import org.backmeup.index.dal.jpa.SharingPolicyDaoImpl;
+import org.backmeup.index.dal.jpa.TaggedCollectionDaoImpl;
 import org.junit.rules.ExternalResource;
 import org.mockito.internal.util.reflection.Whitebox;
 
@@ -25,6 +26,8 @@ public class DerbyDatabase extends ExternalResource {
     public IndexFragmentEntryStatusDao statusDao;
     //for sharing policy persistency 
     public SharingPolicyDao sharingPolicyDao;
+    //for tagged collection persistency
+    public TaggedCollectionDao taggedColDao;
 
     @Override
     protected void before() {
@@ -42,6 +45,9 @@ public class DerbyDatabase extends ExternalResource {
 
         this.sharingPolicyDao = new SharingPolicyDaoImpl();
         Whitebox.setInternalState(this.sharingPolicyDao, "entityManager", this.entityManager);
+
+        this.taggedColDao = new TaggedCollectionDaoImpl();
+        Whitebox.setInternalState(this.taggedColDao, "entityManager", this.entityManager);
     }
 
     private Properties overwrittenJPAProps() {

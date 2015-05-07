@@ -22,12 +22,6 @@ public class SharingPolicyDaoImpl extends BaseDaoImpl<SharingPolicy> implements 
         super(SharingPolicy.class);
     }
 
-    @Transactional
-    @Override
-    public void deleteAll() {
-        this.entityManager.createQuery("DELETE FROM +" + TABLENAME).executeUpdate();
-    }
-
     @Override
     public SharingPolicy getByEntityId(Long entityId) {
         TypedQuery<SharingPolicy> q = createTypedQuery("SELECT u FROM " + TABLENAME + " u WHERE u.Id = :entityId");
@@ -136,6 +130,12 @@ public class SharingPolicyDaoImpl extends BaseDaoImpl<SharingPolicy> implements 
     private SharingPolicy executeQuerySelectFirst(TypedQuery<SharingPolicy> q) {
         List<SharingPolicy> status = executeQuery(q);
         return status.size() > 0 ? status.get(0) : null;
+    }
+
+    @Transactional
+    @Override
+    public void deleteAll() {
+        this.entityManager.createQuery("DELETE FROM +" + TABLENAME).executeUpdate();
     }
 
 }

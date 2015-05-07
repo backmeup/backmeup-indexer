@@ -102,13 +102,6 @@ public class SharingPolicy {
         this.policyCreationDate = policyCreationDate;
     }
 
-    @Override
-    public String toString() {
-        return "id: '" + this.Id + "', fromUserID: '" + this.fromUserID + "', withUserID: '" + this.withUserID
-                + "', policy: '" + this.policy + "', sharedElement: '" + this.sharedElementID + "', state: '"
-                + this.state + "'";
-    }
-
     public Date getPolicyLastCheckedDate() {
         return this.policyLastCheckedDate;
     }
@@ -147,6 +140,14 @@ public class SharingPolicy {
 
     public void setState(ActivityState state) {
         this.state = state;
+    }
+
+    @Override
+    public String toString() {
+        return "id: '" + this.Id + "', fromUserID: '" + this.fromUserID + "', withUserID: '" + this.withUserID
+                + "', policy: '" + this.policy + "', sharedElement: '" + this.sharedElementID + "', name: '"
+                + this.name + "', description: '" + this.description + "', creationDate: '"
+                + this.policyCreationDate.toString() + "', state: '" + this.state + "'";
     }
 
 }
