@@ -2,6 +2,7 @@ package org.backmeup.index.sharing.policy;
 
 import java.util.List;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.backmeup.index.dal.SharingPolicyDao;
@@ -16,12 +17,8 @@ import org.slf4j.LoggerFactory;
  * etc.
  *
  */
-//@ApplicationScoped
+@ApplicationScoped
 public class SharingPolicyManager {
-
-    //TODO only allow sharing policy creation if the EntryStatus matches imported?
-    //TODO REST Interface, get active user from system, do not accept others creating policies for this user
-    //TODO Need to trigger Policy Change Event?
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -94,7 +91,6 @@ public class SharingPolicyManager {
      */
     public SharingPolicy addSharingPolicy(SharingPolicy shPolicy) {
 
-        //TODO For now just set policy to active without approving handshake
         shPolicy.setState(ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
 
         shPolicy = this.sharingPolicyDao.save(shPolicy);
