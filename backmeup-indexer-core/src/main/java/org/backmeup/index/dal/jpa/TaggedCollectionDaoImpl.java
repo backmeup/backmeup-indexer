@@ -36,11 +36,11 @@ public class TaggedCollectionDaoImpl extends BaseDaoImpl<TaggedCollection> imple
     }
 
     @Override
-    public List<TaggedCollection> getAllFromUserAndName(User user, String name) {
+    public List<TaggedCollection> getAllFromUserAndLikeName(User user, String query) {
         TypedQuery<TaggedCollection> q = createTypedQuery("SELECT u FROM " + TABLENAME
-                + " u WHERE u.userId = :user and u.name = :name ORDER BY u.id ASC");
+                + " u WHERE u.userId = :user and u.name LIKE :name ORDER BY u.id ASC");
         q.setParameter("user", user.id());
-        q.setParameter("name", name);
+        q.setParameter("name", "%" + query + "%");
         return executeQuery(q);
     }
 
