@@ -59,18 +59,30 @@ public class TaggedCollectionDaoTest {
 
     @Test
     public void executeQueryByUserAndName() {
-        List<TaggedCollection> found = this.taggedColDao.getAllFromUserAndName(this.user1, "collection 1üö");
+        List<TaggedCollection> found = this.taggedColDao.getAllFromUserAndLikeName(this.user1, "collection 1üö");
         assertTrue(found.size() == 1);
         assertNotNull(found.get(0).getDocumentIds());
 
-        found = this.taggedColDao.getAllFromUserAndName(this.user1, "collection");
+        found = this.taggedColDao.getAllFromUserAndLikeName(this.user1, "collection 2");
+        assertTrue(found.size() == 1);
+
+        found = this.taggedColDao.getAllFromUserAndLikeName(this.user1, null);
         assertTrue(found.size() == 0);
 
-        found = this.taggedColDao.getAllFromUserAndName(this.user1, null);
+        found = this.taggedColDao.getAllFromUserAndLikeName(this.user2, null);
         assertTrue(found.size() == 0);
+    }
 
-        found = this.taggedColDao.getAllFromUserAndName(this.user2, null);
-        assertTrue(found.size() == 0);
+    @Test
+    public void executeQueryByUserAndQueryNameString() {
+        List<TaggedCollection> found = this.taggedColDao.getAllFromUserAndLikeName(this.user1, "collection 1üö");
+        assertTrue(found.size() == 1);
+
+        found = this.taggedColDao.getAllFromUserAndLikeName(this.user1, "collection");
+        assertTrue(found.size() == 2);
+
+        found = this.taggedColDao.getAllFromUserAndLikeName(this.user1, "lecti");
+        assertTrue(found.size() == 2);
     }
 
     @Test

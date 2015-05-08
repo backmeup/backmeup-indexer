@@ -15,7 +15,7 @@ public interface TaggedCollectionDao extends BaseDao<TaggedCollection> {
 
     List<TaggedCollection> getAllFromUser(User user);
 
-    List<TaggedCollection> getAllFromUserAndName(User user, String name);
+    List<TaggedCollection> getAllFromUserAndLikeName(User user, String name);
 
     List<TaggedCollection> getAllFromUserContainingDocumentIds(User user, List<UUID> documentIds);
 
