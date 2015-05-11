@@ -20,6 +20,7 @@ import org.backmeup.index.model.User;
 import org.backmeup.index.sharing.IndexDocumentTestingUtils;
 import org.backmeup.index.sharing.policy.SharingPolicies;
 import org.backmeup.index.sharing.policy.SharingPolicy;
+import org.backmeup.index.sharing.policy.SharingPolicy.ActivityState;
 import org.backmeup.index.sharing.policy.SharingPolicyManager;
 import org.backmeup.index.storage.ThemisDataSink;
 import org.junit.After;
@@ -220,6 +221,7 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
         this.user9 = new User(9L);
         this.pol1w8 = new SharingPolicy(this.user1, this.user8, SharingPolicies.SHARE_ALL_AFTER_NOW, "My Name",
                 "My Description");
+
         this.pol1w9 = new SharingPolicy(this.user1, this.user9, SharingPolicies.SHARE_ALL_AFTER_NOW, "My Name",
                 "My Description");
         int hours = 2; //create a date in history 
@@ -250,6 +252,20 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
         this.policyManager.addSharingPolicy(this.pol5w6);
         this.database.entityManager.getTransaction().commit();
 
+        //by default is set to wait for sharing partner handshake - trigger policy activated
+        setPolicyHasBeenApprovedBySharingPartner(this.pol1w2);
+        setPolicyHasBeenApprovedBySharingPartner(this.pol1w7);
+        setPolicyHasBeenApprovedBySharingPartner(this.pol5w6);
+        setPolicyHasBeenApprovedBySharingPartner(this.pol1w9);
+        setPolicyHasBeenApprovedBySharingPartner(this.pol1w8);
+        setPolicyHasBeenApprovedBySharingPartner(this.pol3w4);
+    }
+
+    private void setPolicyHasBeenApprovedBySharingPartner(SharingPolicy p) {
+        this.database.entityManager.getTransaction().begin();
+        p.setState(ActivityState.ACCEPTED_AND_ACTIVE);
+        this.database.sharingPolicyDao.merge(p);
+        this.database.entityManager.getTransaction().commit();
     }
 
     private void createQueueInputData() {

@@ -1,6 +1,7 @@
 package org.backmeup.index.sharing.policy;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -9,6 +10,7 @@ import java.util.List;
 
 import org.backmeup.index.dal.DerbyDatabase;
 import org.backmeup.index.model.User;
+import org.backmeup.index.sharing.policy.SharingPolicy.ActivityState;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -78,10 +80,30 @@ public class SharingPolicyCreationTest {
     }
 
     @Test
+    public void testActivityState() {
+        this.database.entityManager.getTransaction().begin();
+        SharingPolicy p = this.shManager.createAndAddSharingPolicy(this.owner, this.sharedWith,
+                SharingPolicies.SHARE_ALL_AFTER_NOW);
+        assertEquals(ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE, p.getState());
+        this.database.entityManager.getTransaction().commit();
+
+        List<SharingPolicy> ps = this.shManager.getAllActivePoliciesOwnedByUser(this.owner);
+        assertFalse(ps.contains(p));
+
+        this.database.entityManager.getTransaction().begin();
+        this.shManager.approveIncomingSharing(this.sharedWith, p.getId());
+        this.database.entityManager.getTransaction().commit();
+
+        ps = this.shManager.getAllActivePoliciesOwnedByUser(this.owner);
+        assertTrue(ps.contains(p));
+    }
+
+    @Test
     public void addShareAllPolicyAndRemoveIt() {
         this.database.entityManager.getTransaction().begin();
         SharingPolicy p = this.shManager.createAndAddSharingPolicy(this.owner, this.sharedWith,
                 SharingPolicies.SHARE_ALL_AFTER_NOW);
+        this.shManager.approveIncomingSharing(this.sharedWith, p.getId());
         this.database.entityManager.getTransaction().commit();
         List<SharingPolicy> ps = this.shManager.getAllActivePoliciesOwnedByUser(this.owner);
         assertTrue(ps.contains(p));
@@ -100,6 +122,7 @@ public class SharingPolicyCreationTest {
         //share all elements of backupJobID 1
         SharingPolicy p = this.shManager.createAndAddSharingPolicy(this.owner, this.sharedWith,
                 SharingPolicies.SHARE_BACKUP, "1", "My Name", "My Description");
+        this.shManager.approveIncomingSharing(this.sharedWith, p.getId());
         this.database.entityManager.getTransaction().commit();
 
         List<SharingPolicy> ps = this.shManager.getAllActivePoliciesOwnedByUser(this.owner);
