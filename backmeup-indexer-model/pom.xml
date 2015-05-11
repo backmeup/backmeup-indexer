@@ -52,6 +52,7 @@
                         <Export-Package>org.backmeup.index.api,
                             org.backmeup.index.model,
                             org.backmeup.index.model.sharing,
+                            org.backmeup.index.model.tagging,
                             org.backmeup.index.serializer</Export-Package>
                         <Import-Package>*</Import-Package>
                     </instructions>

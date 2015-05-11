@@ -1,11 +1,8 @@
 package org.backmeup.index.rest.resources;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -15,7 +12,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -31,7 +27,7 @@ import org.backmeup.index.sharing.policy.SharingPolicyManager;
 
 @Path("sharing")
 @Produces(MediaType.APPLICATION_JSON)
-public class Sharing implements SharingPolicyServer {
+public class Sharing extends ParameterValidator implements SharingPolicyServer {
 
     @Inject
     private SharingPolicyManager sharingManager;
@@ -169,82 +165,6 @@ public class Sharing implements SharingPolicyServer {
     public String declineIncomingSharing(User user, Long policyID) {
         this.sharingManager.declineIncomingSharing(user, policyID);
         return "incoming sharing declined";
-    }
-
-    private void mandatory(String name, String value) {
-        if (value == null || value.isEmpty()) {
-            badRequestMissingParameter(name);
-        }
-    }
-
-    private void mandatoryUUID(String name, String value) {
-        if (value == null || value.isEmpty()) {
-            badRequestMissingParameter(name);
-        }
-        try {
-            UUID.fromString(value);
-        } catch (Exception e) {
-            throw new WebApplicationException(
-                    Response.status(Response.Status.BAD_REQUEST)
-                            .entity(name + " parameter is malformed. Expecting UUID of syntax: "
-                                    + UUID.randomUUID().toString()).build());
-        }
-    }
-
-    private void mandatoryListFromString(String name, String value) {
-        if (value == null || value.isEmpty()) {
-            badRequestMissingParameter(name);
-        }
-        try {
-            String[] sArr = value.substring(1, value.length() - 1).split(",\\s*");
-            List<String> lArr = Arrays.asList(sArr);
-            if (lArr.size() <= 1) {
-                badRequestMalformedListOfUUIDsParameter(name);
-            }
-            //test sample on UUIDs
-            for (int i = 0; i < lArr.size(); i++) {
-                UUID.fromString(lArr.get(i));
-            }
-        } catch (Exception e) {
-            badRequestMalformedListOfUUIDsParameter(name);
-        }
-    }
-
-    private void mandatory(String name, User user) {
-        if (user == null || user.id() == 0) {
-            badRequestMissingParameter(name);
-        }
-    }
-
-    private void mandatory(String name, Long l) {
-        if (l == null || l == 0) {
-            badRequestMissingParameter(name);
-        }
-    }
-
-    private void mandatory(String name, SharingPolicyTypeEntry type) {
-        if (type == null || type.toString().isEmpty()) {
-            badRequestMissingParameter(name);
-        }
-    }
-
-    private void badRequestMissingParameter(String name) {
-        throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST). //
-                entity(name + " parameter is mandatory"). //
-                build());
-    }
-
-    private void badRequestMalformedListOfUUIDsParameter(String name) {
-        List<UUID> l = new ArrayList<UUID>();
-        l.add(UUID.randomUUID());
-        l.add(UUID.randomUUID());
-        throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST). //
-                entity(name + " parameter is malformed. Expecting list in syntax: " + l.toString()). //
-                build());
-    }
-
-    private Response status(Response.Status code, String message) {
-        return Response.status(code).entity(message).build();
     }
 
     private SharingPolicies convert(SharingPolicyTypeEntry policyType) {

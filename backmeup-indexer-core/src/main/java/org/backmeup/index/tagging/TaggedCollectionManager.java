@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Allows to define tagged collections i.e. select documents of different backups and define them as a custom collection
- * 
  *
  */
 @ApplicationScoped
@@ -83,9 +82,10 @@ public class TaggedCollectionManager {
     public void addDocumentsToTaggedCollection(Long collectionID, List<UUID> documentIDs) {
         TaggedCollection t = this.taggedCollectionDao.getByEntityId(collectionID);
         if (t == null) {
-            this.log.debug("failed adding documents for TaggedCollection: " + collectionID
-                    + " due to: collection not found");
-            return;
+            String s = "failed adding documents for TaggedCollection: " + collectionID
+                    + " due to: collection not found";
+            this.log.debug(s);
+            throw new IllegalArgumentException(s);
         }
         int count = 0;
         for (UUID documentID : documentIDs) {
@@ -98,9 +98,10 @@ public class TaggedCollectionManager {
     public void removeDocumentsFromTaggedCollection(Long collectionID, List<UUID> documentIDs) {
         TaggedCollection t = this.taggedCollectionDao.getByEntityId(collectionID);
         if (t == null) {
-            this.log.debug("failed remove documents for TaggedCollection: " + collectionID
-                    + " due to: collection not found");
-            return;
+            String s = "failed remove documents for TaggedCollection: " + collectionID
+                    + " due to: collection not found";
+            this.log.debug(s);
+            throw new IllegalArgumentException(s);
         }
         int count = 0;
         for (UUID documentID : documentIDs) {

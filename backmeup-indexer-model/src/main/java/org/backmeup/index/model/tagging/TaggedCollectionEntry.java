@@ -1,4 +1,4 @@
-package org.backmeup.index.tagging;
+package org.backmeup.index.model.tagging;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -6,48 +6,28 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-
 import org.backmeup.index.model.User;
 
-@Entity
-public class TaggedCollection {
+public class TaggedCollectionEntry {
 
-    @Id
-    @GeneratedValue
     private Long Id;
     private Long userId;
     private String name;
     private String description;
-    @Temporal(TemporalType.TIMESTAMP)
     private Date collectionCreationDate;
-    @ElementCollection()
-    @CollectionTable(name = "taggedcollection_documents", joinColumns = @JoinColumn(name = "id"))
-    @Column(columnDefinition = "CHAR(32)")
-    //@Type(type = "uuid-char")
     private List<UUID> documentIds = new ArrayList<UUID>();
+    //number of documents in this collection that are currently actually imported/available in the users ES index
+    private int numberOfActuallyAvailableDocuments;
 
-    public TaggedCollection() {
-    }
-
-    public TaggedCollection(User userId, String name, String description, List<UUID> documentIDs) {
-        this(userId, name, description);
-        this.documentIds = documentIDs;
-    }
-
-    public TaggedCollection(User userId, String name, String description) {
-        this.userId = userId.id();
-        this.collectionCreationDate = new Date();
+    public TaggedCollectionEntry(Long Id, User user, String name, String description, Date collectionCreationDate,
+            List<UUID> collection, int numberOfActuallyAvailableDocuments) {
+        this.Id = Id;
+        this.userId = user.id();
         this.name = name;
         this.description = description;
+        this.collectionCreationDate = collectionCreationDate;
+        this.documentIds = collection;
+        this.numberOfActuallyAvailableDocuments = numberOfActuallyAvailableDocuments;
     }
 
     public Long getId() {
@@ -98,23 +78,20 @@ public class TaggedCollection {
         this.documentIds = documentIds;
     }
 
-    public void addDocumentId(UUID documentId) {
-        if (!this.documentIds.contains(documentId)) {
-            this.documentIds.add(documentId);
-        }
+    public int getNumberOfActuallyAvailableDocuments() {
+        return this.numberOfActuallyAvailableDocuments;
     }
 
-    public void removeDocumentId(UUID documentId) {
-        if (this.documentIds.contains(documentId)) {
-            this.documentIds.remove(documentId);
-        }
+    public void setNumberOfActuallyAvailableDocuments(int numberOfActuallyAvailableDocuments) {
+        this.numberOfActuallyAvailableDocuments = numberOfActuallyAvailableDocuments;
     }
 
     @Override
     public String toString() {
         return "id: '" + this.Id + "', userId: '" + this.userId + "', name: '" + this.name + "', description: '"
                 + this.description + "', creationDate: '" + this.collectionCreationDate.toString()
-                + "', documentIds: '" + Arrays.toString(this.documentIds.toArray()) + "'";
+                + "', documentIds: '" + Arrays.toString(this.documentIds.toArray())
+                + "', numberOfActuallyAvailableDocuments: '" + this.numberOfActuallyAvailableDocuments + "'";
     }
 
 }
