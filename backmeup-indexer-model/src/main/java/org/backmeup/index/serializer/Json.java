@@ -10,6 +10,7 @@ import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
 import org.backmeup.index.model.sharing.SharingPolicyEntry;
+import org.backmeup.index.model.tagging.TaggedCollectionEntry;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -124,6 +125,11 @@ public class Json {
 
     public static Set<SharingPolicyEntry> deserializeSetOfSharingPolicyEntries(String body) {
         return deserialize(body, new TypeToken<Set<SharingPolicyEntry>>() {
+        }.getType());
+    }
+
+    public static Set<TaggedCollectionEntry> deserializeSetOfTaggedCollectionEntries(String body) {
+        return deserialize(body, new TypeToken<Set<TaggedCollectionEntry>>() {
         }.getType());
     }
 }

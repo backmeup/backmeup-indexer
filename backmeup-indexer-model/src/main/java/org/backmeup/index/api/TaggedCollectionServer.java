@@ -19,14 +19,14 @@ public interface TaggedCollectionServer {
 
     Set<TaggedCollectionEntry> getAllTaggedCollectionsContainingDocuments(User user, List<UUID> lDocumentUUIDs);
 
-    String removeTaggedCollection(Long collectionID);
+    String removeTaggedCollection(User user, Long collectionID);
 
     TaggedCollectionEntry createAndAddTaggedCollection(User user, String name, String description,
             List<UUID> containedDocumentIDs);
 
-    String addDocumentsToTaggedCollection(Long collectionID, List<UUID> documentIDs);
+    String addDocumentsToTaggedCollection(User user, Long collectionID, List<UUID> documentIDs);
 
-    String removeDocumentsFromTaggedCollection(Long collectionID, List<UUID> documentIDs);
+    String removeDocumentsFromTaggedCollection(User user, Long collectionID, List<UUID> documentIDs);
 
     String removeAllCollectionsForUser(User user);
 

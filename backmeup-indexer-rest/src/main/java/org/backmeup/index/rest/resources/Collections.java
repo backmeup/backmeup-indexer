@@ -78,7 +78,7 @@ public class Collections extends ParameterValidator implements TaggedCollectionS
         mandatory("userId", user);
 
         if (collectionID != null && collectionID != -1) {
-            return this.removeTaggedCollection(collectionID);
+            return this.removeTaggedCollection(user, collectionID);
         } else {
             return this.removeAllCollectionsForUser(user);
         }
@@ -95,7 +95,7 @@ public class Collections extends ParameterValidator implements TaggedCollectionS
     }
 
     @Override
-    public String removeTaggedCollection(Long collectionID) {
+    public String removeTaggedCollection(User user, Long collectionID) {
         try {
             this.collectionManager.removeTaggedCollection(collectionID);
             return "removed tagged collections: " + collectionID;
@@ -110,7 +110,8 @@ public class Collections extends ParameterValidator implements TaggedCollectionS
     public TaggedCollectionEntry createAndAddTaggedCollection(//
             @PathParam("userId") User user,//
             @QueryParam("name") String name,//
-            @QueryParam("description") String description, @QueryParam("documentIds") List<UUID> containedDocumentIDs) {
+            @QueryParam("description") String description, //
+            @QueryParam("documentIds") List<UUID> containedDocumentIDs) {
 
         mandatory("userId", user);
 
@@ -121,10 +122,12 @@ public class Collections extends ParameterValidator implements TaggedCollectionS
 
     @Override
     @POST
-    @Path("/adddocuments/{collId}")
+    @Path("/{userId}/{collId}/adddocuments")
     public String addDocumentsToTaggedCollection(//
+            @PathParam("userId") User user,//
             @PathParam("collId") Long collectionID,//
             @QueryParam("documentIds") List<UUID> documentIDs) {
+        mandatory("userId", user);
         mandatory("collId", collectionID);
         mandatory("documentIds", documentIDs);
 
@@ -138,10 +141,12 @@ public class Collections extends ParameterValidator implements TaggedCollectionS
 
     @Override
     @DELETE
-    @Path("/removedocuments/{collId}")
+    @Path("/{userId}/{collId}/removedocuments")
     public String removeDocumentsFromTaggedCollection(//
+            @PathParam("userId") User user,//
             @PathParam("collId") Long collectionID,//
             @QueryParam("documentIds") List<UUID> documentIDs) {
+        mandatory("userId", user);
         mandatory("collId", collectionID);
         mandatory("documentIds", documentIDs);
 

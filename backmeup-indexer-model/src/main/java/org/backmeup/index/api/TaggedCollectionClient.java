@@ -1,6 +1,7 @@
 package org.backmeup.index.api;
 
 import java.io.Closeable;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -16,15 +17,15 @@ public interface TaggedCollectionClient extends Closeable {
 
     Set<TaggedCollectionEntry> getAllTaggedCollectionsByNameQuery(String query);
 
-    Set<TaggedCollectionEntry> getAllTaggedCollectionsContainingDocuments(Set<UUID> lDocumentUUIDs);
+    Set<TaggedCollectionEntry> getAllTaggedCollectionsContainingDocuments(List<UUID> lDocumentUUIDs);
 
     String removeTaggedCollection(Long collectionID);
 
-    TaggedCollectionEntry createAndAddTaggedCollection(String name, String description, Set<UUID> containedDocumentIDs);
+    TaggedCollectionEntry createAndAddTaggedCollection(String name, String description, List<UUID> containedDocumentIDs);
 
-    String addDocumentsToTaggedCollection(Long collectionID, Set<UUID> documentIDs);
+    String addDocumentsToTaggedCollection(Long collectionID, List<UUID> documentIDs);
 
-    String removeDocumentsFromTaggedCollection(Long collectionID, Set<UUID> documentIDs);
+    String removeDocumentsFromTaggedCollection(Long collectionID, List<UUID> documentIDs);
 
     String removeAllCollectionsForUser();
 
