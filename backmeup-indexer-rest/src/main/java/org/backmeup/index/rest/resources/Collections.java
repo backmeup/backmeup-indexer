@@ -132,8 +132,8 @@ public class Collections extends ParameterValidator implements TaggedCollectionS
         mandatory("documentIds", documentIDs);
 
         try {
-            this.collectionManager.addDocumentsToTaggedCollection(collectionID, documentIDs);
-            return "successfully added " + documentIDs.size() + " documents to collection: " + collectionID;
+            int docCount = this.collectionManager.addDocumentsToTaggedCollection(collectionID, documentIDs);
+            return "successfully added " + docCount + " documents to collection: " + collectionID;
         } catch (Exception e) {
             return "unable to add documents to collection due to: " + e.toString();
         }
@@ -151,16 +151,16 @@ public class Collections extends ParameterValidator implements TaggedCollectionS
         mandatory("documentIds", documentIDs);
 
         try {
-            this.collectionManager.removeDocumentsFromTaggedCollection(collectionID, documentIDs);
-            return "successfully removed " + documentIDs.size() + " documents from collection: " + collectionID;
+            int docCount = this.collectionManager.removeDocumentsFromTaggedCollection(collectionID, documentIDs);
+            return "successfully removed " + docCount + " documents from collection: " + collectionID;
         } catch (Exception e) {
             return "unable to remove documents from collection due to: " + e.toString();
         }
     }
 
     private TaggedCollectionEntry convert(TaggedCollection t) {
-        int docCount = this.indexEntryDao.getAllFromUserInOneOfTheTypes(new User(t.getUserId()), StatusType.IMPORTED,
-                StatusType.WAITING_FOR_IMPORT).size();
+        int docCount = this.indexEntryDao.getByUserOwnedAndImportedSharingsAndByDocumentUUIDs(new User(t.getUserId()),
+                t.getDocumentIds(), StatusType.IMPORTED, StatusType.WAITING_FOR_IMPORT).size();
         TaggedCollectionEntry e = new TaggedCollectionEntry(t.getId(), new User(t.getUserId()), t.getName(),
                 t.getDescription(), t.getCollectionCreationDate(), t.getDocumentIds(), docCount);
         return e;

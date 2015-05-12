@@ -79,7 +79,7 @@ public class TaggedCollectionManager {
         return addTaggedCollection(taggedColl);
     }
 
-    public void addDocumentsToTaggedCollection(Long collectionID, List<UUID> documentIDs) {
+    public int addDocumentsToTaggedCollection(Long collectionID, List<UUID> documentIDs) {
         TaggedCollection t = this.taggedCollectionDao.getByEntityId(collectionID);
         if (t == null) {
             String s = "failed adding documents for TaggedCollection: " + collectionID
@@ -88,14 +88,19 @@ public class TaggedCollectionManager {
             throw new IllegalArgumentException(s);
         }
         int count = 0;
+        List<UUID> docs = t.getDocumentIds();
         for (UUID documentID : documentIDs) {
-            t.addDocumentId(documentID);
-            count++;
+            if (!docs.contains(documentID)) {
+                t.addDocumentId(documentID);
+                count++;
+            }
         }
+        this.taggedCollectionDao.merge(t);
         this.log.debug("added " + count + " documents to taggedCollection: " + collectionID);
+        return count;
     }
 
-    public void removeDocumentsFromTaggedCollection(Long collectionID, List<UUID> documentIDs) {
+    public int removeDocumentsFromTaggedCollection(Long collectionID, List<UUID> documentIDs) {
         TaggedCollection t = this.taggedCollectionDao.getByEntityId(collectionID);
         if (t == null) {
             String s = "failed remove documents for TaggedCollection: " + collectionID
@@ -104,11 +109,16 @@ public class TaggedCollectionManager {
             throw new IllegalArgumentException(s);
         }
         int count = 0;
+        List<UUID> docs = t.getDocumentIds();
         for (UUID documentID : documentIDs) {
-            t.removeDocumentId(documentID);
-            count++;
+            if (docs.contains(documentID)) {
+                t.removeDocumentId(documentID);
+                count++;
+            }
         }
+        this.taggedCollectionDao.merge(t);
         this.log.debug("removed " + count + " documents from taggedCollection: " + collectionID);
+        return count;
     }
 
     public TaggedCollection addTaggedCollection(TaggedCollection taggedColl) {

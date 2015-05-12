@@ -6,6 +6,7 @@ import java.util.Set;
 import javax.ws.rs.core.Application;
 
 import org.backmeup.index.rest.provider.JacksonJsonConfiguration;
+import org.backmeup.index.rest.resources.Collections;
 import org.backmeup.index.rest.resources.Config;
 import org.backmeup.index.rest.resources.Index;
 import org.backmeup.index.rest.resources.IndexDocumentUpload;
@@ -21,6 +22,7 @@ public class BackmeupIndexApplication extends Application {
         this.set.add(Config.class);
         this.set.add(Sharing.class);
         this.set.add(IndexDocumentUpload.class);
+        this.set.add(Collections.class);
 
         // The default life-cycle for providers (registered directly or via a feature) is singleton.
         this.set.add(JacksonJsonConfiguration.class); // provider
