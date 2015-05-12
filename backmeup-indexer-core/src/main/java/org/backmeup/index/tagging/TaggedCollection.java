@@ -31,16 +31,16 @@ public class TaggedCollection {
     private Date collectionCreationDate;
     @ElementCollection()
     @CollectionTable(name = "taggedcollection_documents", joinColumns = @JoinColumn(name = "id"))
-    @Column(columnDefinition = "CHAR(32)")
+    @Column(columnDefinition = "VARCHAR(39)")
     //@Type(type = "uuid-char")
-    private List<UUID> documentIds = new ArrayList<UUID>();
+    private List<String> documentIds = new ArrayList<String>();
 
     public TaggedCollection() {
     }
 
     public TaggedCollection(User userId, String name, String description, List<UUID> documentIDs) {
         this(userId, name, description);
-        this.documentIds = documentIDs;
+        this.setDocumentIds(documentIDs);
     }
 
     public TaggedCollection(User userId, String name, String description) {
@@ -91,22 +91,29 @@ public class TaggedCollection {
     }
 
     public List<UUID> getDocumentIds() {
-        return this.documentIds;
+        List<UUID> ret = new ArrayList<UUID>();
+        for (String s : this.documentIds) {
+            ret.add(UUID.fromString(s));
+        }
+        return ret;
     }
 
     public void setDocumentIds(List<UUID> documentIds) {
-        this.documentIds = documentIds;
+        this.documentIds = new ArrayList<String>();
+        for (UUID uuid : documentIds) {
+            this.documentIds.add(uuid.toString());
+        }
     }
 
     public void addDocumentId(UUID documentId) {
-        if (!this.documentIds.contains(documentId)) {
-            this.documentIds.add(documentId);
+        if (!this.documentIds.contains(documentId.toString())) {
+            this.documentIds.add(documentId.toString());
         }
     }
 
     public void removeDocumentId(UUID documentId) {
-        if (this.documentIds.contains(documentId)) {
-            this.documentIds.remove(documentId);
+        if (this.documentIds.contains(documentId.toString())) {
+            this.documentIds.remove(documentId.toString());
         }
     }
 
