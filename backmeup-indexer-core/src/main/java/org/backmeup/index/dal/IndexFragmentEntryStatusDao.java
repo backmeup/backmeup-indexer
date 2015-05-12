@@ -95,8 +95,8 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
     IndexFragmentEntryStatus getByUserAndDocumentUUID(User user, UUID documentUUID);
 
     /**
-     * Find Status on IndexFragment Entries that match the specified IndexDocument UUIDs for a given user and that match
-     * the given policy types.
+     * Find Status on IndexFragment Entries that match the specified IndexDocument UUIDs for a given user as owner and
+     * that match the given policy types.
      * 
      * @param user
      * @param documentUUIDs
@@ -105,6 +105,18 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
      */
     List<IndexFragmentEntryStatus> getByUserOwnedAndDocumentUUIDs(User user, List<UUID> documentUUIDs,
             StatusType... types);
+
+    /**
+     * Find Status on IndexFragment Entries that match the specified IndexDocument UUIDs for a given user (both owned
+     * and imported sharings) that match the given policy types and Status.
+     * 
+     * @param user
+     * @param documentUUIDs
+     * @param types
+     * @return
+     */
+    List<IndexFragmentEntryStatus> getByUserOwnedAndImportedSharingsAndByDocumentUUIDs(User user,
+            List<UUID> documentUUIDs, StatusType... types);
 
     /**
      * Is status on an IndexFragment Entry on a specific IndexDocument UUID for a given user existing in DB?
@@ -255,7 +267,7 @@ public interface IndexFragmentEntryStatusDao extends BaseDao<IndexFragmentEntryS
      * @param type
      * @return
      */
-    List<IndexFragmentEntryStatus> getAllByStatusType(IndexFragmentEntryStatus.StatusType type);
+    public List<IndexFragmentEntryStatus> getAllByStatusType(IndexFragmentEntryStatus.StatusType type);
 
     void deleteAll();
 

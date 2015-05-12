@@ -264,4 +264,21 @@ public class IndexFragmentEntryStatusDaoImpl extends BaseDaoImpl<IndexFragmentEn
         return executeQuery(q);
     }
 
+    @Override
+    public List<IndexFragmentEntryStatus> getByUserOwnedAndImportedSharingsAndByDocumentUUIDs(User user,
+            List<UUID> documentUUIDs, StatusType... types) {
+        //check for missing but required inputs
+        if (documentUUIDs.size() == 0) {
+            return new ArrayList<IndexFragmentEntryStatus>();
+        }
+        List<StatusType> lTypes = Arrays.asList(types);
+        TypedQuery<IndexFragmentEntryStatus> q = createTypedQuery("SELECT u FROM "
+                + TABLENAME
+                + " u WHERE u.userID = :userId and u.statusType IN (:statusTypes) and u.documentUUID IN (:docUUIDs) ORDER BY u.id ASC");
+        q.setParameter("userId", user.id());
+        q.setParameter("docUUIDs", documentUUIDs);
+        q.setParameter("statusTypes", lTypes);
+        return executeQuery(q);
+    }
+
 }
