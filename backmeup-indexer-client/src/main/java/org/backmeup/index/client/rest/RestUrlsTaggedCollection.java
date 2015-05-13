@@ -2,7 +2,6 @@ package org.backmeup.index.client.rest;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -102,7 +101,9 @@ public class RestUrlsTaggedCollection {
         if (value == null || value.size() < 1) {
             throw new IllegalArgumentException("parameter " + key + " is mandatory");
         }
-        url.addParameter(key, Arrays.toString(value.toArray()));
+        for (UUID uuid : value) {
+            url.addParameter(key, uuid.toString());
+        }
     }
 
     private void addOptionalParameter(URIBuilder url, String key, String value) {
@@ -112,8 +113,10 @@ public class RestUrlsTaggedCollection {
     }
 
     private void addOptionalParameter(URIBuilder url, String key, List<UUID> value) {
-        if (value == null || value.size() < 1) {
-            url.addParameter(key, Arrays.toString(value.toArray()));
+        if (value != null && value.size() > 0) {
+            for (UUID uuid : value) {
+                url.addParameter(key, uuid.toString());
+            }
         }
     }
 

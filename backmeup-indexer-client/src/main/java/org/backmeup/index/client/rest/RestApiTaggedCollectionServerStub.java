@@ -102,7 +102,7 @@ public class RestApiTaggedCollectionServerStub implements TaggedCollectionServer
     @Override
     public String removeDocumentsFromTaggedCollection(User user, Long collectionID, List<UUID> documentIDs) {
         try {
-            URI url = this.urls.forAddDocumentsToTaggedCollection(user, collectionID, documentIDs);
+            URI url = this.urls.forRemoveDocumentsFromTaggedCollection(user, collectionID, documentIDs);
             String body = this.http.delete(url, 200);
             return body;
 
