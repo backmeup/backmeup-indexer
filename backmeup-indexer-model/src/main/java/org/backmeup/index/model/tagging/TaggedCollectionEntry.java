@@ -10,7 +10,7 @@ import org.backmeup.index.model.User;
 
 public class TaggedCollectionEntry {
 
-    private Long Id;
+    private Long collectionId;
     private Long userId;
     private String name;
     private String description;
@@ -19,9 +19,9 @@ public class TaggedCollectionEntry {
     //number of documents in this collection that are currently actually imported/available in the users ES index
     private int numberOfActuallyAvailableDocuments;
 
-    public TaggedCollectionEntry(Long Id, User user, String name, String description, Date collectionCreationDate,
-            List<UUID> collection, int numberOfActuallyAvailableDocuments) {
-        this.Id = Id;
+    public TaggedCollectionEntry(Long collectionId, User user, String name, String description,
+            Date collectionCreationDate, List<UUID> collection, int numberOfActuallyAvailableDocuments) {
+        this.collectionId = collectionId;
         this.userId = user.id();
         this.name = name;
         this.description = description;
@@ -30,12 +30,12 @@ public class TaggedCollectionEntry {
         this.numberOfActuallyAvailableDocuments = numberOfActuallyAvailableDocuments;
     }
 
-    public Long getId() {
-        return this.Id;
+    public Long getCollectionId() {
+        return this.collectionId;
     }
 
-    public void setId(Long id) {
-        this.Id = id;
+    public void setCollectionId(Long collectionId) {
+        this.collectionId = collectionId;
     }
 
     public Long getUserId() {
@@ -88,10 +88,11 @@ public class TaggedCollectionEntry {
 
     @Override
     public String toString() {
-        return "id: '" + this.Id + "', userId: '" + this.userId + "', name: '" + this.name + "', description: '"
-                + this.description + "', creationDate: '" + this.collectionCreationDate.toString()
-                + "', documentIds: '" + Arrays.toString(this.documentIds.toArray())
-                + "', numberOfActuallyAvailableDocuments: '" + this.numberOfActuallyAvailableDocuments + "'";
+        return "collectionId: '" + this.collectionId + "', userId: '" + this.userId + "', name: '" + this.name
+                + "', description: '" + this.description + "', creationDate: '"
+                + this.collectionCreationDate.toString() + "', documentIds: '"
+                + Arrays.toString(this.documentIds.toArray()) + "', numberOfActuallyAvailableDocuments: '"
+                + this.numberOfActuallyAvailableDocuments + "'";
     }
 
 }
