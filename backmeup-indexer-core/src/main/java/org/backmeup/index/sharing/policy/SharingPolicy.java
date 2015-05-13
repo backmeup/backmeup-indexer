@@ -2,6 +2,7 @@ package org.backmeup.index.sharing.policy;
 
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -29,6 +30,7 @@ public class SharingPolicy {
     private Long withUserID;
     @Enumerated(EnumType.STRING)
     private SharingPolicies policy;
+    @Column(columnDefinition = "TEXT")
     private String sharedElementID; //e.g. indexdocumentUUID or backupJobID dependent on policy
     @Temporal(TemporalType.TIMESTAMP)
     private Date policyCreationDate;
