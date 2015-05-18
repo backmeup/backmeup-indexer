@@ -42,8 +42,14 @@ public class SharingPolicyManager {
         return this.sharingPolicyDao.getAllSharingPoliciesFromUserInState(user, ActivityState.ACCEPTED_AND_ACTIVE);
     }
 
-    public List<SharingPolicy> getAllActivePoliciesSharedWithUser(User user) {
-        return this.sharingPolicyDao.getAllSharingPoliciesWithUserInState(user, ActivityState.ACCEPTED_AND_ACTIVE);
+    public List<SharingPolicy> getAllWaiting4HandshakeAndActivePoliciesOwnedByUser(User user) {
+        return this.sharingPolicyDao.getAllSharingPoliciesFromUserInState(user, ActivityState.ACCEPTED_AND_ACTIVE,
+                ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
+    }
+
+    public List<SharingPolicy> getAllWaiting4HandshakeAndActivePoliciesSharedWithUser(User user) {
+        return this.sharingPolicyDao.getAllSharingPoliciesWithUserInState(user, ActivityState.ACCEPTED_AND_ACTIVE,
+                ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
     }
 
     public List<SharingPolicy> getAllActivePoliciesBetweenUsers(User fromUser, User sharingP) {

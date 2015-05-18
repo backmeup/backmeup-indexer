@@ -41,7 +41,7 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
             @PathParam("fromUserId") User fromUser) {
         mandatory("fromUserId", fromUser);
 
-        List<SharingPolicy> lp = this.sharingManager.getAllActivePoliciesOwnedByUser(fromUser);
+        List<SharingPolicy> lp = this.sharingManager.getAllWaiting4HandshakeAndActivePoliciesOwnedByUser(fromUser);
         return convert(lp);
     }
 
@@ -52,7 +52,7 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
             @PathParam("fromUserId") User currUser) {
         mandatory("fromUserId", currUser);
 
-        List<SharingPolicy> lp = this.sharingManager.getAllActivePoliciesSharedWithUser(currUser);
+        List<SharingPolicy> lp = this.sharingManager.getAllWaiting4HandshakeAndActivePoliciesSharedWithUser(currUser);
         return convert(lp);
     }
 
@@ -110,7 +110,7 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
 
     @Override
     public String removeAllOwned(User owner) {
-        int count = this.sharingManager.getAllActivePoliciesOwnedByUser(owner).size();
+        int count = this.sharingManager.getAllWaiting4HandshakeAndActivePoliciesOwnedByUser(owner).size();
         this.sharingManager.removeAllSharingPoliciesForUser(owner);
         return count + " policies removed";
     }
