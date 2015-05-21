@@ -19,7 +19,7 @@ import org.backmeup.index.dal.IndexFragmentEntryStatusDao;
 import org.backmeup.index.dal.RunningIndexUserConfigDao;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
-import org.backmeup.index.query.ElasticSearchIndexClient;
+import org.backmeup.index.query.ElasticSearchSetup;
 import org.backmeup.index.serializer.Json;
 import org.backmeup.index.storage.ThemisDataSink;
 import org.backmeup.index.storage.ThemisEncryptedPartition;
@@ -42,6 +42,8 @@ public class IndexContentManager {
     private IndexFragmentEntryStatusDao entryStatusDao;
     @Inject
     private RunningIndexUserConfigDao runninInstancesDao;
+    @Inject
+    private ElasticSearchSetup esSetup;
 
     /**
      * The ES index gets dropped. Iterate over all import, deletion operations of IndexDocuments (shared and user owned)
@@ -123,13 +125,11 @@ public class IndexContentManager {
      */
     private void importToESIndex(IndexDocument doc, User user) {
         try {
-            try (IndexClient indexClient = new ElasticSearchIndexClient(user,
-                    this.indexManager.initAndCreateAndDoEverthing(user))) {
+            try (IndexClient indexClient = this.esSetup.createIndexClient(user)) {
                 indexClient.index(doc);
                 this.log.debug("document indexed by ElasticSearch. userID=" + user.id() + " document: "
                         + Json.serialize(doc));
             }
-
         } catch (SearchInstanceException e) {
             this.log.error("failed to add IndexDocument " + Json.serialize(doc) + " for userID: " + user.id() + " " + e);
             throw e;
@@ -148,8 +148,7 @@ public class IndexContentManager {
      */
     private void deleteFromESIndex(UUID docUUID, User user) {
         try {
-            try (IndexClient indexClient = new ElasticSearchIndexClient(user,
-                    this.indexManager.initAndCreateAndDoEverthing(user))) {
+            try (IndexClient indexClient = this.esSetup.createIndexClient(user)) {
                 indexClient.deleteRecordsForUserAndDocumentUUID(docUUID);
                 this.log.debug("document " + docUUID + " removed from ElasticSearch for userID=" + user.id());
             }
