@@ -1,6 +1,7 @@
 package org.backmeup.index.query;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,18 +9,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.UUID;
 
 import org.backmeup.index.api.IndexFields;
+import org.backmeup.index.dal.TaggedCollectionDao;
 import org.backmeup.index.model.CountedEntry;
 import org.backmeup.index.model.FileInfo;
 import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.SearchEntry;
 import org.backmeup.index.model.User;
+import org.backmeup.index.tagging.TaggedCollection;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.MissingFilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.TermsFilterBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -225,6 +230,11 @@ class IndexUtils {
         return groupByContentOwner(esResponse);
     }
 
+    public static List<CountedEntry> getByTag(org.elasticsearch.action.search.SearchResponse esResponse,
+            TaggedCollectionDao dao) {
+        return groupByTaggedCollection(esResponse, dao);
+    }
+
     private static List<CountedEntry> groupBySource(org.elasticsearch.action.search.SearchResponse esResponse) {
         // Now where's my Scala groupBy!? *heul*
         Map<String, Integer> groupedHits = new HashMap<>();
@@ -346,6 +356,41 @@ class IndexUtils {
         return countedEntries;
     }
 
+    private static List<CountedEntry> groupByTaggedCollection(
+            org.elasticsearch.action.search.SearchResponse esResponse, TaggedCollectionDao dao) {
+
+        Map<String, Integer> groupedHits = new HashMap<>();
+        for (SearchHit hit : esResponse.getHits()) {
+            if (hit.getSource().get(IndexFields.FIELD_JOB_ID) != null) {
+                String documentUUID, userId;
+                documentUUID = hit.getSource().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString();
+                userId = hit.getSource().get(IndexFields.FIELD_OWNER_ID).toString();
+                //fetch the names and collection id of the tagged collections where this document is contained in
+                List<TaggedCollection> elementInCollections = dao.getAllFromUserContainingDocumentIds(
+                        new User(Long.valueOf(userId)),
+                        new ArrayList<UUID>(Arrays.asList(UUID.fromString(documentUUID))));
+                for (TaggedCollection element : elementInCollections) {
+                    String label = element.getName() + " (" + element.getId() + ")";
+
+                    Integer count = groupedHits.get(label);
+                    if (count == null) {
+                        count = Integer.valueOf(1);
+                    } else {
+                        count = Integer.valueOf(count.intValue() + 1);
+                    }
+
+                    groupedHits.put(label, count);
+                }
+            }
+        }
+        // ...and .map
+        List<CountedEntry> countedEntries = new ArrayList<>();
+        for (Entry<String, Integer> entry : groupedHits.entrySet()) {
+            countedEntries.add(new CountedEntry(entry.getKey(), entry.getValue().intValue()));
+        }
+        return countedEntries;
+    }
+
     private static String getTypeFromMimeType(String mime) {
         return getTypeFromMimeTypeLowerCase(mime.toLowerCase());
     }
@@ -456,7 +501,8 @@ class IndexUtils {
         return filterstr.toString();
     }
 
-    public static QueryBuilder buildQuery(User userid, String queryString, Map<String, List<String>> filters) {
+    public static QueryBuilder buildQuery(User userid, String queryString, Map<String, List<String>> filters,
+            TaggedCollectionDao taggedCollectionDao) {
         BoolQueryBuilder qBuilder = new BoolQueryBuilder();
         qBuilder.must(QueryBuilders.matchQuery(IndexFields.FIELD_OWNER_ID, userid));
         qBuilder.must(QueryBuilders.queryString(queryString));
@@ -469,6 +515,7 @@ class IndexUtils {
         BoolQueryBuilder sourcematches = buildSourceQuery(filters);
         BoolQueryBuilder jobmatches = buildJobQuery(filters);
         BoolQueryBuilder ownermatches = buildOwnerQuery(filters);
+        BoolQueryBuilder tagmatches = buildTagQuery(filters, taggedCollectionDao);
 
         if (typematches != null) {
             qBuilder.must(typematches);
@@ -482,7 +529,9 @@ class IndexUtils {
         if (ownermatches != null) {
             qBuilder.must(ownermatches);
         }
-
+        if (tagmatches != null) {
+            qBuilder.must(tagmatches);
+        }
         return qBuilder;
     }
 
@@ -614,6 +663,37 @@ class IndexUtils {
         }
 
         return jobmatches;
+    }
+
+    private static BoolQueryBuilder buildTagQuery(Map<String, List<String>> filters, TaggedCollectionDao dao) {
+        BoolQueryBuilder tagmatches = null;
+
+        if (filters.containsKey("tag")) {
+            tagmatches = new BoolQueryBuilder();
+            // minimum 1 of the should conditions must match
+            tagmatches.minimumNumberShouldMatch(1);
+
+            // something like this will come "tagged collection name (+"collectionID+")
+            for (String filter : filters.get("tag")) {
+                BoolQueryBuilder tempbuilder = new BoolQueryBuilder();
+
+                // extract the collection id
+                long collectionId = Long
+                        .valueOf(filter.substring(filter.lastIndexOf("(") + 1, filter.lastIndexOf(")")));
+                TaggedCollection collection = dao.getByEntityId(collectionId);
+                List<UUID> documentsInCollection = collection.getDocumentIds();
+
+                //look for docUUIDs that are contained in the tagged collection.
+                TermsFilterBuilder docIDsInListofDocs = FilterBuilders.termsFilter(
+                        IndexFields.FIELD_INDEX_DOCUMENT_UUID, documentsInCollection);
+
+                tempbuilder.must(QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(), docIDsInListofDocs));
+
+                // tempbuilder1 or tempbulder2 or ...
+                tagmatches.should(tempbuilder);
+            }
+        }
+        return tagmatches;
     }
 
     private static StringBuilder createPreview(String s) {

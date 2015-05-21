@@ -13,6 +13,7 @@ import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.backmeup.index.api.IndexClient;
 import org.backmeup.index.api.IndexFields;
+import org.backmeup.index.dal.TaggedCollectionDao;
 import org.backmeup.index.model.FileInfo;
 import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.IndexDocument;
@@ -43,6 +44,14 @@ public class ElasticSearchIndexClient implements IndexClient {
     private final User userId;
     private final Client client;
 
+    private TaggedCollectionDao taggedCollectionDao;
+
+    public ElasticSearchIndexClient(User userId, Client client, TaggedCollectionDao dao) {
+        this(userId, client);
+        this.taggedCollectionDao = dao;
+    }
+
+    @Deprecated
     public ElasticSearchIndexClient(User userId, Client client) {
         this.userId = userId;
         this.client = client;
@@ -111,15 +120,15 @@ public class ElasticSearchIndexClient implements IndexClient {
 
     @Override
     public SearchResultAccumulator queryBackup(String query, String source, String type, String job, String owner,
-            String username) {
-        Map<String, List<String>> filters = createFiltersFor(source, type, job, owner);
+            String tag, String username) {
+        Map<String, List<String>> filters = createFiltersFor(source, type, job, owner, tag);
         return queryBackup(query, filters, username);
     }
 
-    private Map<String, List<String>> createFiltersFor(String source, String type, String job, String owner) {
+    private Map<String, List<String>> createFiltersFor(String source, String type, String job, String owner, String tag) {
         Map<String, List<String>> filters = null;
 
-        if (source != null || type != null || job != null || owner != null) {
+        if (source != null || type != null || job != null || owner != null || tag != null) {
             filters = new HashMap<>();
         }
 
@@ -147,6 +156,12 @@ public class ElasticSearchIndexClient implements IndexClient {
             filters.put("owner", filtervalue);
         }
 
+        if (tag != null) {
+            List<String> filtervalue = new LinkedList<>();
+            filtervalue.add(tag);
+            filters.put("tag", filtervalue);
+        }
+
         return filters;
     }
 
@@ -158,6 +173,8 @@ public class ElasticSearchIndexClient implements IndexClient {
         result.setByType(IndexUtils.getByType(esResponse));
         result.setByJob(IndexUtils.getByJob(esResponse));
         result.setByOwner(IndexUtils.getByOwner(esResponse));
+        //requires Elasticsearch index and database operations to retrieve these objects
+        result.setByTag(IndexUtils.getByTag(esResponse, this.taggedCollectionDao));
         return result;
     }
 
@@ -168,7 +185,7 @@ public class ElasticSearchIndexClient implements IndexClient {
          * QueryBuilder qBuilder = QueryBuilders.queryString(queryString);
          */
 
-        QueryBuilder qBuilder = IndexUtils.buildQuery(this.userId, queryString, filters);
+        QueryBuilder qBuilder = IndexUtils.buildQuery(this.userId, queryString, filters, this.taggedCollectionDao);
         this.logger.debug("#######################################");
         this.logger.debug("QueryString:\n" + qBuilder.toString());
         this.logger.debug("#######################################");

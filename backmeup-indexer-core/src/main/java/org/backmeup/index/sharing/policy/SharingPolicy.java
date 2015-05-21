@@ -30,7 +30,7 @@ public class SharingPolicy {
     private Long withUserID;
     @Enumerated(EnumType.STRING)
     private SharingPolicies policy;
-    @Column(columnDefinition = "TEXT")
+    @Column(length = 4000)
     private String sharedElementID; //e.g. indexdocumentUUID or backupJobID dependent on policy
     @Temporal(TemporalType.TIMESTAMP)
     private Date policyCreationDate;

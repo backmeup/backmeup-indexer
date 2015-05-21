@@ -26,13 +26,14 @@ public class RestUrlsIndex {
     }
 
     public URI forQuery(User userId, String query, String filterBySource, String filterByType, String filterByJob,
-            String filterByOwner, String username) throws URISyntaxException {
+            String filterByOwner, String filterByTag, String username) throws URISyntaxException {
         URIBuilder urlBuilder = startWithBaseUrl(userId, "");
         addMandatoryParameter(urlBuilder, "query", query);
         addOptionalParameter(urlBuilder, "source", filterBySource);
         addOptionalParameter(urlBuilder, "type", filterByType);
         addOptionalParameter(urlBuilder, "job", filterByJob);
         addOptionalParameter(urlBuilder, "owner", filterByOwner);
+        addOptionalParameter(urlBuilder, "tag", filterByTag);
         addMandatoryParameter(urlBuilder, "username", username);
         return urlBuilder.build();
     }

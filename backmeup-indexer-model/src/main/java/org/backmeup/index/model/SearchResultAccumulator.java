@@ -9,6 +9,7 @@ public class SearchResultAccumulator {
     private List<CountedEntry> byJob;
     private List<SearchEntry> files;
     private List<CountedEntry> byOwner;
+    private List<CountedEntry> byTag;
 
     public List<CountedEntry> getBySource() {
         return this.bySource;
@@ -40,6 +41,14 @@ public class SearchResultAccumulator {
 
     public void setByOwner(List<CountedEntry> byOwner) {
         this.byOwner = byOwner;
+    }
+
+    public List<CountedEntry> getByTag() {
+        return this.byTag;
+    }
+
+    public void setByTag(List<CountedEntry> byTag) {
+        this.byTag = byTag;
     }
 
     public List<SearchEntry> getFiles() {

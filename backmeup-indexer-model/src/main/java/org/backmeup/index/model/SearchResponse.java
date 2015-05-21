@@ -44,16 +44,16 @@ public class SearchResponse {
     }
 
     public SearchResponse(int status, String query, List<SearchEntry> files) {
-        this(status, query, files, null, null, null, null);
+        this(status, query, files, null, null, null, null, null);
     }
 
     public SearchResponse(int status, String query, List<CountedEntry> bySource, List<CountedEntry> byType,
-            List<CountedEntry> byJob, List<CountedEntry> byOwner) {
-        this(status, query, null, bySource, byType, byJob, byOwner);
+            List<CountedEntry> byJob, List<CountedEntry> byOwner, List<CountedEntry> byTag) {
+        this(status, query, null, bySource, byType, byJob, byOwner, byTag);
     }
 
     public SearchResponse(int status, String query, List<SearchEntry> files, List<CountedEntry> bySource,
-            List<CountedEntry> byType, List<CountedEntry> byJob, List<CountedEntry> byOwner) {
+            List<CountedEntry> byType, List<CountedEntry> byJob, List<CountedEntry> byOwner, List<CountedEntry> byTag) {
         this.progress = status;
         this.query = query;
         setFiles(files);
@@ -61,6 +61,7 @@ public class SearchResponse {
         setByType(byType);
         setByJob(byJob);
         setByOwner(byOwner);
+        setByTag(byTag);
     }
 
     public String getQuery() {
@@ -105,6 +106,14 @@ public class SearchResponse {
 
     public void setByOwner(List<CountedEntry> byOwner) {
         this.searchResults.setByOwner(byOwner);
+    }
+
+    public List<CountedEntry> getByTag() {
+        return this.searchResults.getByTag();
+    }
+
+    public void setByTag(List<CountedEntry> byTag) {
+        this.searchResults.setByTag(byTag);
     }
 
     public int getProgress() {

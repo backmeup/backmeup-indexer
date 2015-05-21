@@ -5,6 +5,7 @@ import javax.inject.Inject;
 
 import org.backmeup.index.IndexManager;
 import org.backmeup.index.api.IndexClient;
+import org.backmeup.index.dal.TaggedCollectionDao;
 import org.backmeup.index.model.User;
 import org.elasticsearch.client.Client;
 
@@ -18,18 +19,21 @@ public class ElasticSearchSetup {
 
     @Inject
     private IndexManager indexManager;
+    @Inject
+    private TaggedCollectionDao taggedCollectionDao;
 
-    @SuppressWarnings("resource") // this is a factory method
+    @SuppressWarnings("resource")
+    // this is a factory method
     public IndexClient createIndexClient(User userId) {
         Client elasticClient = startInstance(userId);
         return createIndexClient(userId, elasticClient);
     }
 
     private Client startInstance(User userId) {
-        return indexManager.initAndCreateAndDoEverthing(userId);
+        return this.indexManager.initAndCreateAndDoEverthing(userId);
     }
 
     private ElasticSearchIndexClient createIndexClient(User userId, Client elasticClient) {
-        return new ElasticSearchIndexClient(userId, elasticClient);
+        return new ElasticSearchIndexClient(userId, elasticClient, this.taggedCollectionDao);
     }
 }
