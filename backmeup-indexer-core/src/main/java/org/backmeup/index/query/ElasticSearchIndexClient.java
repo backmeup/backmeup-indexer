@@ -24,6 +24,8 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
+import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
+import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
@@ -62,10 +64,17 @@ public class ElasticSearchIndexClient implements IndexClient {
         IndicesExistsResponse existsResponse = this.client.admin().indices().prepareExists(INDEX_NAME).execute()
                 .actionGet();
         if (!existsResponse.isExists()) {
+            //create the index and define dynamic templates field mappings
             CreateIndexRequestBuilder cirb = this.client.admin().indices().prepareCreate(INDEX_NAME)
-                    .addMapping("_default_", getIndexFieldMapping());
+                    .addMapping("_default_", getIndexDynamicTemplateFieldMapping());
             CreateIndexResponse createIndexResponse = cirb.execute().actionGet();
-            if (!createIndexResponse.isAcknowledged()) {
+
+            //update specific field mappings
+            PutMappingRequestBuilder pmrb = this.client.admin().indices().preparePutMapping(INDEX_NAME)
+                    .setType("backup");
+            pmrb.setSource(this.getIndexCustomFieldMapping());
+            PutMappingResponse putMappingResponse = pmrb.execute().actionGet();
+            if ((!createIndexResponse.isAcknowledged()) || (!putMappingResponse.isAcknowledged())) {
                 // throw new Exception("Could not create index ["+ INDEX_NAME +"].");
                 this.logger.error("Could not create index [" + INDEX_NAME + " ].");
             } else {
@@ -73,10 +82,19 @@ public class ElasticSearchIndexClient implements IndexClient {
             }
         }
         //backward compatibility: check if we have an outdated version of the index - if so delete and recreate with mapping
-        else if (!checkIsIndexDynamicTemplateMappingSet()) {
+        else if (!checkIndexFieldMappingsOK()) {
             this.client.admin().indices().prepareDelete(INDEX_NAME).execute().actionGet();
-            this.logger.debug("Deleted [" + INDEX_NAME + " ]" + "due to missing dynamic template configuration");
+            this.logger.debug("Deleted [" + INDEX_NAME + " ]"
+                    + "due to missing dynamic template or field mapping configuration");
             createIndexIfNeeded();
+        }
+    }
+
+    private boolean checkIndexFieldMappingsOK() {
+        if ((checkIsIndexDynamicTemplateMappingSet()) && (checkIsIndexFieldMappingSet())) {
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -106,6 +124,39 @@ public class ElasticSearchIndexClient implements IndexClient {
     }
 
     /**
+     * Checks if the currently existing version of the index was configured properly e.g. if the indexrecord_uuid field
+     * mapping was set etc
+     * 
+     * check if the field mapping for indexrecord_uuid was set to not analyzed as this causes issues using the terms
+     * filter on UUID Strings https://www.elastic.co/guide/en/elasticsearch/guide/current/_finding_exact_values.html
+     * https://www.elastic.co/guide/en/elasticsearch/guide/current/analysis-intro.html#analyze-api
+     * https://www.elastic.co/guide/en/elasticsearch/guide/current/_finding_exact_values.html
+     */
+    private boolean checkIsIndexFieldMappingSet() {
+        GetMappingsResponse mapping = this.client.admin().indices().prepareGetMappings(INDEX_NAME).get();
+        try {
+            HashMap props = (HashMap) mapping.getMappings().get(INDEX_NAME).get("backup").getSourceAsMap();
+            if (props != null) {
+                if (props.containsKey("properties")) {
+                    HashMap fieldMappings = ((HashMap) props.get("properties"));
+                    //check if the field mapping for indexrecord_uuid was set to not analyzed 
+                    if (fieldMappings.containsKey("indexrecord_uuid")) {
+                        HashMap fieldIndexRecordMapping = (HashMap) fieldMappings.get("indexrecord_uuid");
+                        if (fieldIndexRecordMapping.containsKey("index")
+                                && fieldIndexRecordMapping.get("index").toString().equals("not_analyzed")) {
+                            return true;
+                        }
+                    }
+
+                }
+            }
+        } catch (Exception e) {
+            this.logger.debug("Index does not contain a 'not_analyzed' field mapping for indexrecord_uuid");
+        }
+        return false;
+    }
+
+    /**
      * An alternative approach to disabling date detection and explicitly mapping specific fields as dates is instruct
      * ElasticSearchs dynamic mapping functionality to adhere to naming conventions for fields Mapping sets field type
      * to String for all fields that start with tikaprop_
@@ -114,8 +165,18 @@ public class ElasticSearchIndexClient implements IndexClient {
      *      http://joelabrahamsson.com/dynamic-mappings-and-dates-in-elasticsearch/
      * @return
      */
-    private String getIndexFieldMapping() {
+    private String getIndexDynamicTemplateFieldMapping() {
         return loadJson("elasticsearch_dynamic_templates_config.json");
+    }
+
+    /**
+     * Defines field mappings for the backmeup/backup which are required other than auto generated e.g. sets the field
+     * indexrecord_uuid to not_analyzed due to ES UUID String analysis and handling in terms filters
+     * 
+     * @return
+     */
+    private String getIndexCustomFieldMapping() {
+        return loadJson("elasticsearch_field_mapping_config.json");
     }
 
     @Override

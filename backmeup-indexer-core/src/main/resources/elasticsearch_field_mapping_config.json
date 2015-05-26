@@ -1,0 +1,14 @@
+{
+    "backup" : {
+         "properties" : {
+             "indexrecord_uuid" : {
+                 "type" : "string",
+                 "index" : "not_analyzed" 
+             }
+         }
+     }
+}
+   
+   
+   
+   
