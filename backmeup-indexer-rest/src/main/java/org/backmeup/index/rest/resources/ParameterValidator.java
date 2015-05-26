@@ -33,6 +33,15 @@ public class ParameterValidator {
         }
     }
 
+    public void mandatoryLong(String name, String value) {
+        try {
+            Long l = Long.valueOf(value);
+            mandatory(name, l);
+        } catch (Exception e) {
+            badRequestMissingParameter(name);
+        }
+    }
+
     public void mandatoryUUID(String name, String value) {
         if (value == null || value.isEmpty()) {
             badRequestMissingParameter(name);

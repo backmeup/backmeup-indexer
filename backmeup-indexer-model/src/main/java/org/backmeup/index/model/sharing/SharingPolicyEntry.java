@@ -7,7 +7,7 @@ import org.backmeup.index.model.User;
 public class SharingPolicyEntry {
 
     public enum SharingPolicyTypeEntry {
-        Document, DocumentGroup, Backup, AllFromNow, AllInklOld
+        Document, DocumentGroup, Backup, AllFromNow, AllInklOld, TaggedCollection
     }
 
     private Long id;

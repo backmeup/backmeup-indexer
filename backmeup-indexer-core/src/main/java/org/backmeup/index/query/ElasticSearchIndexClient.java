@@ -71,7 +71,7 @@ public class ElasticSearchIndexClient implements IndexClient {
 
             //update specific field mappings
             PutMappingRequestBuilder pmrb = this.client.admin().indices().preparePutMapping(INDEX_NAME)
-                    .setType("backup");
+                    .setType(DOCUMENT_TYPE_BACKUP);
             pmrb.setSource(this.getIndexCustomFieldMapping());
             PutMappingResponse putMappingResponse = pmrb.execute().actionGet();
             if ((!createIndexResponse.isAcknowledged()) || (!putMappingResponse.isAcknowledged())) {
@@ -135,7 +135,7 @@ public class ElasticSearchIndexClient implements IndexClient {
     private boolean checkIsIndexFieldMappingSet() {
         GetMappingsResponse mapping = this.client.admin().indices().prepareGetMappings(INDEX_NAME).get();
         try {
-            HashMap props = (HashMap) mapping.getMappings().get(INDEX_NAME).get("backup").getSourceAsMap();
+            HashMap props = (HashMap) mapping.getMappings().get(INDEX_NAME).get(DOCUMENT_TYPE_BACKUP).getSourceAsMap();
             if (props != null) {
                 if (props.containsKey("properties")) {
                     HashMap fieldMappings = ((HashMap) props.get("properties"));

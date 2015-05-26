@@ -13,12 +13,14 @@ import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.core.model.IndexFragmentEntryStatus;
 import org.backmeup.index.core.model.IndexFragmentEntryStatus.StatusType;
 import org.backmeup.index.dal.IndexFragmentEntryStatusDao;
+import org.backmeup.index.dal.TaggedCollectionDao;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
 import org.backmeup.index.sharing.policy.SharingPolicies;
 import org.backmeup.index.sharing.policy.SharingPolicy;
 import org.backmeup.index.storage.ThemisDataSink;
 import org.backmeup.index.storage.ThemisDataSink.IndexFragmentType;
+import org.backmeup.index.tagging.TaggedCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +31,8 @@ public class SharingPolicyExecution {
 
     @Inject
     private IndexFragmentEntryStatusDao entryStatusDao;
+    @Inject
+    private TaggedCollectionDao taggedCollectionDao;
 
     public void executeImportOwner(IndexDocument doc) throws IOException {
         User owner = new User(Long.parseLong(doc.getFields().get(IndexFields.FIELD_OWNER_ID).toString()));
@@ -80,6 +84,11 @@ public class SharingPolicyExecution {
             //4. check if we're sharing this document group
             else if (policy.getPolicy().equals(SharingPolicies.SHARE_INDEX_DOCUMENT_GROUP)) {
                 this.executeImportShareDocumentGroup(policy, doc, docUUID, shareWithUser, actualDocOwner);
+            }
+
+            //5. check if we're sharing this tagged collection
+            else if (policy.getPolicy().equals(SharingPolicies.SHARE_TAGGED_COLLECTION)) {
+                this.executeImportShareTaggedCollection(policy, doc, docUUID, shareWithUser, actualDocOwner);
             }
         }
     }
@@ -178,6 +187,28 @@ public class SharingPolicyExecution {
             //iterate over all documentUUIDs in document group from the policy and check if we're sharing this specific element
             for (String docInPol : docsInPolicy) {
                 if (docInPol.equals(doc.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString())) {
+                    //drop off document in public user drop off zone
+                    ThemisDataSink.saveIndexFragment(doc, shareWithUser, IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
+                    //create a status object
+                    createWaitingForImportEntry(doc, shareWithUser, actualDocOwner);
+                    this.log.debug("distributed and stored shared IndexFragment: " + docUUID.toString()
+                            + " for userID: " + shareWithUser.id() + " policy: " + policy.toString());
+                }
+            }
+        }
+    }
+
+    private void executeImportShareTaggedCollection(SharingPolicy policy, IndexDocument doc, UUID docUUID,
+            User shareWithUser, User actualDocOwner) throws IOException {
+        if (policy.getSharedElementID() != null) {
+            //get the sharedElementID which is tagged collection ID defining the documents within this collection
+            Long collID = Long.valueOf(policy.getSharedElementID());
+            TaggedCollection taggedColl = this.taggedCollectionDao.getByEntityId(collID);
+            List<UUID> uuidsInPolicy = taggedColl.getDocumentIds();
+
+            //iterate over all documentUUIDs in document group from the policy and check if we're sharing this specific element
+            for (UUID docInPol : uuidsInPolicy) {
+                if (docInPol.toString().equals(doc.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString())) {
                     //drop off document in public user drop off zone
                     ThemisDataSink.saveIndexFragment(doc, shareWithUser, IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
                     //create a status object

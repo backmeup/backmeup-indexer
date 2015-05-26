@@ -72,11 +72,13 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
         mandatory("withUserId", withUser);
         mandatory("policyType", policyType);
         if (policyType == SharingPolicyTypeEntry.Backup) {
-            mandatory("policyValue", policyValue);
+            mandatoryLong("policyValue", policyValue);
         } else if (policyType == SharingPolicyTypeEntry.Document) {
             mandatoryUUID("policyValue", policyValue);
         } else if ((policyType == SharingPolicyTypeEntry.DocumentGroup)) {
             mandatoryListFromString("policyValue", policyValue);
+        } else if ((policyType == SharingPolicyTypeEntry.TaggedCollection)) {
+            mandatoryLong("policyValue", policyValue);
         }
 
         SharingPolicies policy = convert(policyType);
@@ -183,6 +185,9 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
         if (policyType == SharingPolicyTypeEntry.DocumentGroup) {
             return SharingPolicies.SHARE_INDEX_DOCUMENT_GROUP;
         }
+        if (policyType == SharingPolicyTypeEntry.TaggedCollection) {
+            return SharingPolicies.SHARE_TAGGED_COLLECTION;
+        }
         return null;
     }
 
@@ -201,6 +206,9 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
         }
         if (policy == SharingPolicies.SHARE_INDEX_DOCUMENT_GROUP) {
             return SharingPolicyTypeEntry.DocumentGroup;
+        }
+        if (policy == SharingPolicies.SHARE_TAGGED_COLLECTION) {
+            return SharingPolicyTypeEntry.TaggedCollection;
         }
         return null;
     }
