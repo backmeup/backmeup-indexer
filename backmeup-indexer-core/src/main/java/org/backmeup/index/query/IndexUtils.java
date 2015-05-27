@@ -366,7 +366,7 @@ class IndexUtils {
                 documentUUID = hit.getSource().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString();
                 userId = hit.getSource().get(IndexFields.FIELD_OWNER_ID).toString();
                 //fetch the names and collection id of the tagged collections where this document is contained in
-                List<TaggedCollection> elementInCollections = dao.getAllFromUserContainingDocumentIds(
+                List<TaggedCollection> elementInCollections = dao.getAllActiveFromUserContainingDocumentIds(
                         new User(Long.valueOf(userId)),
                         new ArrayList<UUID>(Arrays.asList(UUID.fromString(documentUUID))));
                 for (TaggedCollection element : elementInCollections) {

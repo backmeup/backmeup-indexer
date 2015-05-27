@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import org.backmeup.index.model.User;
 import org.backmeup.index.tagging.TaggedCollection;
+import org.backmeup.index.tagging.TaggedCollection.ActivityState;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,73 +41,99 @@ public class TaggedCollectionDaoTest {
 
     @Test
     public void executeQueryAllFromUser() {
-        List<TaggedCollection> found = this.taggedColDao.getAllFromUser(this.user1);
+        List<TaggedCollection> found = this.taggedColDao.getAllActiveFromUser(this.user1);
         assertNotNull(found);
         assertEquals(2, found.size());
         assertTrue(found.get(0).getId() == 1);
 
-        found = this.taggedColDao.getAllFromUser(this.user2);
+        found = this.taggedColDao.getAllFromUserAndInState(this.user1, ActivityState.ACTIVE);
+        assertNotNull(found);
+        assertEquals(2, found.size());
+        assertTrue(found.get(0).getId() == 1);
+
+        found = this.taggedColDao.getAllActiveFromUser(this.user2);
+        assertNotNull(found);
+        assertEquals(2, found.size());
+
+        found = this.taggedColDao.getAllFromUserAndInState(this.user2, ActivityState.ACTIVE);
         assertNotNull(found);
         assertEquals(2, found.size());
     }
 
     @Test
     public void executeQueryForNonExistingUser() {
-        List<TaggedCollection> found = this.taggedColDao.getAllFromUser(this.user3);
+        List<TaggedCollection> found = this.taggedColDao.getAllActiveFromUser(this.user3);
         assertNotNull(found);
         assertTrue(found.size() == 0);
     }
 
     @Test
     public void executeQueryByUserAndName() {
-        List<TaggedCollection> found = this.taggedColDao.getAllFromUserAndLikeName(this.user1, "collection 1üö");
+        List<TaggedCollection> found = this.taggedColDao.getAllActiveFromUserAndLikeName(this.user1, "collection 1üö");
         assertTrue(found.size() == 1);
         assertNotNull(found.get(0).getDocumentIds());
 
-        found = this.taggedColDao.getAllFromUserAndLikeName(this.user1, "collection 2");
+        found = this.taggedColDao.getAllFromUserAndLikeNameAndInState(this.user1, "collection 1üö", ActivityState.ACTIVE);
+        assertTrue(found.size() == 1);
+        assertNotNull(found.get(0).getDocumentIds());
+
+        found = this.taggedColDao.getAllActiveFromUserAndLikeName(this.user1, "collection 2");
         assertTrue(found.size() == 1);
 
-        found = this.taggedColDao.getAllFromUserAndLikeName(this.user1, null);
+        found = this.taggedColDao.getAllFromUserAndLikeNameAndInState(this.user1, "collection 2", ActivityState.ACTIVE);
+        assertTrue(found.size() == 1);
+
+        found = this.taggedColDao.getAllActiveFromUserAndLikeName(this.user1, null);
         assertTrue(found.size() == 0);
 
-        found = this.taggedColDao.getAllFromUserAndLikeName(this.user2, null);
+        found = this.taggedColDao.getAllActiveFromUserAndLikeName(this.user2, null);
         assertTrue(found.size() == 0);
     }
 
     @Test
     public void executeQueryByUserAndQueryNameString() {
-        List<TaggedCollection> found = this.taggedColDao.getAllFromUserAndLikeName(this.user1, "collection 1üö");
+        List<TaggedCollection> found = this.taggedColDao.getAllActiveFromUserAndLikeName(this.user1, "collection 1üö");
         assertTrue(found.size() == 1);
 
-        found = this.taggedColDao.getAllFromUserAndLikeName(this.user1, "collection");
+        found = this.taggedColDao.getAllActiveFromUserAndLikeName(this.user1, "collection");
         assertTrue(found.size() == 2);
 
-        found = this.taggedColDao.getAllFromUserAndLikeName(this.user1, "lecti");
+        found = this.taggedColDao.getAllFromUserAndLikeNameAndInState(this.user1, "collection", ActivityState.ACTIVE);
+        assertTrue(found.size() == 2);
+
+        found = this.taggedColDao.getAllActiveFromUserAndLikeName(this.user1, "lecti");
+        assertTrue(found.size() == 2);
+
+        found = this.taggedColDao.getAllFromUserAndLikeNameAndInState(this.user1, "lecti", ActivityState.ACTIVE);
         assertTrue(found.size() == 2);
     }
 
     @Test
     public void executeQueryByUserAndDocumentIDs() {
-        List<TaggedCollection> found = this.taggedColDao.getAllFromUserContainingDocumentIds(this.user1,
+        List<TaggedCollection> found = this.taggedColDao.getAllActiveFromUserContainingDocumentIds(this.user1,
                 Arrays.asList(this.uuid2));
         assertTrue(found.size() == 1);
 
-        found = this.taggedColDao.getAllFromUserContainingDocumentIds(this.user2, Arrays.asList(this.uuid1));
+        found = this.taggedColDao.getAllActiveFromUserContainingDocumentIds(this.user2, Arrays.asList(this.uuid1));
         assertTrue(found.size() == 2);
 
-        found = this.taggedColDao
-                .getAllFromUserContainingDocumentIds(this.user2, Arrays.asList(this.uuid1, this.uuid2));
+        found = this.taggedColDao.getAllFromUserContainingDocumentIdsAndInState(this.user2, Arrays.asList(this.uuid1),
+                ActivityState.ACTIVE);
+        assertTrue(found.size() == 2);
+
+        found = this.taggedColDao.getAllActiveFromUserContainingDocumentIds(this.user2,
+                Arrays.asList(this.uuid1, this.uuid2));
         assertTrue(found.size() == 1);
     }
 
     @Test
     public void executeUpdateAddAndRemoveDocumentIDs() {
         //check we don't have this element defined yet
-        List<TaggedCollection> found = this.taggedColDao.getAllFromUserContainingDocumentIds(this.user1,
+        List<TaggedCollection> found = this.taggedColDao.getAllActiveFromUserContainingDocumentIds(this.user1,
                 Arrays.asList(this.uuid2, this.uuid3));
         assertTrue(found.size() == 0);
         //get the element we want to update
-        found = this.taggedColDao.getAllFromUserContainingDocumentIds(this.user1, Arrays.asList(this.uuid2));
+        found = this.taggedColDao.getAllActiveFromUserContainingDocumentIds(this.user1, Arrays.asList(this.uuid2));
         assertTrue(found.size() == 1);
 
         //test update elements
@@ -115,11 +142,11 @@ public class TaggedCollectionDaoTest {
         this.mergeInTransaction(col);
 
         //now we should be able to find the updated element
-        found = this.taggedColDao
-                .getAllFromUserContainingDocumentIds(this.user1, Arrays.asList(this.uuid2, this.uuid3));
+        found = this.taggedColDao.getAllActiveFromUserContainingDocumentIds(this.user1,
+                Arrays.asList(this.uuid2, this.uuid3));
         assertTrue(found.size() == 1);
         //and the original query should still be working
-        found = this.taggedColDao.getAllFromUserContainingDocumentIds(this.user1, Arrays.asList(this.uuid2));
+        found = this.taggedColDao.getAllActiveFromUserContainingDocumentIds(this.user1, Arrays.asList(this.uuid2));
         assertTrue(found.size() == 1);
 
         //test element removal
@@ -128,12 +155,31 @@ public class TaggedCollectionDaoTest {
         this.mergeInTransaction(col);
 
         //now we should be able to find the updated element
-        found = this.taggedColDao
-                .getAllFromUserContainingDocumentIds(this.user1, Arrays.asList(this.uuid2, this.uuid3));
+        found = this.taggedColDao.getAllActiveFromUserContainingDocumentIds(this.user1,
+                Arrays.asList(this.uuid2, this.uuid3));
         assertTrue(found.size() == 0);
         //and the original query should still be working
-        found = this.taggedColDao.getAllFromUserContainingDocumentIds(this.user1, Arrays.asList(this.uuid2));
+        found = this.taggedColDao.getAllActiveFromUserContainingDocumentIds(this.user1, Arrays.asList(this.uuid2));
         assertTrue(found.size() == 1);
+    }
+
+    @Test
+    public void executeStateChanges() {
+        List<TaggedCollection> found = this.taggedColDao.getAllActiveFromUserAndLikeName(this.user1, "collection 1üö");
+        assertTrue(found.size() == 1);
+        assertNotNull(found.get(0).getDocumentIds());
+
+        TaggedCollection taggedCol = found.get(0);
+        taggedCol.setState(ActivityState.WAITING_FOR_DELETION);
+        this.mergeInTransaction(taggedCol);
+
+        found = this.taggedColDao.getAllActiveFromUserAndLikeName(this.user1, "collection 1üö");
+        assertTrue(found.size() == 0);
+
+        found = this.taggedColDao.getAllFromUserAndLikeNameAndInState(this.user1, "collection 1üö",
+                ActivityState.WAITING_FOR_DELETION);
+        assertTrue(found.size() == 1);
+        assertNotNull(found.get(0).getDocumentIds());
     }
 
     private void persistInTransaction(TaggedCollection taggedColl) {

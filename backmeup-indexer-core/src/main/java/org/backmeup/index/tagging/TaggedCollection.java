@@ -10,6 +10,8 @@ import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -20,6 +22,12 @@ import org.backmeup.index.model.User;
 
 @Entity
 public class TaggedCollection {
+
+    public enum ActivityState {
+        ACTIVE, //accepted by the sharing partner
+        WAITING_FOR_DELETION, //waiting for items to get deleted
+        DELETED; //deleted and no longer checked
+    }
 
     @Id
     @GeneratedValue
@@ -34,6 +42,8 @@ public class TaggedCollection {
     @Column(columnDefinition = "VARCHAR(39)")
     //@Type(type = "uuid-char")
     private List<String> documentIds = new ArrayList<String>();
+    @Enumerated(EnumType.STRING)
+    private ActivityState state;
 
     public TaggedCollection() {
     }
@@ -48,6 +58,7 @@ public class TaggedCollection {
         this.collectionCreationDate = new Date();
         this.name = name;
         this.description = description;
+        this.state = ActivityState.ACTIVE;
     }
 
     public Long getId() {
@@ -117,11 +128,19 @@ public class TaggedCollection {
         }
     }
 
+    public ActivityState getState() {
+        return this.state;
+    }
+
+    public void setState(ActivityState state) {
+        this.state = state;
+    }
+
     @Override
     public String toString() {
         return "id: '" + this.Id + "', userId: '" + this.userId + "', name: '" + this.name + "', description: '"
                 + this.description + "', creationDate: '" + this.collectionCreationDate.toString()
-                + "', documentIds: '" + Arrays.toString(this.documentIds.toArray()) + "'";
+                + "', documentIds: '" + Arrays.toString(this.documentIds.toArray()) + "', state: '" + this.state + "'";
     }
 
 }

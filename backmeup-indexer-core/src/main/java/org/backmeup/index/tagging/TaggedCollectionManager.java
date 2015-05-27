@@ -8,6 +8,10 @@ import javax.inject.Inject;
 
 import org.backmeup.index.dal.TaggedCollectionDao;
 import org.backmeup.index.model.User;
+import org.backmeup.index.sharing.policy.SharingPolicies;
+import org.backmeup.index.sharing.policy.SharingPolicy;
+import org.backmeup.index.sharing.policy.SharingPolicyManager;
+import org.backmeup.index.tagging.TaggedCollection.ActivityState;
 import org.backmeup.index.utils.cdi.RunRequestScoped;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +29,8 @@ public class TaggedCollectionManager {
 
     @Inject
     private TaggedCollectionDao taggedCollectionDao;
+    @Inject
+    private SharingPolicyManager sharingManager;
 
     public TaggedCollectionManager() {
     }
@@ -40,15 +46,15 @@ public class TaggedCollectionManager {
     }
 
     public List<TaggedCollection> getAllTaggedCollections(User user) {
-        return this.taggedCollectionDao.getAllFromUser(user);
+        return this.taggedCollectionDao.getAllActiveFromUser(user);
     }
 
     public List<TaggedCollection> getAllTaggedCollectionsByNameQuery(User user, String query) {
-        return this.taggedCollectionDao.getAllFromUserAndLikeName(user, query);
+        return this.taggedCollectionDao.getAllActiveFromUserAndLikeName(user, query);
     }
 
     public List<TaggedCollection> getAllTaggedCollectionsContainingDocuments(User user, List<UUID> lDocumentUUIDs) {
-        return this.taggedCollectionDao.getAllFromUserContainingDocumentIds(user, lDocumentUUIDs);
+        return this.taggedCollectionDao.getAllActiveFromUserContainingDocumentIds(user, lDocumentUUIDs);
     }
 
     public void removeTaggedCollection(Long collectionID) {
@@ -61,12 +67,44 @@ public class TaggedCollectionManager {
     }
 
     public void removeTaggedCollection(TaggedCollection t) {
-        this.taggedCollectionDao.delete(t);
-        this.log.debug("deleted TaggedCollection: " + t.getId());
-        //TODO AL: WHAT HAPPENS IF WE SEARCH FOR DOCUMENTS THAT ARENT THERE ANYMORE? (e.g. sharing revoked ones)
-        //Possible we need something like this: just set the state, deletion from dao will be handled by the SharingPolicyUp2DateCheckerTask
-        //t.setState(ActivityState.WAITING_FOR_DELETION);
-        //this.sharingPolicyDao.merge(p);
+        if (t != null) {
+            t.setState(ActivityState.DELETED);
+            this.taggedCollectionDao.merge(t);
+            this.log.debug("deleted tagged collection: " + t.toString());
+            //finally remove any related sharing rule for this tagged collection
+            removeRelatedSharingPolicies(t);
+        } else {
+            String s = "unable to delete tagged collection as it was null";
+            this.log.debug(s);
+            throw new IllegalArgumentException(s);
+        }
+    }
+
+    /**
+     * Removes Sharing Policies which are associated with a given tagged collection.
+     * 
+     * @param t
+     */
+    public void removeRelatedSharingPolicies(TaggedCollection t) {
+        List<SharingPolicy> policies = this.sharingManager
+                .getAllWaiting4HandshakeAndActivePoliciesOwnedByUser(new User(t.getUserId()));
+        //iterate over all policies and check if any matches the tagged collection we're deleting
+        for (SharingPolicy policy : policies) {
+            if (policy.getPolicy().equals(SharingPolicies.SHARE_TAGGED_COLLECTION)) {
+                try {
+                    Long collID = Long.valueOf(policy.getSharedElementID());
+                    //check if we have a match
+                    if (collID == t.getId()) {
+                        //mark this policy for deletion
+                        this.log.debug("found related sharing policy for removed tagged collection " + t.getId()
+                                + " marking sharing policy: " + policy.getId() + " for removal");
+                        this.sharingManager.removeSharingPolicy(collID);
+                    }
+                } catch (Exception e) {
+                    //ignore - probably a miss configured policy - should not happen
+                }
+            }
+        }
     }
 
     public TaggedCollection createAndAddTaggedCollection(User user, String name, String description) {
@@ -128,7 +166,7 @@ public class TaggedCollectionManager {
     }
 
     public void removeAllTaggedCollectionsForUser(User user) {
-        for (TaggedCollection taggedColl : this.taggedCollectionDao.getAllFromUser(user)) {
+        for (TaggedCollection taggedColl : this.taggedCollectionDao.getAllActiveFromUser(user)) {
             this.removeTaggedCollection(taggedColl);
         }
     }

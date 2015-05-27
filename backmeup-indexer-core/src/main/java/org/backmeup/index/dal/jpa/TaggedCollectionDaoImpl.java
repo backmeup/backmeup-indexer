@@ -1,6 +1,7 @@
 package org.backmeup.index.dal.jpa;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -10,6 +11,7 @@ import javax.persistence.TypedQuery;
 import org.backmeup.index.dal.TaggedCollectionDao;
 import org.backmeup.index.model.User;
 import org.backmeup.index.tagging.TaggedCollection;
+import org.backmeup.index.tagging.TaggedCollection.ActivityState;
 
 @RequestScoped
 public class TaggedCollectionDaoImpl extends BaseDaoImpl<TaggedCollection> implements TaggedCollectionDao {
@@ -28,28 +30,60 @@ public class TaggedCollectionDaoImpl extends BaseDaoImpl<TaggedCollection> imple
     }
 
     @Override
-    public List<TaggedCollection> getAllFromUser(User user) {
+    public TaggedCollection getByEntityIdAndState(Long entityId, ActivityState... state) {
+        List<ActivityState> lState = Arrays.asList(state);
         TypedQuery<TaggedCollection> q = createTypedQuery("SELECT u FROM " + TABLENAME
-                + " u WHERE u.userId = :user ORDER BY u.id ASC");
+                + " u WHERE u.id = :entityId and u.state IN (:activeState)");
+        q.setParameter("entityId", entityId);
+        q.setParameter("activeState", lState);
+        return executeQuerySelectFirst(q);
+    }
+
+    @Override
+    public List<TaggedCollection> getAllActiveFromUser(User user) {
+        return getAllFromUserAndInState(user, ActivityState.ACTIVE);
+    }
+
+    @Override
+    public List<TaggedCollection> getAllFromUserAndInState(User user, ActivityState... state) {
+        List<ActivityState> lState = Arrays.asList(state);
+        TypedQuery<TaggedCollection> q = createTypedQuery("SELECT u FROM " + TABLENAME
+                + " u WHERE u.userId = :user and u.state IN (:activeState) ORDER BY u.id ASC");
         q.setParameter("user", user.id());
+        q.setParameter("activeState", lState);
         return executeQuery(q);
     }
 
     @Override
-    public List<TaggedCollection> getAllFromUserAndLikeName(User user, String query) {
+    public List<TaggedCollection> getAllActiveFromUserAndLikeName(User user, String query) {
+        return getAllFromUserAndLikeNameAndInState(user, query, ActivityState.ACTIVE);
+    }
+
+    @Override
+    public List<TaggedCollection> getAllFromUserAndLikeNameAndInState(User user, String query, ActivityState... state) {
+        List<ActivityState> lState = Arrays.asList(state);
         TypedQuery<TaggedCollection> q = createTypedQuery("SELECT u FROM " + TABLENAME
-                + " u WHERE u.userId = :user and u.name LIKE :name ORDER BY u.id ASC");
+                + " u WHERE u.userId = :user and u.name LIKE :name and u.state IN (:activeState) ORDER BY u.id ASC");
         q.setParameter("user", user.id());
         q.setParameter("name", "%" + query + "%");
+        q.setParameter("activeState", lState);
         return executeQuery(q);
     }
 
     @Override
-    public List<TaggedCollection> getAllFromUserContainingDocumentIds(User user, List<UUID> requiredDDocUUIDs) {
+    public List<TaggedCollection> getAllActiveFromUserContainingDocumentIds(User user, List<UUID> requiredDDocUUIDs) {
+        return getAllFromUserContainingDocumentIdsAndInState(user, requiredDDocUUIDs, ActivityState.ACTIVE);
+    }
+
+    @Override
+    public List<TaggedCollection> getAllFromUserContainingDocumentIdsAndInState(User user,
+            List<UUID> requiredDDocUUIDs, ActivityState... state) {
+        List<ActivityState> lState = Arrays.asList(state);
         List<TaggedCollection> ret = new ArrayList<TaggedCollection>();
         TypedQuery<TaggedCollection> q = createTypedQuery("SELECT u FROM " + TABLENAME
-                + " u WHERE u.userId = :user ORDER BY u.id ASC");
+                + " u WHERE u.userId = :user and u.state IN (:activeState) ORDER BY u.id ASC");
         q.setParameter("user", user.id());
+        q.setParameter("activeState", lState);
         List<TaggedCollection> collections = executeQuery(q);
         //Note: as we're using  @ElementCollection() for the Hibernate Entity we can't use a proper JOIN
         //to query to oneTwoMany Table but need to work on the parent object. So for simplicity we
