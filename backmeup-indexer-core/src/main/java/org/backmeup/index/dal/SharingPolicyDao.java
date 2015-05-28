@@ -26,6 +26,9 @@ public interface SharingPolicyDao extends BaseDao<SharingPolicy> {
 
     List<SharingPolicy> getAllSharingPoliciesFromUserInState(User fromUser, ActivityState... state);
 
+    List<SharingPolicy> getAllSharingPoliciesFromUserInStateAndOfType(User fromUser, SharingPolicies type,
+            ActivityState... state);
+
     List<SharingPolicy> getAllSharingPoliciesWithUser(User withUser);
 
     SharingPolicy getAllSharingPoliciesWithUserAndPolicyID(User withUser, Long policyID);

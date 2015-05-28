@@ -87,23 +87,14 @@ public class TaggedCollectionManager {
      */
     public void removeRelatedSharingPolicies(TaggedCollection t) {
         List<SharingPolicy> policies = this.sharingManager
-                .getAllWaiting4HandshakeAndActivePoliciesOwnedByUser(new User(t.getUserId()));
-        //iterate over all policies and check if any matches the tagged collection we're deleting
+                .getAllWaiting4HandshakeAndActivePoliciesOwnedByUserContainingTaggedCollection(new User(t.getUserId()),
+                        t);
+        //iterate over policies that match our tagged collection filter
         for (SharingPolicy policy : policies) {
-            if (policy.getPolicy().equals(SharingPolicies.SHARE_TAGGED_COLLECTION)) {
-                try {
-                    Long collID = Long.valueOf(policy.getSharedElementID());
-                    //check if we have a match
-                    if (collID.longValue() == t.getId().longValue()) {
-                        //mark this policy for deletion
-                        this.log.debug("found related sharing policy for removed tagged collection: " + t.getId()
-                                + " marking sharing policy: " + policy.getId() + " for removal");
-                        this.sharingManager.removeSharingPolicy(policy.getId());
-                    }
-                } catch (Exception e) {
-                    //ignore - probably a miss configured policy - should not happen
-                }
-            }
+            //and mark this policy for deletion
+            this.log.debug("found related sharing policy for removed tagged collection: " + t.getId()
+                    + " marking sharing policy: " + policy.getId() + " for removal");
+            this.sharingManager.removeSharingPolicy(policy.getId());
         }
     }
 
@@ -148,6 +139,9 @@ public class TaggedCollectionManager {
         }
         int count = 0;
         List<UUID> docs = t.getDocumentIds();
+        //before updating the tagged collection we need to capture the state for related policies
+        updateDocumentRemovalForRelatedSharingPolicies(t, docs);
+        //remove the documents from the tagged collection
         for (UUID documentID : documentIDs) {
             if (docs.contains(documentID)) {
                 t.removeDocumentId(documentID);
@@ -157,6 +151,38 @@ public class TaggedCollectionManager {
         this.taggedCollectionDao.merge(t);
         this.log.debug("removed " + count + " documents from taggedCollection: " + collectionID);
         return count;
+
+        //TODO Mark old sharing policy for deletion + create new one containing the new set of documents
+    }
+
+    /**
+     * Changes in a tagged collection in terms of documentUUID removal need to be handled separately in the case there
+     * are related sharing policies. In this case a helper policy is created containing all currently shared UUIDs by
+     * the the tagged collection and after creation, marked for deletion. This will lead to the removal of the elements
+     * which are no longer part of a tagged collection if they aren't shared by any other policy. Adding documentUUIDs
+     * is fine as in this case calculation of missing delta can be calculated accurately
+     * 
+     * @param t
+     * @return
+     */
+    private void updateDocumentRemovalForRelatedSharingPolicies(TaggedCollection t, List<UUID> oldListOfDocuments) {
+        //a list of all active sharing policies that are related to this tagged collection t
+        List<SharingPolicy> lActivePolicies = this.sharingManager
+                .getAllActiveSharingPoliciesOwnedByUserContainingTaggedCollection(new User(t.getUserId()), t);
+        for (SharingPolicy p : lActivePolicies) {
+            //create a new helper policy of type document group, with the list of originally shared documents by the tagged collection before document removal
+
+            String previouslySharedUUIDs = oldListOfDocuments.toString();
+            SharingPolicy pHelper = new SharingPolicy(new User(p.getFromUserID()), new User(p.getWithUserID()),
+                    SharingPolicies.SHARE_INDEX_DOCUMENT_GROUP, previouslySharedUUIDs, "helper_" + p.getName(),
+                    "helper policy for document removal of tagged collectionId: " + t.getId());
+            pHelper.setState(p.getState());
+            this.sharingManager.addSharingPolicy(pHelper);
+
+            //finally invalidate the helper sharing policy - which will lead to deletion removed documenUUIDs 
+            //which are no longer part of the tagged collection
+            this.sharingManager.removeSharingPolicy(pHelper);
+        }
     }
 
     public TaggedCollection addTaggedCollection(TaggedCollection taggedColl) {

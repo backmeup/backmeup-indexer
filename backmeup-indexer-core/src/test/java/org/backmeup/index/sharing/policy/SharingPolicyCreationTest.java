@@ -5,8 +5,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import org.backmeup.index.dal.DerbyDatabase;
 import org.backmeup.index.model.User;
@@ -128,6 +131,26 @@ public class SharingPolicyCreationTest {
         List<SharingPolicy> ps = this.shManager.getAllActivePoliciesOwnedByUser(this.owner);
         assertTrue(ps.contains(p));
         assertTrue(ps.get(0).getSharedElementID().equals("1"));
+    }
+
+    @Test
+    public void testUUIDSerealizationOfSharedElementForPolicyShareDocumentGroup() {
+        UUID uuid1 = UUID.randomUUID();
+        UUID uuid2 = UUID.randomUUID();
+        List<UUID> lUUIDs = new ArrayList<UUID>();
+        lUUIDs.add(uuid1);
+        lUUIDs.add(uuid2);
+        String sharedElementID = lUUIDs.toString();
+        try {
+            String[] sArr = sharedElementID.substring(1, sharedElementID.length() - 1).split(",\\s*");
+            List<String> lArr = Arrays.asList(sArr);
+            assertTrue(lArr.size() == 2);
+            //test records
+            assertEquals(uuid1, UUID.fromString(lArr.get(0)));
+            assertEquals(uuid2, UUID.fromString(lArr.get(1)));
+        } catch (Exception e) {
+            assertTrue(e.toString(), false);
+        }
     }
 
     private void setupWhiteboxTest() {

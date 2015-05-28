@@ -149,6 +149,32 @@ public class SharingPolicyDaoTest {
         assertTrue(lPolicies.size() == 0);
     }
 
+    @Test
+    public void getSharingPolicyOfSpecificTypeAndStateForOwner() {
+        //check the entry state for this test
+        List<SharingPolicy> lPolicies = this.sharingPolicyDao.getAllSharingPoliciesFromUserInStateAndOfType(this.user1,
+                SharingPolicies.SHARE_TAGGED_COLLECTION, ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
+        assertNotNull(lPolicies);
+        assertTrue(lPolicies.size() == 0);
+
+        //now change a policy to match this policy type
+        lPolicies = this.sharingPolicyDao.getAllSharingPoliciesBetweenUsersInType(this.user1, this.user2,
+                SharingPolicies.SHARE_ALL_AFTER_NOW, SharingPolicies.SHARE_ALL_INKLUDING_OLD,
+                SharingPolicies.SHARE_INDEX_DOCUMENT);
+        assertNotNull(lPolicies);
+        assertTrue(lPolicies.size() == 1);
+
+        SharingPolicy p = lPolicies.get(0);
+        p.setPolicy(SharingPolicies.SHARE_TAGGED_COLLECTION);
+        this.mergeInTransaction(p);
+
+        //now we should be able to find it
+        lPolicies = this.sharingPolicyDao.getAllSharingPoliciesFromUserInStateAndOfType(this.user1,
+                SharingPolicies.SHARE_TAGGED_COLLECTION, ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
+        assertNotNull(lPolicies);
+        assertTrue(lPolicies.size() == 1);
+    }
+
     private void persistInTransaction(SharingPolicy policy) {
         // need manual transaction in test because transactional interceptor is not installed in tests
         this.database.entityManager.getTransaction().begin();

@@ -1,5 +1,6 @@
 package org.backmeup.index.sharing.policy;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -8,6 +9,7 @@ import javax.inject.Inject;
 import org.backmeup.index.dal.SharingPolicyDao;
 import org.backmeup.index.model.User;
 import org.backmeup.index.sharing.policy.SharingPolicy.ActivityState;
+import org.backmeup.index.tagging.TaggedCollection;
 import org.backmeup.index.utils.cdi.RunRequestScoped;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +49,36 @@ public class SharingPolicyManager {
                 ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
     }
 
+    /**
+     * Returns a list of all Active and Waiting4Handshake sharing policies owned by a given user which define the
+     * Sharing of the provided tagged collection.
+     * 
+     * @param user
+     * @param t
+     * @return
+     */
+    public List<SharingPolicy> getAllWaiting4HandshakeAndActivePoliciesOwnedByUserContainingTaggedCollection(User user,
+            TaggedCollection t) {
+        List<SharingPolicy> activePolicies = this.sharingPolicyDao.getAllSharingPoliciesFromUserInState(user,
+                ActivityState.ACCEPTED_AND_ACTIVE, ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
+        return filterMatchingTaggedCollection(activePolicies, t);
+    }
+
+    /**
+     * Returns a list of all Active (not the ones waiting 4 handshake, as this data has not been imported yet) sharing
+     * policies owned by a given user, which define the Sharing of the provided tagged collection.
+     * 
+     * @param user
+     * @param t
+     * @return
+     */
+    public List<SharingPolicy> getAllActiveSharingPoliciesOwnedByUserContainingTaggedCollection(User user,
+            TaggedCollection t) {
+        List<SharingPolicy> activePolicies = this.sharingPolicyDao.getAllSharingPoliciesFromUserInStateAndOfType(user,
+                SharingPolicies.SHARE_TAGGED_COLLECTION, ActivityState.ACCEPTED_AND_ACTIVE);
+        return filterMatchingTaggedCollection(activePolicies, t);
+    }
+
     public List<SharingPolicy> getAllWaiting4HandshakeAndActivePoliciesSharedWithUser(User user) {
         return this.sharingPolicyDao.getAllSharingPoliciesWithUserInState(user, ActivityState.ACCEPTED_AND_ACTIVE,
                 ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
@@ -63,6 +95,30 @@ public class SharingPolicyManager {
 
     public List<SharingPolicy> getAllWaitingForDeletionPoliciesSharedWithUser(User user) {
         return this.sharingPolicyDao.getAllSharingPoliciesWithUserInState(user, ActivityState.WAITING_FOR_DELETION);
+    }
+
+    /**
+     * Takes a list of policies and checks for the ones that define the sharing of a given tagged collection
+     * 
+     * @param policies
+     * @param t
+     * @return
+     */
+    private List<SharingPolicy> filterMatchingTaggedCollection(List<SharingPolicy> policies, TaggedCollection t) {
+        List<SharingPolicy> ret = new ArrayList<SharingPolicy>();
+        //iterate over all policies and check if any matches the tagged collection we're looking for
+        for (SharingPolicy policy : policies) {
+            try {
+                Long collID = Long.valueOf(policy.getSharedElementID());
+                //check if we have a match
+                if (collID.longValue() == t.getId().longValue()) {
+                    ret.add(policy);
+                }
+            } catch (Exception e) {
+                //ignore - probably a miss configured policy - should not happen
+            }
+        }
+        return ret;
     }
 
     public SharingPolicy createAndAddSharingPolicy(User owner, User sharingWith, SharingPolicies policy) {
