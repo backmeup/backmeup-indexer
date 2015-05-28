@@ -151,8 +151,6 @@ public class TaggedCollectionManager {
         this.taggedCollectionDao.merge(t);
         this.log.debug("removed " + count + " documents from taggedCollection: " + collectionID);
         return count;
-
-        //TODO Mark old sharing policy for deletion + create new one containing the new set of documents
     }
 
     /**
@@ -177,7 +175,7 @@ public class TaggedCollectionManager {
                     SharingPolicies.SHARE_INDEX_DOCUMENT_GROUP, previouslySharedUUIDs, "helper_" + p.getName(),
                     "helper policy for document removal of tagged collectionId: " + t.getId());
             pHelper.setState(p.getState());
-            this.sharingManager.addSharingPolicy(pHelper);
+            pHelper = this.sharingManager.addSharingPolicy(pHelper);
 
             //finally invalidate the helper sharing policy - which will lead to deletion removed documenUUIDs 
             //which are no longer part of the tagged collection

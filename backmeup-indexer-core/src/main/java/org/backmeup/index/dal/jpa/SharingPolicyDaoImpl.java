@@ -26,7 +26,7 @@ public class SharingPolicyDaoImpl extends BaseDaoImpl<SharingPolicy> implements 
     public SharingPolicy getByEntityId(Long entityId) {
         TypedQuery<SharingPolicy> q = createTypedQuery("SELECT u FROM " + TABLENAME + " u WHERE u.Id = :entityId");
         q.setParameter("entityId", entityId);
-        return executeQuerySelectFirst(q);
+        return executeQuerySelectLast(q);
     }
 
     @Override
@@ -80,7 +80,7 @@ public class SharingPolicyDaoImpl extends BaseDaoImpl<SharingPolicy> implements 
                 + " u WHERE u.withUserID = :withUserID and u.Id = :policyId ORDER BY u.Id ASC");
         q.setParameter("withUserID", withUser.id());
         q.setParameter("policyId", policyID);
-        return executeQuerySelectFirst(q);
+        return executeQuerySelectLast(q);
     }
 
     @Override
@@ -140,9 +140,9 @@ public class SharingPolicyDaoImpl extends BaseDaoImpl<SharingPolicy> implements 
         return new ArrayList<>();
     }
 
-    private SharingPolicy executeQuerySelectFirst(TypedQuery<SharingPolicy> q) {
+    private SharingPolicy executeQuerySelectLast(TypedQuery<SharingPolicy> q) {
         List<SharingPolicy> status = executeQuery(q);
-        return status.size() > 0 ? status.get(0) : null;
+        return status.size() > 0 ? status.get(status.size() - 1) : null;
     }
 
     @Transactional
