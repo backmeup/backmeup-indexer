@@ -94,11 +94,11 @@ public class TaggedCollectionManager {
                 try {
                     Long collID = Long.valueOf(policy.getSharedElementID());
                     //check if we have a match
-                    if (collID == t.getId()) {
+                    if (collID.longValue() == t.getId().longValue()) {
                         //mark this policy for deletion
-                        this.log.debug("found related sharing policy for removed tagged collection " + t.getId()
+                        this.log.debug("found related sharing policy for removed tagged collection: " + t.getId()
                                 + " marking sharing policy: " + policy.getId() + " for removal");
-                        this.sharingManager.removeSharingPolicy(collID);
+                        this.sharingManager.removeSharingPolicy(policy.getId());
                     }
                 } catch (Exception e) {
                     //ignore - probably a miss configured policy - should not happen
