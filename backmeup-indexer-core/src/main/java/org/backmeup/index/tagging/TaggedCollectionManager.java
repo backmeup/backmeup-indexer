@@ -1,5 +1,6 @@
 package org.backmeup.index.tagging;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -139,15 +140,23 @@ public class TaggedCollectionManager {
         }
         int count = 0;
         List<UUID> docs = t.getDocumentIds();
-        //before updating the tagged collection we need to capture the state for related policies
-        updateDocumentRemovalForRelatedSharingPolicies(t, docs);
-        //remove the documents from the tagged collection
+        List<UUID> matches = new ArrayList<UUID>();
+        //figure out the document matches
         for (UUID documentID : documentIDs) {
             if (docs.contains(documentID)) {
-                t.removeDocumentId(documentID);
+                matches.add(documentID);
                 count++;
             }
         }
+        if (count > 0) {
+            //before updating the tagged collection we need to capture the state for related policies
+            updateDocumentRemovalForRelatedSharingPolicies(t, docs);
+            //remove the documents from the tagged collection
+            for (UUID documentID : matches) {
+                t.removeDocumentId(documentID);
+            }
+        }
+
         this.taggedCollectionDao.merge(t);
         this.log.debug("removed " + count + " documents from taggedCollection: " + collectionID);
         return count;
@@ -176,6 +185,7 @@ public class TaggedCollectionManager {
                     "helper policy for document removal of tagged collectionId: " + t.getId());
             pHelper.setState(p.getState());
             pHelper = this.sharingManager.addSharingPolicy(pHelper);
+            this.sharingManager.approveIncomingSharing(new User(pHelper.getWithUserID()), pHelper.getId());
 
             //finally invalidate the helper sharing policy - which will lead to deletion removed documenUUIDs 
             //which are no longer part of the tagged collection
