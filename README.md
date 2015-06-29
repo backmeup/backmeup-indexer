@@ -20,7 +20,6 @@ Specific to index-core
 Elasticsearch + Marvel beide in Version 1.2.0 zum download zur Verfügung gestellt:
 http://www.share-online.biz/dl/Q2AY2ZEN8ZP
 
- 
 For implicitly required software artifacts and version see the project's pom.xml files
 
 1) Installing Elasticsearch 1.2.0 on Debian
@@ -41,7 +40,6 @@ apt-get update && apt-get install elasticsearch
 
 Complete installer docu available at:
 http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/setup-repositories.html#_yum
-_y
 
 2) Installing Truecrypt
 =======================
@@ -74,10 +72,10 @@ Truecrypt
 
  #a directory where Truecrypt container files are copied to when mounting them
  #as well as Elasticsearch yml files when starting the ES user instances
- index.temp.data.home.dir = D:/temp/themis/indexuserspace1
+ index.temp.data.home.dir = /data/index-core/temp/indexuserspace
 
  #the root directory of the themis-datasink (dummy implementation)
- themis-datasink.home.dir = D:/temp/themis/datasink
+ themis-datasink.home.dir = /data/index-core/datasink
  
 ----------------
 Database Configuration: 
@@ -86,7 +84,7 @@ create a database user called 'dbu_indexcore' (pw 'dbu_indexcore')
 create a database called 'bmuindexcore' and assign the dbu_indexcore user as owner
 
 Info:
-Make sure this information is reflected within src>main>resources>META-INF/persistance.xml
+Make sure this information is reflected within src>main>resources>META-INF/persistence.xml
 
 4.1) Deployment to Tomcat
 =======================
@@ -101,7 +99,7 @@ To manually execute the backmeup-indexer integration tests call maven with '-P I
 4.2) Deployment of osgi bundles
 =============================
 * within backmeup-index/autodeploy directory you'll find the created osgi bundles + their dependencies which are required to run within the plugin-framework. 
-Copy all bundle jars into data/backmeup-service/autodeploy [according to the configuration of backmeup-service manual section B] 
+Copy all bundle jars into /data/backmeup-service/autodeploy and /data/backmeup-worker/autodeploy [according to the configuration of backmeup-service manual section F2] 
 
 
 Hints

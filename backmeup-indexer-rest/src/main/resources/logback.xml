@@ -14,7 +14,8 @@
             <!-- <fileNamePattern>${catalina.home}/logs/backmeup-service_%d{yyyy-MM-dd}.log</fileNamePattern> -->
             <fileNamePattern>${catalina.base}/logs/backmeup-indexer_%d{yyyy-MM-dd}.log</fileNamePattern>
 
-            <!-- keep 30 days' worth of history <maxHistory>30</maxHistory> -->
+            <!-- keep 30 days' worth of history -->
+			<maxHistory>14</maxHistory>
         </rollingPolicy>
 
         <encoder>
