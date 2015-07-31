@@ -1,6 +1,7 @@
 package org.backmeup.index.sharing.policy;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -141,7 +142,21 @@ public class SharingPolicyManager {
      */
     public SharingPolicy createAndAddSharingPolicy(User owner, User sharingWith, SharingPolicies policy,
             String sharedElementID, String name, String description) {
+        return createAndAddSharingPolicy(owner, sharingWith, policy, null, name, description, null, null);
+    }
+
+    public SharingPolicy createAndAddSharingPolicy(User owner, User sharingWith, SharingPolicies policy,
+            String sharedElementID, String name, String description, Date lifespanStartDate, Date lifespanEndDate) {
+        //create the policy calling the default constructor
         SharingPolicy shPol = new SharingPolicy(owner, sharingWith, policy, sharedElementID, name, description);
+        //check if we're setting a custom lifespan for the policy
+        if (lifespanStartDate != null) {
+            shPol.setPolicyLifeSpanStartDate(lifespanStartDate);
+        }
+        if (lifespanEndDate != null) {
+            shPol.setPolicyLifeSpanEndDate(lifespanEndDate);
+        }
+        //add the sharing policy
         return addSharingPolicy(shPol);
     }
 
@@ -158,6 +173,39 @@ public class SharingPolicyManager {
         shPolicy = this.sharingPolicyDao.save(shPolicy);
         this.log.debug("adding SharingPolicy " + shPolicy.toString());
         return shPolicy;
+    }
+
+    /**
+     * Allows to update the metadata fields of a sharing policy e.g. name and description and to change the lifespan All
+     * other fields cannot be updated for an already existing policy
+     * 
+     */
+    public SharingPolicy updateSharingPolicy(User user, Long policyID, String name, String description,
+            Date lifespanstart, Date lifespanend) {
+
+        SharingPolicy p = this.sharingPolicyDao.getAllSharingPoliciesFromUserAndPolicyID(user, policyID);
+        if (p != null) {
+            if (name != null) {
+                p.setName(name);
+            }
+            if (description != null) {
+                p.setDescription(description);
+            }
+            if (lifespanstart != null) {
+                p.setPolicyLifeSpanStartDate(lifespanstart);
+            }
+            if (lifespanend != null) {
+                p.setPolicyLifeSpanEndDate(lifespanend);
+            }
+            p = this.sharingPolicyDao.merge(p);
+            this.log.debug("updated sharing policy for user: " + user.id() + " and SharingPolicy " + p.getId());
+            return p;
+        } else {
+            String s = "unable to update sharing for user: " + user.id() + " and SharingPolicy " + policyID
+                    + " - policy does not exist";
+            this.log.debug(s);
+            throw new IllegalArgumentException(s);
+        }
     }
 
     public void removeSharingPolicy(Long policyID) {

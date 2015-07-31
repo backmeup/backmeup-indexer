@@ -20,10 +20,12 @@ public class SharingPolicyEntry {
     private String description;
     private int numberOfSharedDocuments; //number of documents that this policy has currently shared
     private boolean approvedBySharingpartner; //indicates if the sharing partner has already accepted it
+    private Date policyLifeSpanStartDate; //start of life for this policy
+    private Date policyLifeSpanEndDate; //end of life for this policy
 
     public SharingPolicyEntry(Long id, User fromUser, User withUser, SharingPolicyTypeEntry policy,
             Date policyCreationDate, String sharedElementID, String name, String description, int numberOfSharedDocs,
-            boolean approvedBySharingpartner) {
+            boolean approvedBySharingpartner, Date lifespanStart, Date lifespanEnd) {
         this.id = id;
         this.fromUserID = fromUser.id();
         this.withUserID = withUser.id();
@@ -34,6 +36,8 @@ public class SharingPolicyEntry {
         this.description = description;
         this.numberOfSharedDocuments = numberOfSharedDocs;
         this.approvedBySharingpartner = approvedBySharingpartner;
+        this.policyLifeSpanStartDate = lifespanStart;
+        this.policyLifeSpanEndDate = lifespanEnd;
     }
 
     public Long getFromUserID() {
@@ -89,6 +93,14 @@ public class SharingPolicyEntry {
 
     public boolean getApprovedBySharingpartner() {
         return this.approvedBySharingpartner;
+    }
+
+    public Date getPolicyLifeSpanStartDate() {
+        return this.policyLifeSpanStartDate;
+    }
+
+    public Date getPolicyLifeSpanEndDate() {
+        return this.policyLifeSpanEndDate;
     }
 
 }

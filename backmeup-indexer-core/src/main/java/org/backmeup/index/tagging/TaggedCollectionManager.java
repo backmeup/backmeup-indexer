@@ -184,6 +184,8 @@ public class TaggedCollectionManager {
                     SharingPolicies.SHARE_INDEX_DOCUMENT_GROUP, previouslySharedUUIDs, "helper_" + p.getName(),
                     "helper policy for document removal of tagged collectionId: " + t.getId());
             pHelper.setState(p.getState());
+            pHelper.setPolicyLifeSpanStartDate(p.getPolicyLifeSpanStartDate());
+            pHelper.setPolicyLifeSpanEndDate(p.getPolicyLifeSpanEndDate());
             pHelper = this.sharingManager.addSharingPolicy(pHelper);
             this.sharingManager.approveIncomingSharing(new User(pHelper.getWithUserID()), pHelper.getId());
 

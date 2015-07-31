@@ -1,5 +1,6 @@
 package org.backmeup.index.rest.resources;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -66,7 +67,9 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
             @QueryParam("policyType") SharingPolicyTypeEntry policyType, //
             @QueryParam("policyValue") String policyValue,//
             @QueryParam("name") String name,//
-            @QueryParam("description") String description) {
+            @QueryParam("description") String description,//
+            @QueryParam("lifespanstart") Date lifespanStart,//
+            @QueryParam("lifespanend") Date lifespanEnd) {
 
         mandatory("fromUserId", fromUser);
         mandatory("withUserId", withUser);
@@ -83,7 +86,26 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
 
         SharingPolicies policy = convert(policyType);
         SharingPolicy p = this.sharingManager.createAndAddSharingPolicy(fromUser, withUser, policy, policyValue, name,
-                description);
+                description, lifespanStart, lifespanEnd);
+        return convert(p);
+    }
+
+    @Override
+    @POST
+    @Path("/{fromUserId}/update")
+    @Produces(MediaType.APPLICATION_JSON)
+    public SharingPolicyEntry update(//
+            @PathParam("fromUserId") User owner,//
+            @QueryParam("policyID") Long policyID,//
+            @QueryParam("name") String name,//
+            @QueryParam("description") String description,//
+            @QueryParam("lifespanstart") Date lifespanStart,//
+            @QueryParam("lifespanend") Date lifespanEnd) {
+
+        mandatory("fromUserId", owner);
+        mandatory("policyID", policyID);
+        SharingPolicy p = this.sharingManager.updateSharingPolicy(owner, policyID, name, description, lifespanStart,
+                lifespanEnd);
         return convert(p);
     }
 
@@ -222,7 +244,8 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
         }
         SharingPolicyEntry e = new SharingPolicyEntry(p.getId(), new User(p.getFromUserID()), new User(
                 p.getWithUserID()), t, p.getPolicyCreationDate(), p.getSharedElementID(), p.getName(),
-                p.getDescription(), polDocCount, incomingSharingAccepted);
+                p.getDescription(), polDocCount, incomingSharingAccepted, p.getPolicyLifeSpanStartDate(),
+                p.getPolicyLifeSpanEndDate());
         return e;
     }
 

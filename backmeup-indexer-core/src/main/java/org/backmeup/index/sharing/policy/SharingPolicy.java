@@ -1,5 +1,6 @@
 package org.backmeup.index.sharing.policy;
 
+import java.util.Calendar;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -40,6 +41,10 @@ public class SharingPolicy {
     private String description;
     @Enumerated(EnumType.STRING)
     private ActivityState state;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date policyLifeSpanStartDate;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date policyLifeSpanEndDate;
 
     public SharingPolicy() {
     }
@@ -55,6 +60,8 @@ public class SharingPolicy {
         this.withUserID = withUser.id();
         this.policy = policy;
         this.policyCreationDate = new Date();
+        this.policyLifeSpanStartDate = new Date();
+        this.policyLifeSpanEndDate = getDefaultLifeSpanEndDate(); //defaults to 31.12.2999
         this.policyLastCheckedDate = null;
         this.name = name;
         this.description = description;
@@ -144,12 +151,44 @@ public class SharingPolicy {
         this.state = state;
     }
 
+    public static Date getDefaultLifeSpanEndDate() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.clear();
+        calendar.set(Calendar.DAY_OF_MONTH, 31);
+        calendar.set(Calendar.MONTH, 12);
+        calendar.set(Calendar.YEAR, 2999);
+        Date date = calendar.getTime();
+        return date;
+    }
+
+    public Date getPolicyLifeSpanStartDate() {
+        return this.policyLifeSpanStartDate;
+    }
+
+    public void setPolicyLifeSpanStartDate(Date policyLifeSpanStartDate) {
+        if (policyLifeSpanStartDate.before(this.policyLifeSpanEndDate)) {
+            this.policyLifeSpanStartDate = policyLifeSpanStartDate;
+        }
+    }
+
+    public Date getPolicyLifeSpanEndDate() {
+        return this.policyLifeSpanEndDate;
+    }
+
+    public void setPolicyLifeSpanEndDate(Date policyLifeSpanEndDate) {
+        if (policyLifeSpanEndDate.after(this.policyLifeSpanStartDate)) {
+            this.policyLifeSpanEndDate = policyLifeSpanEndDate;
+        }
+    }
+
     @Override
     public String toString() {
         return "id: '" + this.Id + "', fromUserID: '" + this.fromUserID + "', withUserID: '" + this.withUserID
                 + "', policy: '" + this.policy + "', sharedElement: '" + this.sharedElementID + "', name: '"
                 + this.name + "', description: '" + this.description + "', creationDate: '"
-                + this.policyCreationDate.toString() + "', state: '" + this.state + "'";
+                + this.policyCreationDate.toString() + "', lifespanStartDate: '"
+                + this.policyLifeSpanStartDate.toString() + "', lifespanEndDate: '"
+                + this.policyLifeSpanEndDate.toString() + "', state: '" + this.state + "'";
     }
 
 }

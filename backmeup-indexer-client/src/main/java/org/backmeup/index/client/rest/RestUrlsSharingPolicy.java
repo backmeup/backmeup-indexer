@@ -4,6 +4,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,7 +39,7 @@ public class RestUrlsSharingPolicy {
     }
 
     public URI forAdd(User fromUser, User withUser, SharingPolicyTypeEntry policyType, String policyValue, String name,
-            String description) throws URISyntaxException {
+            String description, Date lifespanstart, Date lifespanend) throws URISyntaxException {
         URIBuilder urlBuilder = startWithBaseUrl(fromUser, "");
         addMandatoryParameter(urlBuilder, "withUserId", withUser);
         addMandatoryParameter(urlBuilder, "policyType", policyType);
@@ -51,6 +52,20 @@ public class RestUrlsSharingPolicy {
         }
         addOptionalParameter(urlBuilder, "name", name);
         addOptionalParameter(urlBuilder, "description", description);
+        addOptionalParameter(urlBuilder, "lifespanstart", lifespanstart);
+        addOptionalParameter(urlBuilder, "lifespanend", lifespanend);
+        return urlBuilder.build();
+    }
+
+    public URI forUpdate(User currUser, Long policyID, String name, String description, Date lifespanstart,
+            Date lifespanend) throws URISyntaxException {
+        URIBuilder urlBuilder = startWithBaseUrl(currUser, "update");
+        addMandatoryParameter(urlBuilder, "fromUserId", currUser);
+        addMandatoryParameter(urlBuilder, "policyID", policyID);
+        addOptionalParameter(urlBuilder, "name", name);
+        addOptionalParameter(urlBuilder, "description", description);
+        addOptionalParameter(urlBuilder, "lifespanstart", lifespanstart);
+        addOptionalParameter(urlBuilder, "lifespanend", lifespanend);
         return urlBuilder.build();
     }
 
@@ -147,6 +162,12 @@ public class RestUrlsSharingPolicy {
     private void addOptionalParameter(URIBuilder url, String key, Long value) {
         if (value != null && value != 0) {
             url.addParameter(key, String.valueOf(value));
+        }
+    }
+
+    private void addOptionalParameter(URIBuilder url, String key, Date value) {
+        if (value != null) {
+            url.addParameter(key, value.toString());
         }
     }
 

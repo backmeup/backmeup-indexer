@@ -1,5 +1,6 @@
 package org.backmeup.index.client.rest;
 
+import java.util.Date;
 import java.util.Set;
 
 import org.backmeup.index.api.SharingPolicyClient;
@@ -33,8 +34,15 @@ public class RestApiSharingPolicyClient implements SharingPolicyClient {
 
     @Override
     public SharingPolicyEntry add(User sharingWith, SharingPolicyTypeEntry policy, String sharedElementID, String name,
-            String description) {
-        return this.server.add(this.currUser, sharingWith, policy, sharedElementID, name, description);
+            String description, Date lifespanstart, Date lifespanend) {
+        return this.server.add(this.currUser, sharingWith, policy, sharedElementID, name, description, lifespanstart,
+                lifespanend);
+    }
+
+    @Override
+    public SharingPolicyEntry update(Long policyID, String name, String description, Date lifespanstart,
+            Date lifespanend) {
+        return this.server.update(this.currUser, policyID, name, description, lifespanstart, lifespanend);
     }
 
     @Override

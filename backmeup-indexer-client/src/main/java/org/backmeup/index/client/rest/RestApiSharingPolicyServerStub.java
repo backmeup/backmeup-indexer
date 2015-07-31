@@ -3,6 +3,7 @@ package org.backmeup.index.client.rest;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Date;
 import java.util.Set;
 
 import org.backmeup.index.api.SharingPolicyServer;
@@ -51,9 +52,23 @@ public class RestApiSharingPolicyServerStub implements SharingPolicyServer {
 
     @Override
     public SharingPolicyEntry add(User currUser, User sharingWith, SharingPolicyTypeEntry policy,
-            String sharedElementID, String name, String description) {
+            String sharedElementID, String name, String description, Date lifespanstart, Date lifespanend) {
         try {
-            URI url = this.urls.forAdd(currUser, sharingWith, policy, sharedElementID, name, description);
+            URI url = this.urls.forAdd(currUser, sharingWith, policy, sharedElementID, name, description,
+                    lifespanstart, lifespanend);
+            String body = this.http.post(url, "", 200);
+            return Json.deserialize(body, SharingPolicyEntry.class);
+
+        } catch (IOException | URISyntaxException e) {
+            throw failedToContactServer(e);
+        }
+    }
+
+    @Override
+    public SharingPolicyEntry update(User currUser, Long policyID, String name, String description, Date lifespanstart,
+            Date lifespanend) {
+        try {
+            URI url = this.urls.forUpdate(currUser, policyID, name, description, lifespanstart, lifespanend);
             String body = this.http.post(url, "", 200);
             return Json.deserialize(body, SharingPolicyEntry.class);
 

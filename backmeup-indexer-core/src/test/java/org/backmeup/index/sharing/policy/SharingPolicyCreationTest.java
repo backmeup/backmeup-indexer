@@ -44,10 +44,51 @@ public class SharingPolicyCreationTest {
         assertEquals(this.owner.id(), p.getFromUserID());
         assertEquals(this.sharedWith.id(), p.getWithUserID());
         assertNotNull(p.getId());
+        assertTrue(p.getPolicyLifeSpanStartDate().before(p.getPolicyLifeSpanEndDate()));
         assertEquals(SharingPolicies.SHARE_ALL_AFTER_NOW, p.getPolicy());
         //need to sleep as Date does not capture millis but just seconds
         Thread.sleep(1200);
         assertTrue(p.getPolicyCreationDate().before(new Date(System.currentTimeMillis())));
+    }
+
+    @Test
+    public void updateSharingPolicyMetadataAndLifespan() throws InterruptedException {
+        String policyName = "my policy name";
+        String policyDescription = "my policy description";
+        this.database.entityManager.getTransaction().begin();
+        SharingPolicy p = this.shManager.createAndAddSharingPolicy(this.owner, this.sharedWith,
+                SharingPolicies.SHARE_ALL_AFTER_NOW, policyName, policyDescription);
+        this.database.entityManager.getTransaction().commit();
+
+        assertEquals(this.owner.id(), p.getFromUserID());
+        assertEquals(this.sharedWith.id(), p.getWithUserID());
+        assertNotNull(p.getId());
+        assertNotNull(p.getName().equals(policyName));
+        assertNotNull(p.getDescription().equals(policyDescription));
+        assertNotNull(p.getPolicyLifeSpanStartDate());
+        assertNotNull(p.getPolicyLifeSpanEndDate());
+        assertEquals(SharingPolicies.SHARE_ALL_AFTER_NOW, p.getPolicy());
+        //need to sleep as Date does not capture millis but just seconds
+        Thread.sleep(1200);
+        assertTrue(p.getPolicyCreationDate().before(new Date(System.currentTimeMillis())));
+
+        //now update the policy
+        policyName = "my policy name2";
+        Date pStartDate = new Date();
+        Thread.sleep(1200);
+        Date pEndDate = new Date();
+        this.database.entityManager.getTransaction().begin();
+        p = this.shManager.updateSharingPolicy(this.owner, p.getId(), policyName, null, pStartDate, pEndDate);
+        this.database.entityManager.getTransaction().commit();
+
+        assertEquals(this.owner.id(), p.getFromUserID());
+        assertEquals(this.sharedWith.id(), p.getWithUserID());
+        assertNotNull(p.getId());
+        assertNotNull(p.getName().equals(policyName));
+        assertNotNull(p.getName().equals(policyDescription));
+        assertNotNull(p.getPolicyLifeSpanStartDate().equals(pStartDate));
+        assertNotNull(p.getPolicyLifeSpanEndDate().equals(pEndDate));
+        assertEquals(SharingPolicies.SHARE_ALL_AFTER_NOW, p.getPolicy());
     }
 
     @Test
