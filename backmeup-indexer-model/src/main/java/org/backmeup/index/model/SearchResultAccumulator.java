@@ -10,6 +10,9 @@ public class SearchResultAccumulator {
     private List<SearchEntry> files;
     private List<CountedEntry> byOwner;
     private List<CountedEntry> byTag;
+    //elements that are related to the paging and offset for search results
+    private Long offsetStart;
+    private Long offsetEnd;
 
     public List<CountedEntry> getBySource() {
         return this.bySource;
@@ -57,6 +60,22 @@ public class SearchResultAccumulator {
 
     public void setFiles(List<SearchEntry> files) {
         this.files = files;
+    }
+
+    public Long getOffsetStart() {
+        return this.offsetStart;
+    }
+
+    public void setOffsetStart(Long offsetStart) {
+        this.offsetStart = offsetStart;
+    }
+
+    public Long getOffsetEnd() {
+        return this.offsetEnd;
+    }
+
+    public void setOffsetEnd(Long offsetEnd) {
+        this.offsetEnd = offsetEnd;
     }
 
 }

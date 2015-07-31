@@ -26,7 +26,8 @@ public class RestUrlsIndex {
     }
 
     public URI forQuery(User userId, String query, String filterBySource, String filterByType, String filterByJob,
-            String filterByOwner, String filterByTag, String username) throws URISyntaxException {
+            String filterByOwner, String filterByTag, String username, Long queryOffSetStart, Long queryMaxResults)
+            throws URISyntaxException {
         URIBuilder urlBuilder = startWithBaseUrl(userId, "");
         addMandatoryParameter(urlBuilder, "query", query);
         addOptionalParameter(urlBuilder, "source", filterBySource);
@@ -35,6 +36,8 @@ public class RestUrlsIndex {
         addOptionalParameter(urlBuilder, "owner", filterByOwner);
         addOptionalParameter(urlBuilder, "tag", filterByTag);
         addMandatoryParameter(urlBuilder, "username", username);
+        addOptionalParameter(urlBuilder, "offset", queryOffSetStart);
+        addOptionalParameter(urlBuilder, "maxresults", queryMaxResults);
         return urlBuilder.build();
     }
 

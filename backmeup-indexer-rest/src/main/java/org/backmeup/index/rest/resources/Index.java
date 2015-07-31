@@ -49,14 +49,16 @@ public class Index implements IndexServer {
             @QueryParam("job") String filterByJob, //
             @QueryParam("owner") String filterByOwner, //
             @QueryParam("tag") String filterByTag, //
-            @QueryParam("username") String username) {
+            @QueryParam("username") String username,//
+            @QueryParam("offset") Long offSetStart, //
+            @QueryParam("maxresults") Long maxResults) {
         mandatory("query", query);
         mandatory("username", username);
 
         try (IndexClient indexClient = getIndexClient(userId)) {
 
             return indexClient.queryBackup(query, filterBySource, filterByType, filterByJob, filterByOwner,
-                    filterByTag, username);
+                    filterByTag, username, offSetStart, maxResults);
 
         }
     }

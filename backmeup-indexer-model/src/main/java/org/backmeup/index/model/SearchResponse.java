@@ -18,6 +18,10 @@ public class SearchResponse {
 
     private SearchResultAccumulator searchResults = new SearchResultAccumulator();
 
+    //elements that are related to the paging and offset for search results
+    private Long offsetStart;
+    private Long offsetEnd;
+
     public SearchResponse() {
     }
 
@@ -74,6 +78,8 @@ public class SearchResponse {
 
     public void setDetails(SearchResultAccumulator searchResults) {
         this.searchResults = searchResults;
+        this.setOffsetStart(searchResults.getOffsetStart());
+        this.setOffsetEnd(searchResults.getOffsetEnd());
     }
 
     public List<CountedEntry> getBySource() {
@@ -138,6 +144,22 @@ public class SearchResponse {
 
     public void setFilters(String filters) {
         this.filters = filters;
+    }
+
+    public Long getOffsetStart() {
+        return this.offsetStart;
+    }
+
+    public void setOffsetStart(Long offsetStart) {
+        this.offsetStart = offsetStart;
+    }
+
+    public Long getOffsetEnd() {
+        return this.offsetEnd;
+    }
+
+    public void setOffsetEnd(Long offsetEnd) {
+        this.offsetEnd = offsetEnd;
     }
 
 }

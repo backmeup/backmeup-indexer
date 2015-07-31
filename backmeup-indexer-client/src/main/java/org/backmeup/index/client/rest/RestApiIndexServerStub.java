@@ -32,11 +32,12 @@ public class RestApiIndexServerStub implements IndexServer {
 
     @Override
     public SearchResultAccumulator query(User userId, String query, String filterBySource, String filterByType,
-            String filterByJob, String filterByOwner, String filterByTag, String username) {
+            String filterByJob, String filterByOwner, String filterByTag, String username, Long queryOffSetStart,
+            Long queryMaxResults) {
         try {
 
             URI url = this.urls.forQuery(userId, query, filterBySource, filterByType, filterByJob, filterByOwner,
-                    filterByTag, username);
+                    filterByTag, username, queryOffSetStart, queryMaxResults);
             String body = this.http.get(url, 200);
             return Json.deserialize(body, SearchResultAccumulator.class);
 

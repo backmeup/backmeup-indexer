@@ -181,9 +181,9 @@ public class ElasticSearchIndexClient implements IndexClient {
 
     @Override
     public SearchResultAccumulator queryBackup(String query, String source, String type, String job, String owner,
-            String tag, String username) {
+            String tag, String username, Long offSetStart, Long maxResults) {
         Map<String, List<String>> filters = createFiltersFor(source, type, job, owner, tag);
-        return queryBackup(query, filters, username);
+        return queryBackup(query, filters, username, offSetStart, maxResults);
     }
 
     private Map<String, List<String>> createFiltersFor(String source, String type, String job, String owner, String tag) {
@@ -226,20 +226,34 @@ public class ElasticSearchIndexClient implements IndexClient {
         return filters;
     }
 
-    public SearchResultAccumulator queryBackup(String query, Map<String, List<String>> filters, String username) {
-        SearchResponse esResponse = queryBackup(query, filters);
+    public SearchResultAccumulator queryBackup(String query, Map<String, List<String>> filters, String username,
+            Long offSetStart, Long maxResults) {
+        //size Indicates the number of results that should be returned, defaults to 10 
+        if (maxResults == null || maxResults < 0) {
+            maxResults = Long.valueOf(100);
+        }
+        //from Indicates the number of initial results that should be skipped, defaults to 0 
+        if (offSetStart == null || offSetStart < 0) {
+            offSetStart = Long.valueOf(0);
+        }
+
+        SearchResponse esResponse = queryBackup(query, filters, offSetStart, maxResults);
         SearchResultAccumulator result = new SearchResultAccumulator();
         result.setFiles(IndexUtils.convertSearchEntries(esResponse, username));
         result.setBySource(IndexUtils.getBySource(esResponse));
         result.setByType(IndexUtils.getByType(esResponse));
         result.setByJob(IndexUtils.getByJob(esResponse));
         result.setByOwner(IndexUtils.getByOwner(esResponse));
+        //set the offset and nr of elements requested for this search
+        result.setOffsetStart(offSetStart);
+        result.setOffsetEnd(offSetStart + maxResults);
         //requires Elasticsearch index and database operations to retrieve these objects
         result.setByTag(IndexUtils.getByTag(esResponse, this.taggedCollectionDao));
         return result;
     }
 
-    private SearchResponse queryBackup(String query, Map<String, List<String>> filters) {
+    private SearchResponse queryBackup(String query, Map<String, List<String>> filters, Long offSetStart,
+            Long maxElements) {
         String queryString = buildQuery(query);
 
         /*
@@ -253,7 +267,7 @@ public class ElasticSearchIndexClient implements IndexClient {
 
         return this.client.prepareSearch(INDEX_NAME).setQuery(qBuilder)
                 .addSort(IndexFields.FIELD_BACKUP_AT, SortOrder.DESC).addHighlightedField(IndexFields.FIELD_FULLTEXT)
-                .setSize(100).execute().actionGet();
+                .setSize(maxElements.intValue()).setFrom(offSetStart.intValue()).execute().actionGet();
     }
 
     private String buildQuery(String query) {

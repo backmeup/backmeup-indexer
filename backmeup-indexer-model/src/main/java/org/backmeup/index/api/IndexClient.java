@@ -18,8 +18,22 @@ import org.backmeup.index.model.SearchResultAccumulator;
  */
 public interface IndexClient extends Closeable {
 
+
+    /**
+     * Querying the backuped and indexed data of a given user by search queries, filters, etc.
+     * @param query the query string including wildcards etc
+     * @param filterBySource by plugin source
+     * @param filterByType by data type e.g. image, html, etc.
+     * @param filterByJob by a specific backupjob
+     * @param owner query for a specific userID
+     * @param username query by username e.g. to distinguish owner and sharing partner
+     * @param tag provide tags to restrict the query
+     * @param offSetStart when offSetStart is set to 100 then the first 1-99 results will not be returned
+     * @param maxResults limits the number of returned results e.g. to 50 search results
+     * @return
+     */
     SearchResultAccumulator queryBackup(String query, String filterBySource, String filterByType, String filterByJob,
-            String owner, String username, String tag);
+            String owner, String username, String tag, Long offSetStart, Long maxResults);
 
     Set<FileItem> searchAllFileItemsForJob(Long jobId);
 

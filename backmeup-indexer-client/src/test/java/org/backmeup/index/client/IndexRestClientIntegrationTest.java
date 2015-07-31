@@ -54,7 +54,8 @@ public class IndexRestClientIntegrationTest {
     }
 
     private void assertHasDocuments() {
-        SearchResultAccumulator result = this.client.queryBackup("*", null, null, null, null, null, "username");
+        SearchResultAccumulator result = this.client.queryBackup("*", null, null, null, null, null, "username", null,
+                null);
         //TODO PK,AL not the proper asserts here
         assertTrue(result.getFiles().size() > 0);
     }
@@ -66,7 +67,8 @@ public class IndexRestClientIntegrationTest {
     }
 
     private void assertHasNoDocuments() {
-        SearchResultAccumulator result = this.client.queryBackup("*", null, null, null, null, null, "username");
+        SearchResultAccumulator result = this.client.queryBackup("*", null, null, null, null, null, "username", null,
+                null);
         //TODO PK,AL not the proper asserts here
         assertTrue(result.getFiles().isEmpty());
     }

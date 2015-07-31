@@ -125,6 +125,7 @@ public class IndexContentManager {
      */
     private void importToESIndex(IndexDocument doc, User user) {
         try {
+            //TODO AL: use same connection to index multiple documents - big overhead to init index client for every call
             try (IndexClient indexClient = this.esSetup.createIndexClient(user)) {
                 indexClient.index(doc);
                 this.log.debug("document indexed by ElasticSearch. userID=" + user.id() + " document: "

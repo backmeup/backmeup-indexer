@@ -19,7 +19,8 @@ import org.backmeup.index.model.User;
 public interface IndexServer {
 
     SearchResultAccumulator query(User userId, String query, String filterBySource, String filterByType,
-            String filterByJob, String filterByOwner, String filterByTag, String username);
+            String filterByJob, String filterByOwner, String filterByTag, String username, Long queryOffSetStart,
+            Long queryMaxResults);
 
     Set<FileItem> filesForJob(User userId, Long jobId);
 
