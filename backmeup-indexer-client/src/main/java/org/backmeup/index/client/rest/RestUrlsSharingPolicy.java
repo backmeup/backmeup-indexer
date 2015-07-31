@@ -2,6 +2,7 @@ package org.backmeup.index.client.rest;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -167,7 +168,9 @@ public class RestUrlsSharingPolicy {
 
     private void addOptionalParameter(URIBuilder url, String key, Date value) {
         if (value != null) {
-            url.addParameter(key, value.toString());
+            SimpleDateFormat formatter = new SimpleDateFormat("EE MMM dd hh:mm:ss z yyyy");
+            String fDate = formatter.format(value);
+            url.addParameter(key, fDate);
         }
     }
 

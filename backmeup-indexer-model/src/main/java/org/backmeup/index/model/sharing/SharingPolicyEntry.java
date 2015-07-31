@@ -68,7 +68,9 @@ public class SharingPolicyEntry {
         return "id: '" + this.id + "', fromUserID: '" + this.fromUserID + "', withUserID: '" + this.withUserID
                 + "', policy: '" + this.policy + "', sharedElement: '" + this.sharedElementID + "', name: '"
                 + this.name + "', description: '" + this.description + "', numberOfSharedDocuments: '"
-                + this.numberOfSharedDocuments + "', approvedBySharingPartner: '" + this.approvedBySharingpartner + "'";
+                + this.numberOfSharedDocuments + "', policytimespanstart: '" + this.policyLifeSpanStartDate.toString()
+                + "', policytimespanend: '" + this.policyLifeSpanEndDate.toString() + "', approvedBySharingPartner: '"
+                + this.approvedBySharingpartner + "'";
     }
 
     public Long getId() {

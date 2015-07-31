@@ -20,6 +20,7 @@ import org.backmeup.index.api.SharingPolicyServer;
 import org.backmeup.index.model.User;
 import org.backmeup.index.model.sharing.SharingPolicyEntry;
 import org.backmeup.index.model.sharing.SharingPolicyEntry.SharingPolicyTypeEntry;
+import org.backmeup.index.rest.utils.DateFormat;
 import org.backmeup.index.sharing.policy.SharingPolicies;
 import org.backmeup.index.sharing.policy.SharingPolicy;
 import org.backmeup.index.sharing.policy.SharingPolicy.ActivityState;
@@ -68,8 +69,8 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
             @QueryParam("policyValue") String policyValue,//
             @QueryParam("name") String name,//
             @QueryParam("description") String description,//
-            @QueryParam("lifespanstart") Date lifespanStart,//
-            @QueryParam("lifespanend") Date lifespanEnd) {
+            @QueryParam("lifespanstart") @DateFormat("EE MMM dd hh:mm:ss z yyyy") Date lifespanStart,//
+            @QueryParam("lifespanend") @DateFormat("EE MMM dd hh:mm:ss z yyyy") Date lifespanEnd) {
 
         mandatory("fromUserId", fromUser);
         mandatory("withUserId", withUser);
@@ -99,8 +100,8 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
             @QueryParam("policyID") Long policyID,//
             @QueryParam("name") String name,//
             @QueryParam("description") String description,//
-            @QueryParam("lifespanstart") Date lifespanStart,//
-            @QueryParam("lifespanend") Date lifespanEnd) {
+            @QueryParam("lifespanstart") @DateFormat("EE MMM dd hh:mm:ss z yyyy") Date lifespanStart,//
+            @QueryParam("lifespanend") @DateFormat("EE MMM dd hh:mm:ss z yyyy") Date lifespanEnd) {
 
         mandatory("fromUserId", owner);
         mandatory("policyID", policyID);
