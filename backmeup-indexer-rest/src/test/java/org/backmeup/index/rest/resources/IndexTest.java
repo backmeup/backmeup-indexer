@@ -47,7 +47,7 @@ public class IndexTest {
     public static class IndexWithMockedFactory extends Index {
         public IndexWithMockedFactory() {
             indexClient = mock(IndexClient.class);
-            when(indexClient.queryBackup("find_me", null, null, null, null, null, "peter", 0L, 100L)).thenReturn(
+            when(indexClient.queryBackup("find_me", null, null, null, null, null, "peter", null, null)).thenReturn(
                     oneFile());
 
             ElasticSearchSetup clientFactory = mock(ElasticSearchSetup.class);

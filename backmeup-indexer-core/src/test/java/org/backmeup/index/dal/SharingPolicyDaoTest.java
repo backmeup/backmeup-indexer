@@ -175,6 +175,29 @@ public class SharingPolicyDaoTest {
         assertTrue(lPolicies.size() == 1);
     }
 
+    @Test
+    public void getSharingPolicyOfSpecificTypeOverAllUsers() {
+        //check the entry state for this test
+        List<SharingPolicy> lPolicies = this.sharingPolicyDao
+                .getAllSharingPoliciesOverAllUsersInState(ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
+        assertNotNull(lPolicies);
+        assertTrue(lPolicies.size() == 2);
+
+        SharingPolicy p = lPolicies.get(0);
+        p.setState(ActivityState.ACCEPTED_AND_WAITING_FOR_TIMSPAN_START);
+        this.mergeInTransaction(p);
+
+        lPolicies = this.sharingPolicyDao
+                .getAllSharingPoliciesOverAllUsersInState(ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
+        assertNotNull(lPolicies);
+        assertTrue(lPolicies.size() == 1);
+
+        lPolicies = this.sharingPolicyDao
+                .getAllSharingPoliciesOverAllUsersInState(ActivityState.ACCEPTED_AND_WAITING_FOR_TIMSPAN_START);
+        assertNotNull(lPolicies);
+        assertTrue(lPolicies.size() == 1);
+    }
+
     private void persistInTransaction(SharingPolicy policy) {
         // need manual transaction in test because transactional interceptor is not installed in tests
         this.database.entityManager.getTransaction().begin();
@@ -203,4 +226,5 @@ public class SharingPolicyDaoTest {
         persistInTransaction(this.pol1);
         persistInTransaction(this.pol2);
     }
+
 }

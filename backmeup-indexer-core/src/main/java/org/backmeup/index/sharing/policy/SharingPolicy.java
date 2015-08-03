@@ -19,7 +19,8 @@ public class SharingPolicy {
 
     public enum ActivityState {
         CREATED_AND_WAITING_FOR_HANDSHAKE, //after created by the owner
-        ACCEPTED_AND_ACTIVE, //accepted by the sharing partner
+        ACCEPTED_AND_WAITING_FOR_TIMSPAN_START, //accepted by sharing partner and waiting for policy start date
+        ACCEPTED_AND_ACTIVE, //accepted by the sharing partner and active
         WAITING_FOR_DELETION, //waiting for items to get deleted
         DELETED; //deleted and no longer checked
     }
@@ -60,7 +61,7 @@ public class SharingPolicy {
         this.withUserID = withUser.id();
         this.policy = policy;
         this.policyCreationDate = new Date();
-        this.policyLifeSpanStartDate = new Date();
+        this.policyLifeSpanStartDate = getDefaultLifeSpanStartDate(); //defaults to current Date
         this.policyLifeSpanEndDate = getDefaultLifeSpanEndDate(); //defaults to 31.12.2999
         this.policyLastCheckedDate = null;
         this.name = name;
@@ -111,10 +112,12 @@ public class SharingPolicy {
         this.policyCreationDate = policyCreationDate;
     }
 
+    @Deprecated
     public Date getPolicyLastCheckedDate() {
         return this.policyLastCheckedDate;
     }
 
+    @Deprecated
     public void setPolicyLastCheckedDate(Date policyLastCheckedDate) {
         this.policyLastCheckedDate = policyLastCheckedDate;
     }
@@ -151,6 +154,11 @@ public class SharingPolicy {
         this.state = state;
     }
 
+    public static Date getDefaultLifeSpanStartDate() {
+        Date date = new Date();
+        return date;
+    }
+
     public static Date getDefaultLifeSpanEndDate() {
         Calendar calendar = Calendar.getInstance();
         calendar.clear();
@@ -166,6 +174,7 @@ public class SharingPolicy {
     }
 
     public void setPolicyLifeSpanStartDate(Date policyLifeSpanStartDate) {
+        //only allow dates before the end date of the policy
         if (policyLifeSpanStartDate.before(this.policyLifeSpanEndDate)) {
             this.policyLifeSpanStartDate = policyLifeSpanStartDate;
         }
@@ -176,6 +185,7 @@ public class SharingPolicy {
     }
 
     public void setPolicyLifeSpanEndDate(Date policyLifeSpanEndDate) {
+        //only allow dates after the policy start date
         if (policyLifeSpanEndDate.after(this.policyLifeSpanStartDate)) {
             this.policyLifeSpanEndDate = policyLifeSpanEndDate;
         }

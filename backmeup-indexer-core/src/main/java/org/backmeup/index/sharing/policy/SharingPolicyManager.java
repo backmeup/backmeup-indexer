@@ -45,9 +45,9 @@ public class SharingPolicyManager {
         return this.sharingPolicyDao.getAllSharingPoliciesFromUserInState(user, ActivityState.ACCEPTED_AND_ACTIVE);
     }
 
-    public List<SharingPolicy> getAllWaiting4HandshakeAndActivePoliciesOwnedByUser(User user) {
+    public List<SharingPolicy> getAllWaiting4HandshakeAndScheduledAndActivePoliciesOwnedByUser(User user) {
         return this.sharingPolicyDao.getAllSharingPoliciesFromUserInState(user, ActivityState.ACCEPTED_AND_ACTIVE,
-                ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
+                ActivityState.ACCEPTED_AND_WAITING_FOR_TIMSPAN_START, ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
     }
 
     /**
@@ -58,10 +58,11 @@ public class SharingPolicyManager {
      * @param t
      * @return
      */
-    public List<SharingPolicy> getAllWaiting4HandshakeAndActivePoliciesOwnedByUserContainingTaggedCollection(User user,
-            TaggedCollection t) {
+    public List<SharingPolicy> getAllWaiting4HandshakeAndScheduledAndActivePoliciesOwnedByUserContainingTaggedCollection(
+            User user, TaggedCollection t) {
         List<SharingPolicy> activePolicies = this.sharingPolicyDao.getAllSharingPoliciesFromUserInState(user,
-                ActivityState.ACCEPTED_AND_ACTIVE, ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
+                ActivityState.ACCEPTED_AND_ACTIVE, ActivityState.ACCEPTED_AND_WAITING_FOR_TIMSPAN_START,
+                ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
         return filterMatchingTaggedCollection(activePolicies, t);
     }
 
@@ -80,9 +81,9 @@ public class SharingPolicyManager {
         return filterMatchingTaggedCollection(activePolicies, t);
     }
 
-    public List<SharingPolicy> getAllWaiting4HandshakeAndActivePoliciesSharedWithUser(User user) {
+    public List<SharingPolicy> getAllWaiting4HandshakeAndScheduledAndActivePoliciesSharedWithUser(User user) {
         return this.sharingPolicyDao.getAllSharingPoliciesWithUserInState(user, ActivityState.ACCEPTED_AND_ACTIVE,
-                ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
+                ActivityState.ACCEPTED_AND_WAITING_FOR_TIMSPAN_START, ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
     }
 
     public List<SharingPolicy> getAllActivePoliciesBetweenUsers(User fromUser, User sharingP) {
@@ -142,7 +143,7 @@ public class SharingPolicyManager {
      */
     public SharingPolicy createAndAddSharingPolicy(User owner, User sharingWith, SharingPolicies policy,
             String sharedElementID, String name, String description) {
-        return createAndAddSharingPolicy(owner, sharingWith, policy, null, name, description, null, null);
+        return createAndAddSharingPolicy(owner, sharingWith, policy, sharedElementID, name, description, null, null);
     }
 
     public SharingPolicy createAndAddSharingPolicy(User owner, User sharingWith, SharingPolicies policy,
@@ -247,7 +248,7 @@ public class SharingPolicyManager {
     public void approveIncomingSharing(User user, Long policyID) {
         SharingPolicy p = this.sharingPolicyDao.getAllSharingPoliciesWithUserAndPolicyID(user, policyID);
         if (p != null) {
-            p.setState(ActivityState.ACCEPTED_AND_ACTIVE);
+            p.setState(ActivityState.ACCEPTED_AND_WAITING_FOR_TIMSPAN_START);
             this.sharingPolicyDao.merge(p);
             this.log.debug("approved incoming sharing for user: " + user.id() + " and SharingPolicy " + p.getId());
         } else {

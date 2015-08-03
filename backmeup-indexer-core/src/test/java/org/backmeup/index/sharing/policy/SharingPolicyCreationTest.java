@@ -13,6 +13,7 @@ import java.util.UUID;
 
 import org.backmeup.index.dal.DerbyDatabase;
 import org.backmeup.index.model.User;
+import org.backmeup.index.sharing.execution.SharingPolicyLifespanCheckerTask;
 import org.backmeup.index.sharing.policy.SharingPolicy.ActivityState;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -26,6 +27,7 @@ public class SharingPolicyCreationTest {
     public final DerbyDatabase database = new DerbyDatabase();
 
     private SharingPolicyManager shManager;
+    private SharingPolicyLifespanCheckerTask lifespanCheckerTask;
     private User owner = new User(1L);
     private User sharedWith = new User(2L);
 
@@ -124,11 +126,12 @@ public class SharingPolicyCreationTest {
     }
 
     @Test
-    public void testActivityState() {
+    public void testActivityState() throws InterruptedException {
         this.database.entityManager.getTransaction().begin();
         SharingPolicy p = this.shManager.createAndAddSharingPolicy(this.owner, this.sharedWith,
                 SharingPolicies.SHARE_ALL_AFTER_NOW);
         assertEquals(ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE, p.getState());
+
         this.database.entityManager.getTransaction().commit();
 
         List<SharingPolicy> ps = this.shManager.getAllActivePoliciesOwnedByUser(this.owner);
@@ -136,6 +139,15 @@ public class SharingPolicyCreationTest {
 
         this.database.entityManager.getTransaction().begin();
         this.shManager.approveIncomingSharing(this.sharedWith, p.getId());
+        this.database.entityManager.getTransaction().commit();
+
+        //set to ActivitySate.ACCEPTED_AND_WAITING_FOR_TIMSPAN_START and not yet active
+        ps = this.shManager.getAllActivePoliciesOwnedByUser(this.owner);
+        assertFalse(ps.contains(p));
+
+        //this thread should set the policy to ActivitySate.ACCEPTED_AND_ACTIVE
+        this.database.entityManager.getTransaction().begin();
+        this.lifespanCheckerTask.run();
         this.database.entityManager.getTransaction().commit();
 
         ps = this.shManager.getAllActivePoliciesOwnedByUser(this.owner);
@@ -149,6 +161,12 @@ public class SharingPolicyCreationTest {
                 SharingPolicies.SHARE_ALL_AFTER_NOW);
         this.shManager.approveIncomingSharing(this.sharedWith, p.getId());
         this.database.entityManager.getTransaction().commit();
+
+        //this thread should picks up the policy timespan and sets the policy to ActivitySate.ACCEPTED_AND_ACTIVE
+        this.database.entityManager.getTransaction().begin();
+        this.lifespanCheckerTask.run();
+        this.database.entityManager.getTransaction().commit();
+
         List<SharingPolicy> ps = this.shManager.getAllActivePoliciesOwnedByUser(this.owner);
         assertTrue(ps.contains(p));
 
@@ -170,8 +188,49 @@ public class SharingPolicyCreationTest {
         this.database.entityManager.getTransaction().commit();
 
         List<SharingPolicy> ps = this.shManager.getAllActivePoliciesOwnedByUser(this.owner);
+        assertFalse(ps.contains(p));
+
+        //this thread should set the policy to ActivitySate.ACCEPTED_AND_ACTIVE
+        this.database.entityManager.getTransaction().begin();
+        this.lifespanCheckerTask.run();
+        this.database.entityManager.getTransaction().commit();
+
+        ps = this.shManager.getAllActivePoliciesOwnedByUser(this.owner);
         assertTrue(ps.contains(p));
         assertTrue(ps.get(0).getSharedElementID().equals("1"));
+    }
+
+    @Test
+    public void sharingPolicyLifeSpanTimeout() {
+        this.database.entityManager.getTransaction().begin();
+        //share all elements of backupJobID 1
+        SharingPolicy p = this.shManager.createAndAddSharingPolicy(this.owner, this.sharedWith,
+                SharingPolicies.SHARE_BACKUP, "1", "My Name", "My Description");
+        this.shManager.approveIncomingSharing(this.sharedWith, p.getId());
+        this.database.entityManager.getTransaction().commit();
+        Date d1 = new Date();
+
+        //this thread should set the policy to ActivitySate.ACCEPTED_AND_ACTIVE
+        this.database.entityManager.getTransaction().begin();
+        this.lifespanCheckerTask.run();
+        this.database.entityManager.getTransaction().commit();
+
+        List<SharingPolicy> ps = this.shManager.getAllActivePoliciesOwnedByUser(this.owner);
+        assertTrue(ps.contains(p));
+        assertTrue(ps.get(0).getSharedElementID().equals("1"));
+        p = ps.get(0);
+
+        this.database.entityManager.getTransaction().begin();
+        p = this.shManager.updateSharingPolicy(this.owner, p.getId(), null, null, null, d1);
+        this.database.entityManager.getTransaction().commit();
+
+        //this thread should set the policy from ACCEPTED_AND_ACTIVE to WAITING_FOR_DELETION
+        this.database.entityManager.getTransaction().begin();
+        this.lifespanCheckerTask.run();
+        this.database.entityManager.getTransaction().commit();
+
+        ps = this.shManager.getAllActivePoliciesOwnedByUser(this.owner);
+        assertFalse(ps.contains(p));
     }
 
     @Test
@@ -197,7 +256,8 @@ public class SharingPolicyCreationTest {
     private void setupWhiteboxTest() {
         this.shManager = new SharingPolicyManager();
         Whitebox.setInternalState(this.shManager, "sharingPolicyDao", this.database.sharingPolicyDao);
-
+        this.lifespanCheckerTask = new SharingPolicyLifespanCheckerTask();
+        Whitebox.setInternalState(this.lifespanCheckerTask, "sharingPolicyDao", this.database.sharingPolicyDao);
     }
 
 }

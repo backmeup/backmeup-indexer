@@ -43,6 +43,8 @@ public interface SharingPolicyDao extends BaseDao<SharingPolicy> {
 
     List<SharingPolicy> getAllSharingPoliciesBetweenUsersInType(User fromUser, User withUser, SharingPolicies... types);
 
+    List<SharingPolicy> getAllSharingPoliciesOverAllUsersInState(ActivityState... state);
+
     void deleteAll();
 
 }

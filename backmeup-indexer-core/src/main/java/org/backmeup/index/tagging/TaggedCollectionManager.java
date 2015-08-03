@@ -88,7 +88,7 @@ public class TaggedCollectionManager {
      */
     public void removeRelatedSharingPolicies(TaggedCollection t) {
         List<SharingPolicy> policies = this.sharingManager
-                .getAllWaiting4HandshakeAndActivePoliciesOwnedByUserContainingTaggedCollection(new User(t.getUserId()),
+                .getAllWaiting4HandshakeAndScheduledAndActivePoliciesOwnedByUserContainingTaggedCollection(new User(t.getUserId()),
                         t);
         //iterate over policies that match our tagged collection filter
         for (SharingPolicy policy : policies) {

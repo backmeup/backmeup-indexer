@@ -43,7 +43,8 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
             @PathParam("fromUserId") User fromUser) {
         mandatory("fromUserId", fromUser);
 
-        List<SharingPolicy> lp = this.sharingManager.getAllWaiting4HandshakeAndActivePoliciesOwnedByUser(fromUser);
+        List<SharingPolicy> lp = this.sharingManager
+                .getAllWaiting4HandshakeAndScheduledAndActivePoliciesOwnedByUser(fromUser);
         return convert(lp);
     }
 
@@ -54,7 +55,8 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
             @PathParam("fromUserId") User currUser) {
         mandatory("fromUserId", currUser);
 
-        List<SharingPolicy> lp = this.sharingManager.getAllWaiting4HandshakeAndActivePoliciesSharedWithUser(currUser);
+        List<SharingPolicy> lp = this.sharingManager
+                .getAllWaiting4HandshakeAndScheduledAndActivePoliciesSharedWithUser(currUser);
         return convert(lp);
     }
 
@@ -135,7 +137,7 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
 
     @Override
     public String removeAllOwned(User owner) {
-        int count = this.sharingManager.getAllWaiting4HandshakeAndActivePoliciesOwnedByUser(owner).size();
+        int count = this.sharingManager.getAllWaiting4HandshakeAndScheduledAndActivePoliciesOwnedByUser(owner).size();
         this.sharingManager.removeAllSharingPoliciesForUser(owner);
         return count + " policies removed";
     }
@@ -240,9 +242,11 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
         SharingPolicyTypeEntry t = convert(p.getPolicy());
         int polDocCount = this.pol2uuidConverter.getNumberOfDocsInPolicyForOwner(p);
         boolean incomingSharingAccepted = false;
-        if (p.getState().equals(ActivityState.ACCEPTED_AND_ACTIVE)) {
+        if (p.getState().equals(ActivityState.ACCEPTED_AND_ACTIVE)
+                || p.getState().equals(ActivityState.ACCEPTED_AND_WAITING_FOR_TIMSPAN_START)) {
             incomingSharingAccepted = true;
         }
+
         SharingPolicyEntry e = new SharingPolicyEntry(p.getId(), new User(p.getFromUserID()), new User(
                 p.getWithUserID()), t, p.getPolicyCreationDate(), p.getSharedElementID(), p.getName(),
                 p.getDescription(), polDocCount, incomingSharingAccepted, p.getPolicyLifeSpanStartDate(),

@@ -137,6 +137,15 @@ public class SharingPolicyDaoImpl extends BaseDaoImpl<SharingPolicy> implements 
         return executeQuery(q);
     }
 
+    @Override
+    public List<SharingPolicy> getAllSharingPoliciesOverAllUsersInState(ActivityState... state) {
+        List<ActivityState> lState = Arrays.asList(state);
+        TypedQuery<SharingPolicy> q = createTypedQuery("SELECT u FROM " + TABLENAME
+                + " u WHERE u.state IN (:activeState) ORDER BY u.Id ASC");
+        q.setParameter("activeState", lState);
+        return executeQuery(q);
+    }
+
     private TypedQuery<SharingPolicy> createTypedQuery(String sql) {
         return this.entityManager.createQuery(sql, SharingPolicy.class);
     }
