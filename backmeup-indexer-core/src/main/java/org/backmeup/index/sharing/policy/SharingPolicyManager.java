@@ -193,7 +193,10 @@ public class SharingPolicyManager {
                 p.setDescription(description);
             }
             if (lifespanstart != null) {
-                p.setPolicyLifeSpanStartDate(lifespanstart);
+                //we don't allow to modify already active policies
+                if (!p.getState().equals(ActivityState.ACCEPTED_AND_ACTIVE)) {
+                    p.setPolicyLifeSpanStartDate(lifespanstart);
+                }
             }
             if (lifespanend != null) {
                 p.setPolicyLifeSpanEndDate(lifespanend);

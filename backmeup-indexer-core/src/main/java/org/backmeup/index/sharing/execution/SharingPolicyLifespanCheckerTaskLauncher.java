@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 @ApplicationScoped
 public class SharingPolicyLifespanCheckerTaskLauncher {
 
-    private int SECONDS_BETWEEN_RECHECKING = 20; //TODO SET TO 120
+    private int SECONDS_BETWEEN_RECHECKING = 20;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
