@@ -22,7 +22,13 @@ public class SharingPolicy {
         ACCEPTED_AND_WAITING_FOR_TIMSPAN_START, //accepted by sharing partner and waiting for policy start date
         ACCEPTED_AND_ACTIVE, //accepted by the sharing partner and active
         WAITING_FOR_DELETION, //waiting for items to get deleted
-        DELETED; //deleted and no longer checked
+        DELETED, //deleted and no longer checked
+        HERITAGE_WAITING_FOR_ACTIVATION; //status for policies representing the use case 'Vererben'
+    }
+
+    public enum Type {
+        SHARING, //standard sharing between two users
+        HERITAGE; //heritage sharing for use case 'vererben'
     }
 
     @Id
@@ -46,6 +52,8 @@ public class SharingPolicy {
     private Date policyLifeSpanStartDate;
     @Temporal(TemporalType.TIMESTAMP)
     private Date policyLifeSpanEndDate;
+    @Enumerated(EnumType.STRING)
+    private Type type;
 
     public SharingPolicy() {
     }
@@ -57,6 +65,11 @@ public class SharingPolicy {
     }
 
     public SharingPolicy(User fromUser, User withUser, SharingPolicies policy, String name, String description) {
+        this(fromUser, withUser, policy, name, description, Type.SHARING); //policies default to sharing
+    }
+
+    public SharingPolicy(User fromUser, User withUser, SharingPolicies policy, String name, String description,
+            Type type) {
         this.fromUserID = fromUser.id();
         this.withUserID = withUser.id();
         this.policy = policy;
@@ -67,6 +80,12 @@ public class SharingPolicy {
         this.name = name;
         this.description = description;
         this.state = ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE;
+        if (type != null) {
+            this.type = type;
+        } else {
+            this.type = Type.SHARING; //policies default to sharing
+        }
+
     }
 
     public Long getFromUserID() {
@@ -191,14 +210,27 @@ public class SharingPolicy {
         }
     }
 
+    public Type getType() {
+        return this.type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    public void initHeritagePolicy() {
+        this.type = Type.HERITAGE;
+        this.state = ActivityState.HERITAGE_WAITING_FOR_ACTIVATION;
+    }
+
     @Override
     public String toString() {
         return "id: '" + this.Id + "', fromUserID: '" + this.fromUserID + "', withUserID: '" + this.withUserID
                 + "', policy: '" + this.policy + "', sharedElement: '" + this.sharedElementID + "', name: '"
-                + this.name + "', description: '" + this.description + "', creationDate: '"
+                + this.name + "', description: '" + this.description + "', type: '" + this.type + "', creationDate: '"
                 + this.policyCreationDate.toString() + "', lifespanStartDate: '"
                 + this.policyLifeSpanStartDate.toString() + "', lifespanEndDate: '"
-                + this.policyLifeSpanEndDate.toString() + "', state: '" + this.state + "'";
+                + this.policyLifeSpanEndDate.toString() + "'";
     }
 
 }

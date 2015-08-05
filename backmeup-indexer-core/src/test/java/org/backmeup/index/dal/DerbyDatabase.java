@@ -5,6 +5,7 @@ import java.util.Properties;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
+import org.backmeup.index.dal.jpa.HeritagePolicyDaoImpl;
 import org.backmeup.index.dal.jpa.IndexFragmentEntryStatusDaoImpl;
 import org.backmeup.index.dal.jpa.JPAEntityManagerFactoryProducer;
 import org.backmeup.index.dal.jpa.QueuedIndexDocumentDaoImpl;
@@ -26,6 +27,8 @@ public class DerbyDatabase extends ExternalResource {
     public IndexFragmentEntryStatusDao statusDao;
     //for sharing policy persistency 
     public SharingPolicyDao sharingPolicyDao;
+    public HeritagePolicyDao heritagePolicyDao;
+
     //for tagged collection persistency
     public TaggedCollectionDao taggedColDao;
 
@@ -45,6 +48,9 @@ public class DerbyDatabase extends ExternalResource {
 
         this.sharingPolicyDao = new SharingPolicyDaoImpl();
         Whitebox.setInternalState(this.sharingPolicyDao, "entityManager", this.entityManager);
+
+        this.heritagePolicyDao = new HeritagePolicyDaoImpl();
+        Whitebox.setInternalState(this.heritagePolicyDao, "sharingPolicyDao", this.sharingPolicyDao);
 
         this.taggedColDao = new TaggedCollectionDaoImpl();
         Whitebox.setInternalState(this.taggedColDao, "entityManager", this.entityManager);
