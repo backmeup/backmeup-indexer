@@ -23,36 +23,36 @@ public class RestApiSharingPolicyClient implements SharingPolicyClient {
     }
 
     @Override
-    public Set<SharingPolicyEntry> getAllOwned() {
-        return this.server.getAllOwned(this.currUser);
+    public Set<SharingPolicyEntry> getAllOwnedSharingPolicies() {
+        return this.server.getAllOwnedSharingPolicies(this.currUser);
     }
 
     @Override
-    public Set<SharingPolicyEntry> getAllIncoming() {
-        return this.server.getAllIncoming(this.currUser);
+    public Set<SharingPolicyEntry> getAllIncomingSharingPolicies() {
+        return this.server.getAllIncomingSharingPolicies(this.currUser);
     }
 
     @Override
-    public SharingPolicyEntry add(User sharingWith, SharingPolicyTypeEntry policy, String sharedElementID, String name,
-            String description, Date lifespanstart, Date lifespanend) {
-        return this.server.add(this.currUser, sharingWith, policy, sharedElementID, name, description, lifespanstart,
-                lifespanend);
+    public SharingPolicyEntry addSharingPolicy(User sharingWith, SharingPolicyTypeEntry policy, String sharedElementID,
+            String name, String description, Date lifespanstart, Date lifespanend) {
+        return this.server.addSharingPolicy(this.currUser, sharingWith, policy, sharedElementID, name, description,
+                lifespanstart, lifespanend);
     }
 
     @Override
-    public SharingPolicyEntry update(Long policyID, String name, String description, Date lifespanstart,
+    public SharingPolicyEntry updateSharingPolicy(Long policyID, String name, String description, Date lifespanstart,
             Date lifespanend) {
-        return this.server.update(this.currUser, policyID, name, description, lifespanstart, lifespanend);
+        return this.server.updateSharingPolicy(this.currUser, policyID, name, description, lifespanstart, lifespanend);
     }
 
     @Override
-    public String removeOwned(Long policyID) {
-        return this.server.removeOwned(this.currUser, policyID);
+    public String removeOwnedSharingPolicy(Long policyID) {
+        return this.server.removeOwnedSharingPolicy(this.currUser, policyID);
     }
 
     @Override
-    public String removeAllOwned() {
-        return this.server.removeAllOwned(this.currUser);
+    public String removeAllOwnedSharingPolicies() {
+        return this.server.removeAllOwnedSharingPolicies(this.currUser);
     }
 
     @Override
@@ -67,6 +67,37 @@ public class RestApiSharingPolicyClient implements SharingPolicyClient {
 
     @Override
     public void close() {
+    }
+
+    //-------------------- Heritage related operations -----------------------//
+
+    @Override
+    public Set<SharingPolicyEntry> getAllOwnedHeritagePolicies() {
+        return this.server.getAllOwnedHeritagePolicies(this.currUser);
+    }
+
+    @Override
+    public Set<SharingPolicyEntry> getAllIncomingHeritagePolicies() {
+        return this.server.getAllIncomingHeritagePolicies(this.currUser);
+    }
+
+    @Override
+    public SharingPolicyEntry addHeritagePolicy(User sharingWith, SharingPolicyTypeEntry policy,
+            String sharedElementID, String name, String description, Date lifespanstart, Date lifespanend) {
+        return this.server.addHeritagePolicy(this.currUser, sharingWith, policy, sharedElementID, name, description,
+                lifespanstart, lifespanend);
+    }
+
+    @Override
+    public SharingPolicyEntry updateHeritagePolicy(Long policyID, String name, String description, Date lifespanstart,
+            Date lifespanend) {
+        return this.server.updateHeritagePolicy(this.currUser, policyID, name, description, lifespanstart, lifespanend);
+
+    }
+
+    @Override
+    public String removeOwnedHeritagePolicy(Long policyID) {
+        return this.server.removeOwnedHeritagePolicy(this.currUser, policyID);
     }
 
 }

@@ -57,6 +57,16 @@ public class HeritagePolicyDaoImpl extends BaseDaoImpl<SharingPolicy> implements
     }
 
     @Override
+    public SharingPolicy getHeritagePolicyFromUserAndPolicyID(User fromUser, Long policyID) {
+        SharingPolicy policy = this.sharingPolicyDao.getAllSharingPoliciesFromUserAndPolicyID(fromUser, policyID);
+        if ((policy != null) && (policy.getType().equals(Type.HERITAGE))) {
+            return policy;
+        } else {
+            return null;
+        }
+    }
+
+    @Override
     public List<SharingPolicy> getAllHeritagePoliciesBetweenUsers(User fromUser, User withUser) {
         List<SharingPolicy> lPolicies = this.sharingPolicyDao.getAllSharingPoliciesBetweenUsers(fromUser, withUser);
         return filterByHeritageType(lPolicies);

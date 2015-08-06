@@ -12,24 +12,24 @@ import org.backmeup.index.model.sharing.SharingPolicyEntry.SharingPolicyTypeEntr
  * A REST API client to the sharing policy component.
  * 
  */
-public interface SharingPolicyClient extends Closeable {
+public interface SharingPolicyClient extends Closeable, HeritagePolicyClient {
 
-    Set<SharingPolicyEntry> getAllOwned();
+    Set<SharingPolicyEntry> getAllOwnedSharingPolicies();
 
-    Set<SharingPolicyEntry> getAllIncoming();
+    Set<SharingPolicyEntry> getAllIncomingSharingPolicies();
 
-    SharingPolicyEntry add(User sharingWith, SharingPolicyTypeEntry policy, String sharedElementID, String name,
+    SharingPolicyEntry addSharingPolicy(User sharingWith, SharingPolicyTypeEntry policy, String sharedElementID, String name,
             String description, Date lifespanstart, Date lifespanend);
 
     /**
      * It's only possible to update a already existing policy's name, description and lifespan. For all other fields you
      * need to delete and recreate
      */
-    SharingPolicyEntry update(Long policyID, String name, String description, Date lifespanstart, Date lifespanend);
+    SharingPolicyEntry updateSharingPolicy(Long policyID, String name, String description, Date lifespanstart, Date lifespanend);
 
-    String removeOwned(Long policyID);
+    String removeOwnedSharingPolicy(Long policyID);
 
-    String removeAllOwned();
+    String removeAllOwnedSharingPolicies();
 
     String acceptIncomingSharing(Long policyID);
 

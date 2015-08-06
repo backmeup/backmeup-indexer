@@ -24,9 +24,13 @@ public class RestUrlsSharingPolicy {
     private final String basePath;
 
     public RestUrlsSharingPolicy(RestApiConfig config) {
+        this(config, "/sharing");
+    }
+
+    public RestUrlsSharingPolicy(RestApiConfig config, String path) {
         this.host = config.host;
         this.port = config.port;
-        this.basePath = config.basepath + "/sharing";
+        this.basePath = config.basepath + path;
     }
 
     public URI forGetAllOwned(User owner) throws URISyntaxException {

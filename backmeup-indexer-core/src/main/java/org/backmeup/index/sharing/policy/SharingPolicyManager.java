@@ -7,9 +7,11 @@ import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import org.backmeup.index.dal.HeritagePolicyDao;
 import org.backmeup.index.dal.SharingPolicyDao;
 import org.backmeup.index.model.User;
 import org.backmeup.index.sharing.policy.SharingPolicy.ActivityState;
+import org.backmeup.index.sharing.policy.SharingPolicy.Type;
 import org.backmeup.index.tagging.TaggedCollection;
 import org.backmeup.index.utils.cdi.RunRequestScoped;
 import org.slf4j.Logger;
@@ -27,6 +29,8 @@ public class SharingPolicyManager {
 
     @Inject
     private SharingPolicyDao sharingPolicyDao;
+    @Inject
+    private HeritagePolicyDao heritagePolicyDao;
 
     public SharingPolicyManager() {
     }
@@ -148,8 +152,19 @@ public class SharingPolicyManager {
 
     public SharingPolicy createAndAddSharingPolicy(User owner, User sharingWith, SharingPolicies policy,
             String sharedElementID, String name, String description, Date lifespanStartDate, Date lifespanEndDate) {
+        return createAndAddPolicy(owner, sharingWith, policy, sharedElementID, name, description, lifespanStartDate,
+                lifespanEndDate, Type.SHARING);
+    }
+
+    private SharingPolicy createAndAddPolicy(User owner, User sharingWith, SharingPolicies policy,
+            String sharedElementID, String name, String description, Date lifespanStartDate, Date lifespanEndDate,
+            Type t) {
         //create the policy calling the default constructor
         SharingPolicy shPol = new SharingPolicy(owner, sharingWith, policy, sharedElementID, name, description);
+        //distinguish between standard sharing and heritage policy
+        if (t.equals(Type.HERITAGE)) {
+            shPol.initHeritagePolicy();
+        }
         //check if we're setting a custom lifespan for the policy
         if (lifespanStartDate != null) {
             shPol.setPolicyLifeSpanStartDate(lifespanStartDate);
@@ -185,6 +200,14 @@ public class SharingPolicyManager {
             Date lifespanstart, Date lifespanend) {
 
         SharingPolicy p = this.sharingPolicyDao.getAllSharingPoliciesFromUserAndPolicyID(user, policyID);
+        return updatePolicy(user, policyID, p, name, description, lifespanstart, lifespanend);
+    }
+
+    /**
+     * private helper to update sharing and heritage policies
+     */
+    private SharingPolicy updatePolicy(User user, Long policyID, SharingPolicy p, String name, String description,
+            Date lifespanstart, Date lifespanend) {
         if (p != null) {
             if (name != null) {
                 p.setName(name);
@@ -192,13 +215,15 @@ public class SharingPolicyManager {
             if (description != null) {
                 p.setDescription(description);
             }
-            if (lifespanstart != null) {
+            //only allow editing the lifespan of Sharing not of Heritage policies
+            if ((p.getType().equals(Type.SHARING)) && (lifespanstart != null)) {
                 //we don't allow to modify already active policies
                 if (!p.getState().equals(ActivityState.ACCEPTED_AND_ACTIVE)) {
                     p.setPolicyLifeSpanStartDate(lifespanstart);
                 }
             }
-            if (lifespanend != null) {
+            //only allow editing the lifespan of Sharing not of Heritage policies
+            if ((p.getType().equals(Type.SHARING)) && (lifespanend != null)) {
                 p.setPolicyLifeSpanEndDate(lifespanend);
             }
             p = this.sharingPolicyDao.merge(p);
@@ -219,6 +244,10 @@ public class SharingPolicyManager {
     }
 
     public void removeSharingPolicy(SharingPolicy p) {
+        removePolicy(p);
+    }
+
+    private void removePolicy(SharingPolicy p) {
         //just set the state, deletion from dao will be handled by the SharingPolicyUp2DateCheckerTask
         p.setState(ActivityState.WAITING_FOR_DELETION);
         this.sharingPolicyDao.merge(p);
@@ -282,5 +311,31 @@ public class SharingPolicyManager {
             this.log.debug(s);
             throw new IllegalArgumentException(s);
         }
+    }
+
+    public List<SharingPolicy> getAllHeritagePoliciesOwnedByUser(User user) {
+        return this.heritagePolicyDao.getAllHeritagePoliciesFromUser(user);
+    }
+
+    public List<SharingPolicy> getAllHeritagePoliciesSharedWithUser(User user) {
+        return this.heritagePolicyDao.getAllHeritagePoliciesWithUser(user);
+    }
+
+    public SharingPolicy createAndAddHeritagePolicy(User owner, User sharingWith, SharingPolicies policy,
+            String sharedElementID, String name, String description, Date lifespanStartDate, Date lifespanEndDate) {
+        return createAndAddPolicy(owner, sharingWith, policy, sharedElementID, name, description, lifespanStartDate,
+                lifespanEndDate, Type.HERITAGE);
+    }
+
+    public SharingPolicy updateHeritagePolicy(User user, Long policyID, String name, String description,
+            Date lifespanstart, Date lifespanend) {
+        SharingPolicy p = this.heritagePolicyDao.getHeritagePolicyFromUserAndPolicyID(user, policyID);
+        return updatePolicy(user, policyID, p, name, description, lifespanstart, lifespanend);
+    }
+
+    public void removeHeritagePolicy(Long policyID) {
+        SharingPolicy p = this.heritagePolicyDao.getByEntityId(policyID);
+        removePolicy(p);
+        this.log.debug("updated HeritagePolicy for deletion: " + p.toString());
     }
 }

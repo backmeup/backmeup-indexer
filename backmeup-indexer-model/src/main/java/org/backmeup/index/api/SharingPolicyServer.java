@@ -11,13 +11,13 @@ import org.backmeup.index.model.sharing.SharingPolicyEntry.SharingPolicyTypeEntr
  * Artificial interface to keep the client and the server of REST API in sync.
  * 
  */
-public interface SharingPolicyServer {
+public interface SharingPolicyServer extends HeritagePolicyServer{
 
-    Set<SharingPolicyEntry> getAllOwned(User forUser);
+    Set<SharingPolicyEntry> getAllOwnedSharingPolicies(User forUser);
 
-    Set<SharingPolicyEntry> getAllIncoming(User forUser);
+    Set<SharingPolicyEntry> getAllIncomingSharingPolicies(User forUser);
 
-    SharingPolicyEntry add(User owner, User sharingWith, SharingPolicyTypeEntry policy, String sharedElementID,
+    SharingPolicyEntry addSharingPolicy(User owner, User sharingWith, SharingPolicyTypeEntry policy, String sharedElementID,
             String name, String description, Date lifespanstart, Date lifespanend);
 
     /**
@@ -25,12 +25,12 @@ public interface SharingPolicyServer {
      * need to delete and recreate
      * 
      */
-    SharingPolicyEntry update(User owner, Long policyID, String name, String description, Date lifespanstart,
+    SharingPolicyEntry updateSharingPolicy(User owner, Long policyID, String name, String description, Date lifespanstart,
             Date lifespanend);
 
-    String removeOwned(User owner, Long policyID);
+    String removeOwnedSharingPolicy(User owner, Long policyID);
 
-    String removeAllOwned(User owner);
+    String removeAllOwnedSharingPolicies(User owner);
 
     String acceptIncomingSharing(User user, Long policyID);
 

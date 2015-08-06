@@ -24,6 +24,7 @@ import org.backmeup.index.rest.utils.DateFormat;
 import org.backmeup.index.sharing.policy.SharingPolicies;
 import org.backmeup.index.sharing.policy.SharingPolicy;
 import org.backmeup.index.sharing.policy.SharingPolicy.ActivityState;
+import org.backmeup.index.sharing.policy.SharingPolicy.Type;
 import org.backmeup.index.sharing.policy.SharingPolicy2DocumentUUIDConverter;
 import org.backmeup.index.sharing.policy.SharingPolicyManager;
 
@@ -39,7 +40,7 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
     @Override
     @GET
     @Path("/{fromUserId}/owned")
-    public Set<SharingPolicyEntry> getAllOwned(//
+    public Set<SharingPolicyEntry> getAllOwnedSharingPolicies(//
             @PathParam("fromUserId") User fromUser) {
         mandatory("fromUserId", fromUser);
 
@@ -51,7 +52,7 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
     @Override
     @GET
     @Path("/{fromUserId}/incoming")
-    public Set<SharingPolicyEntry> getAllIncoming(//
+    public Set<SharingPolicyEntry> getAllIncomingSharingPolicies(//
             @PathParam("fromUserId") User currUser) {
         mandatory("fromUserId", currUser);
 
@@ -64,7 +65,7 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
     @POST
     @Path("/{fromUserId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public SharingPolicyEntry add( //
+    public SharingPolicyEntry addSharingPolicy( //
             @PathParam("fromUserId") User fromUser, // 
             @QueryParam("withUserId") User withUser, //
             @QueryParam("policyType") SharingPolicyTypeEntry policyType, //
@@ -73,6 +74,19 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
             @QueryParam("description") String description,//
             @QueryParam("lifespanstart") @DateFormat("EE MMM dd hh:mm:ss z yyyy") Date lifespanStart,//
             @QueryParam("lifespanend") @DateFormat("EE MMM dd hh:mm:ss z yyyy") Date lifespanEnd) {
+
+        SharingPolicy p = createAndAddPolicy(fromUser, withUser, policyType, policyValue, name, description,
+                lifespanStart, lifespanEnd, Type.SHARING);
+        return convert(p);
+    }
+
+    /**
+     * Helper to reuse logic for both Heritage and standard Sharing policies
+     * 
+     * @return
+     */
+    private SharingPolicy createAndAddPolicy(User fromUser, User withUser, SharingPolicyTypeEntry policyType,
+            String policyValue, String name, String description, Date lifespanStart, Date lifespanEnd, Type t) {
 
         mandatory("fromUserId", fromUser);
         mandatory("withUserId", withUser);
@@ -88,16 +102,26 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
         }
 
         SharingPolicies policy = convert(policyType);
-        SharingPolicy p = this.sharingManager.createAndAddSharingPolicy(fromUser, withUser, policy, policyValue, name,
-                description, lifespanStart, lifespanEnd);
-        return convert(p);
+
+        //distinguish between Sharing and Heritage policy
+        SharingPolicy p = null;
+        if (t.equals(Type.SHARING)) {
+            p = this.sharingManager.createAndAddSharingPolicy(fromUser, withUser, policy, policyValue, name,
+                    description, lifespanStart, lifespanEnd);
+        }
+        if (t.equals(Type.HERITAGE)) {
+            p = this.sharingManager.createAndAddHeritagePolicy(fromUser, withUser, policy, policyValue, name,
+                    description, lifespanStart, lifespanEnd);
+        }
+        return p;
+
     }
 
     @Override
     @POST
     @Path("/{fromUserId}/update")
     @Produces(MediaType.APPLICATION_JSON)
-    public SharingPolicyEntry update(//
+    public SharingPolicyEntry updateSharingPolicy(//
             @PathParam("fromUserId") User owner,//
             @QueryParam("policyID") Long policyID,//
             @QueryParam("name") String name,//
@@ -114,7 +138,7 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
 
     @DELETE
     @Path("/{fromUserId}")
-    public Response removeRS(// 
+    public Response removeOwnedSharingPolicyRS(// 
             @PathParam("fromUserId") User owner, //
             @QueryParam("policyID") Long policyID) {
 
@@ -122,7 +146,7 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
         mandatory("policyID", policyID);
 
         try {
-            return status(Response.Status.OK, removeOwned(owner, policyID));
+            return status(Response.Status.OK, removeOwnedSharingPolicy(owner, policyID));
         } catch (IllegalArgumentException e) {
             return status(Response.Status.NOT_ACCEPTABLE, "failed to delete policy: " + policyID);
         }
@@ -130,24 +154,24 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
     }
 
     @Override
-    public String removeOwned(User owner, Long policyID) {
+    public String removeOwnedSharingPolicy(User owner, Long policyID) {
         this.sharingManager.removeSharingPolicy(policyID);
         return "policy removed";
     }
 
+    @DELETE
+    @Path("/{fromUserId}/all")
+    public Response removeAllOwnedSharingPoliciesRS( //
+            @PathParam("fromUserId") User owner) {
+        mandatory("fromUserId", owner);
+        return status(Response.Status.OK, removeAllOwnedSharingPolicies(owner));
+    }
+
     @Override
-    public String removeAllOwned(User owner) {
+    public String removeAllOwnedSharingPolicies(User owner) {
         int count = this.sharingManager.getAllWaiting4HandshakeAndScheduledAndActivePoliciesOwnedByUser(owner).size();
         this.sharingManager.removeAllSharingPoliciesForUser(owner);
         return count + " policies removed";
-    }
-
-    @DELETE
-    @Path("/{fromUserId}/all")
-    public Response removeAllOwnedRS( //
-            @PathParam("fromUserId") User owner) {
-        mandatory("fromUserId", owner);
-        return status(Response.Status.OK, removeAllOwned(owner));
     }
 
     @POST
@@ -193,6 +217,92 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
         this.sharingManager.declineIncomingSharing(user, policyID);
         return "incoming sharing declined";
     }
+
+    //-----------------------HERITAGE SHARING -------------------------//
+
+    @Override
+    @GET
+    @Path("/heritage/{fromUserId}/owned")
+    public Set<SharingPolicyEntry> getAllOwnedHeritagePolicies(//
+            @PathParam("fromUserId") User fromUser) {
+        mandatory("fromUserId", fromUser);
+        List<SharingPolicy> lp = this.sharingManager.getAllHeritagePoliciesOwnedByUser(fromUser);
+        return convert(lp);
+    }
+
+    @Override
+    @GET
+    @Path("/heritage/{fromUserId}/incoming")
+    public Set<SharingPolicyEntry> getAllIncomingHeritagePolicies(//
+            @PathParam("fromUserId") User currUser) {
+        mandatory("fromUserId", currUser);
+        List<SharingPolicy> lp = this.sharingManager.getAllHeritagePoliciesSharedWithUser(currUser);
+        return convert(lp);
+    }
+
+    @Override
+    @POST
+    @Path("/heritag/{fromUserId}e")
+    @Produces(MediaType.APPLICATION_JSON)
+    public SharingPolicyEntry addHeritagePolicy( //
+            @PathParam("fromUserId") User fromUser, // 
+            @QueryParam("withUserId") User withUser, //
+            @QueryParam("policyType") SharingPolicyTypeEntry policyType, //
+            @QueryParam("policyValue") String policyValue,//
+            @QueryParam("name") String name,//
+            @QueryParam("description") String description,//
+            @QueryParam("lifespanstart") @DateFormat("EE MMM dd hh:mm:ss z yyyy") Date lifespanStart,//
+            @QueryParam("lifespanend") @DateFormat("EE MMM dd hh:mm:ss z yyyy") Date lifespanEnd) {
+
+        SharingPolicy p = createAndAddPolicy(fromUser, withUser, policyType, policyValue, name, description,
+                lifespanStart, lifespanEnd, Type.HERITAGE);
+        return convert(p);
+
+    }
+
+    @Override
+    @POST
+    @Path("/heritage/{fromUserId}/update")
+    @Produces(MediaType.APPLICATION_JSON)
+    public SharingPolicyEntry updateHeritagePolicy(//
+            @PathParam("fromUserId") User owner,//
+            @QueryParam("policyID") Long policyID,//
+            @QueryParam("name") String name,//
+            @QueryParam("description") String description,//
+            @QueryParam("lifespanstart") @DateFormat("EE MMM dd hh:mm:ss z yyyy") Date lifespanStart,//
+            @QueryParam("lifespanend") @DateFormat("EE MMM dd hh:mm:ss z yyyy") Date lifespanEnd) {
+
+        mandatory("fromUserId", owner);
+        mandatory("policyID", policyID);
+        SharingPolicy p = this.sharingManager.updateHeritagePolicy(owner, policyID, name, description, lifespanStart,
+                lifespanEnd);
+        return convert(p);
+    }
+
+    @DELETE
+    @Path("/heritage/{fromUserId}")
+    public Response removeOwnedHeritagePolicyRS(// 
+            @PathParam("fromUserId") User owner, //
+            @QueryParam("policyID") Long policyID) {
+
+        mandatory("fromUserId", owner);
+        mandatory("policyID", policyID);
+
+        try {
+            return status(Response.Status.OK, removeOwnedHeritagePolicy(owner, policyID));
+        } catch (IllegalArgumentException e) {
+            return status(Response.Status.NOT_ACCEPTABLE, "failed to delete policy: " + policyID);
+        }
+
+    }
+
+    @Override
+    public String removeOwnedHeritagePolicy(User owner, Long policyID) {
+        this.sharingManager.removeHeritagePolicy(policyID);
+        return "policy removed";
+    }
+
+    //-----------------------conversion helper ---------------------------//
 
     private SharingPolicies convert(SharingPolicyTypeEntry policyType) {
         if (policyType == SharingPolicyTypeEntry.Backup) {

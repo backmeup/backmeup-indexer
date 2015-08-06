@@ -22,7 +22,7 @@ public class RestApiSharingPolicyServerStubTest {
         this.server.setResourceFileName("SharingPolicyEntries.json");
 
         Set<SharingPolicyEntry> sharingEntry = new RestApiSharingPolicyServerStub(testConfig())
-                .getAllOwned(new User(1L));
+                .getAllOwnedSharingPolicies(new User(1L));
         assertNotNull(sharingEntry);
         assertEquals(1, sharingEntry.size());
         assertTrue(sharingEntry.iterator().next().getWithUserID() == 2);
