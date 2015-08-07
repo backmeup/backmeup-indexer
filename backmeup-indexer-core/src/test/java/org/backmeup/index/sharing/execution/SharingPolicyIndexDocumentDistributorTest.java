@@ -21,6 +21,7 @@ import org.backmeup.index.sharing.IndexDocumentTestingUtils;
 import org.backmeup.index.sharing.policy.SharingPolicies;
 import org.backmeup.index.sharing.policy.SharingPolicy;
 import org.backmeup.index.sharing.policy.SharingPolicy.ActivityState;
+import org.backmeup.index.sharing.policy.SharingPolicy.Type;
 import org.backmeup.index.sharing.policy.SharingPolicyManager;
 import org.backmeup.index.storage.ThemisDataSink;
 import org.junit.After;
@@ -230,8 +231,8 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
         this.pol1w9.setPolicyCreationDate(this.dateBeforeBackup);
         this.pol1w8.setPolicyCreationDate(this.dateAfterBackup);
         this.database.entityManager.getTransaction().begin();
-        this.policyManager.addSharingPolicy(this.pol1w8);
-        this.policyManager.addSharingPolicy(this.pol1w9);
+        this.policyManager.addSharingPolicy(this.pol1w8, Type.SHARING);
+        this.policyManager.addSharingPolicy(this.pol1w9, Type.SHARING);
         this.database.entityManager.getTransaction().commit();
 
         //policy 2 -> share all elements of a specific backup job 53
@@ -249,7 +250,7 @@ public class SharingPolicyIndexDocumentDistributorTest extends IndexDocumentTest
         this.pol5w6 = new SharingPolicy(this.user5, this.user6, SharingPolicies.SHARE_INDEX_DOCUMENT, "My Name",
                 "My Description");
         this.pol5w6.setSharedElementID(UUID.randomUUID().toString());
-        this.policyManager.addSharingPolicy(this.pol5w6);
+        this.policyManager.addSharingPolicy(this.pol5w6, Type.SHARING);
         this.database.entityManager.getTransaction().commit();
 
         //by default is set to wait for sharing partner handshake - trigger policy activated

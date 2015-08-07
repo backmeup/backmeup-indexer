@@ -303,7 +303,7 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
     }
 
     @POST
-    @Path("/heritage/{fromUserId}/deadmannswitch/activate")
+    @Path("/heritage/{fromUserId}/deadmanswitch/activate")
     @Produces(MediaType.APPLICATION_JSON)
     public Response activateDeadMannSwitchAndImportRS(//
             @PathParam("fromUserId") User currUser) {

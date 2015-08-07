@@ -88,8 +88,8 @@ public class TaggedCollectionManager {
      */
     public void removeRelatedSharingPolicies(TaggedCollection t) {
         List<SharingPolicy> policies = this.sharingManager
-                .getAllWaiting4HandshakeAndScheduledAndActivePoliciesOwnedByUserContainingTaggedCollection(new User(t.getUserId()),
-                        t);
+                .getAllWaiting4HandshakeAndScheduledAndActivePoliciesOwnedByUserContainingTaggedCollection(
+                        new User(t.getUserId()), t);
         //iterate over policies that match our tagged collection filter
         for (SharingPolicy policy : policies) {
             //and mark this policy for deletion
@@ -186,9 +186,9 @@ public class TaggedCollectionManager {
             pHelper.setState(p.getState());
             pHelper.setPolicyLifeSpanStartDate(p.getPolicyLifeSpanStartDate());
             pHelper.setPolicyLifeSpanEndDate(p.getPolicyLifeSpanEndDate());
-            pHelper = this.sharingManager.addSharingPolicy(pHelper);
+            pHelper = this.sharingManager.addSharingPolicy(pHelper, p.getType());
+            //re-approve sharing
             this.sharingManager.approveIncomingSharing(new User(pHelper.getWithUserID()), pHelper.getId());
-
             //finally invalidate the helper sharing policy - which will lead to deletion removed documenUUIDs 
             //which are no longer part of the tagged collection
             this.sharingManager.removeSharingPolicy(pHelper);

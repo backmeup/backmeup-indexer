@@ -161,10 +161,6 @@ public class SharingPolicyManager {
             Type t) {
         //create the policy calling the default constructor
         SharingPolicy shPol = new SharingPolicy(owner, sharingWith, policy, sharedElementID, name, description);
-        //distinguish between standard sharing and heritage policy
-        if (t.equals(Type.HERITAGE)) {
-            shPol.initHeritagePolicy();
-        }
         //check if we're setting a custom lifespan for the policy
         if (lifespanStartDate != null) {
             shPol.setPolicyLifeSpanStartDate(lifespanStartDate);
@@ -173,7 +169,7 @@ public class SharingPolicyManager {
             shPol.setPolicyLifeSpanEndDate(lifespanEndDate);
         }
         //add the sharing policy
-        return addSharingPolicy(shPol);
+        return addSharingPolicy(shPol, t);
     }
 
     /**
@@ -182,10 +178,15 @@ public class SharingPolicyManager {
      * @param shPolicy
      * @return
      */
-    public SharingPolicy addSharingPolicy(SharingPolicy shPolicy) {
+    public SharingPolicy addSharingPolicy(SharingPolicy shPolicy, Type t) {
 
-        shPolicy.setState(ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
-
+        //distinguish between standard sharing and heritage policy
+        if (t.equals(Type.HERITAGE)) {
+            shPolicy.initHeritagePolicy();
+        }
+        if (t.equals(Type.SHARING)) {
+            shPolicy.setState(ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
+        }
         shPolicy = this.sharingPolicyDao.save(shPolicy);
         this.log.debug("adding SharingPolicy " + shPolicy.toString());
         return shPolicy;
@@ -272,10 +273,8 @@ public class SharingPolicyManager {
     /**
      * User accepts the incoming sharing he/she received
      * 
-     * @param user
-     *            the user which received the incoming sharing
-     * @param policyID
-     *            the sharingpolicy ID that contains the sharing for the user as sharedWith
+     * @param user the user which received the incoming sharing
+     * @param policyID the sharingpolicy ID that contains the sharing for the user as sharedWith
      */
     public void approveIncomingSharing(User user, Long policyID) {
         SharingPolicy p = this.sharingPolicyDao.getAllSharingPoliciesWithUserAndPolicyID(user, policyID);

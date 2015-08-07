@@ -111,7 +111,7 @@ public class RestUrlsSharingPolicy {
      * endpoint available only for heritage policies only - not for sharing policies
      */
     public URI forActivateDeadMannSwitchAndImport(User user) throws URISyntaxException {
-        URIBuilder urlBuilder = startWithBaseUrl(user, "deadmannswitch/activate");
+        URIBuilder urlBuilder = startWithBaseUrl(user, "deadmanswitch/activate");
         return urlBuilder.build();
     }
 
