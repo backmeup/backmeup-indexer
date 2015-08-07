@@ -100,4 +100,9 @@ public class RestApiSharingPolicyClient implements SharingPolicyClient {
         return this.server.removeOwnedHeritagePolicy(this.currUser, policyID);
     }
 
+    @Override
+    public String activateDeadMannSwitchAndImport() {
+        return this.server.activateDeadMannSwitchAndImport(this.currUser);
+    }
+
 }

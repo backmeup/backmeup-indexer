@@ -32,14 +32,11 @@ public interface HeritagePolicyDao extends BaseDao<SharingPolicy> {
     List<SharingPolicy> getAllHeritagePoliciesBetweenUsers(User fromUser, User withUser);
 
     /**
-     * Pulls the dea man switch and activates the heritage passed from fromUser (heritage owner) to withUser (heritage
-     * receiver)
-     * 
-     * @param deadUser
-     *            from user
+     * Pulls the dea man switch and activates the heritage passed on to withUser (heritage receiver)
+     *
      * @param withUser
      * @return
      */
-    void activateHeritage(User deadUser, User withUser);
+    void acceptAndActivateHeritage(User withUser);
 
 }

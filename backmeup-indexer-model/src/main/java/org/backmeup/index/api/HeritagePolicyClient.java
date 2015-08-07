@@ -26,6 +26,12 @@ public interface HeritagePolicyClient extends Closeable {
 
     String removeOwnedHeritagePolicy(Long policyID);
 
+    /**
+     * Activates the dead man switch for the current user. So all incoming heritage policies shared with this user will
+     * be activated.
+     */
+    String activateDeadMannSwitchAndImport();
+
     @Override
     void close();
 

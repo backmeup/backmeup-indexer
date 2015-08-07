@@ -14,7 +14,8 @@ import org.backmeup.index.model.User;
 import org.backmeup.index.model.sharing.SharingPolicyEntry.SharingPolicyTypeEntry;
 
 /**
- * Create the RESTful URLs to contact the sharing policy component.
+ * Create the RESTful URLs to contact the sharing policy component. Class is used to cover both REST endpoints for
+ * SharingPolicies and HeritagePolicies
  * 
  */
 public class RestUrlsSharingPolicy {
@@ -80,20 +81,37 @@ public class RestUrlsSharingPolicy {
         return urlBuilder.build();
     }
 
+    /**
+     * endpoint available only for sharing policies only - not for heritage policies
+     */
     public URI forRemoveAllOwned(User owner) throws URISyntaxException {
         URIBuilder urlBuilder = startWithBaseUrl(owner, "all");
         return urlBuilder.build();
     }
 
+    /**
+     * endpoint available only for sharing policies only - not for heritage policies
+     */
     public URI forAcceptIncomingSharing(User user, Long policyID) throws URISyntaxException {
         URIBuilder urlBuilder = startWithBaseUrl(user, "acceptIncoming");
         addMandatoryParameter(urlBuilder, "policyID", policyID);
         return urlBuilder.build();
     }
 
+    /**
+     * endpoint available only for sharing policies only - not for heritage policies
+     */
     public URI forDeclineIncomingSharing(User user, Long policyID) throws URISyntaxException {
         URIBuilder urlBuilder = startWithBaseUrl(user, "declineIncoming");
         addMandatoryParameter(urlBuilder, "policyID", policyID);
+        return urlBuilder.build();
+    }
+
+    /**
+     * endpoint available only for heritage policies only - not for sharing policies
+     */
+    public URI forActivateDeadMannSwitchAndImport(User user) throws URISyntaxException {
+        URIBuilder urlBuilder = startWithBaseUrl(user, "deadmannswitch/activate");
         return urlBuilder.build();
     }
 

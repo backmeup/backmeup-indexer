@@ -338,4 +338,9 @@ public class SharingPolicyManager {
         removePolicy(p);
         this.log.debug("updated HeritagePolicy for deletion: " + p.toString());
     }
+
+    public void activateDeadManSwitchAndImport(User currUser) {
+        //as heritage is only shared 1:1 between acounts we enable import of all heritage sharing policies 
+        this.heritagePolicyDao.acceptAndActivateHeritage(currUser);
+    }
 }

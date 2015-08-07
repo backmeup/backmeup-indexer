@@ -73,12 +73,16 @@ public class HeritagePolicyDaoImpl extends BaseDaoImpl<SharingPolicy> implements
     }
 
     @Override
-    public void activateHeritage(User deadUser, User withUser) {
-        List<SharingPolicy> lPolicies = getAllHeritagePoliciesBetweenUsers(deadUser, withUser);
+    public void acceptAndActivateHeritage(User withUser) {
+        //as heritage from different users have different accounts we can activate all heritage for the given user
+        List<SharingPolicy> lPolicies = getAllHeritagePoliciesWithUser(withUser);
         lPolicies = filterByHeritageActivityState(lPolicies);
         for (SharingPolicy policy : lPolicies) {
-            policy.setState(ActivityState.ACCEPTED_AND_WAITING_FOR_TIMSPAN_START);
-            this.sharingPolicyDao.merge(policy);
+            //check we only activate policies that are waiting for activation
+            if (policy.getState().equals(ActivityState.HERITAGE_WAITING_FOR_ACTIVATION)) {
+                policy.setState(ActivityState.ACCEPTED_AND_WAITING_FOR_TIMSPAN_START);
+                this.sharingPolicyDao.merge(policy);
+            }
         }
     }
 

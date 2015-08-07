@@ -196,4 +196,16 @@ public class RestApiSharingPolicyServerStub implements SharingPolicyServer {
         }
     }
 
+    @Override
+    public String activateDeadMannSwitchAndImport(User currUser) {
+        try {
+            URI url = this.urlsForHeritage.forActivateDeadMannSwitchAndImport(currUser);
+            String body = this.http.post(url, "", 200);
+            return body;
+
+        } catch (IOException | URISyntaxException e) {
+            throw failedToContactServer(e);
+        }
+    }
+
 }

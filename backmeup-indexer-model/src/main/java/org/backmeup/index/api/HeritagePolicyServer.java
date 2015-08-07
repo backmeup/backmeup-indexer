@@ -25,4 +25,6 @@ public interface HeritagePolicyServer {
 
     String removeOwnedHeritagePolicy(User owner, Long policyID);
 
+    String activateDeadMannSwitchAndImport(User owner);
+
 }

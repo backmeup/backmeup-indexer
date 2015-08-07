@@ -217,7 +217,7 @@ public class SharingPolicyDaoTest {
 
         //now activate the heritage - marks elements for import
         this.database.entityManager.getTransaction().begin();
-        this.heritagePolicyDao.activateHeritage(this.user1, this.user2);
+        this.heritagePolicyDao.acceptAndActivateHeritage(this.user2);
         this.database.entityManager.getTransaction().commit();
 
         lPolicies = this.sharingPolicyDao

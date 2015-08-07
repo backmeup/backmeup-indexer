@@ -242,7 +242,7 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
 
     @Override
     @POST
-    @Path("/heritag/{fromUserId}e")
+    @Path("/heritage/{fromUserId}")
     @Produces(MediaType.APPLICATION_JSON)
     public SharingPolicyEntry addHeritagePolicy( //
             @PathParam("fromUserId") User fromUser, // 
@@ -300,6 +300,25 @@ public class Sharing extends ParameterValidator implements SharingPolicyServer {
     public String removeOwnedHeritagePolicy(User owner, Long policyID) {
         this.sharingManager.removeHeritagePolicy(policyID);
         return "policy removed";
+    }
+
+    @POST
+    @Path("/heritage/{fromUserId}/deadmannswitch/activate")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response activateDeadMannSwitchAndImportRS(//
+            @PathParam("fromUserId") User currUser) {
+
+        try {
+            return status(Response.Status.OK, this.activateDeadMannSwitchAndImport(currUser));
+        } catch (IllegalArgumentException e) {
+            return status(Response.Status.NOT_ACCEPTABLE, "failed to activate heritage for userId: " + currUser);
+        }
+    }
+
+    @Override
+    public String activateDeadMannSwitchAndImport(User currUser) {
+        this.sharingManager.activateDeadManSwitchAndImport(currUser);
+        return "activated heritage import";
     }
 
     //-----------------------conversion helper ---------------------------//
