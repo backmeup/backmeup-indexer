@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.backmeup.index.model.User;
 import org.backmeup.index.sharing.policy.SharingPolicy;
+import org.backmeup.index.sharing.policy.SharingPolicy.ActivityState;
 
 /**
  * The HeritagePolicyDao contains all database relevant operations for the model class SharingPolicy which are specific
@@ -23,7 +24,11 @@ public interface HeritagePolicyDao extends BaseDao<SharingPolicy> {
 
     List<SharingPolicy> getAllHeritagePoliciesFromUser(User fromUser);
 
+    List<SharingPolicy> getAllSharingPoliciesFromUserInState(User fromUser, ActivityState... state);
+
     List<SharingPolicy> getAllHeritagePoliciesWithUser(User withUser);
+
+    List<SharingPolicy> getAllSharingPoliciesWithUserInState(User fromUser, ActivityState... state);
 
     SharingPolicy getHeritagePolicyWithUserAndPolicyID(User withUser, Long policyID);
 

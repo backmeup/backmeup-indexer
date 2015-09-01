@@ -41,8 +41,20 @@ public class HeritagePolicyDaoImpl extends BaseDaoImpl<SharingPolicy> implements
     }
 
     @Override
+    public List<SharingPolicy> getAllSharingPoliciesFromUserInState(User fromUser, ActivityState... state) {
+        List<SharingPolicy> lPolicies = this.sharingPolicyDao.getAllSharingPoliciesFromUserInState(fromUser, state);
+        return filterByHeritageType(lPolicies);
+    }
+
+    @Override
     public List<SharingPolicy> getAllHeritagePoliciesWithUser(User withUser) {
         List<SharingPolicy> lPolicies = this.sharingPolicyDao.getAllSharingPoliciesWithUser(withUser);
+        return filterByHeritageType(lPolicies);
+    }
+
+    @Override
+    public List<SharingPolicy> getAllSharingPoliciesWithUserInState(User fromUser, ActivityState... state) {
+        List<SharingPolicy> lPolicies = this.sharingPolicyDao.getAllSharingPoliciesWithUserInState(fromUser, state);
         return filterByHeritageType(lPolicies);
     }
 

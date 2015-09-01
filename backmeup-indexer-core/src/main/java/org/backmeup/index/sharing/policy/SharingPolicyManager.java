@@ -273,8 +273,10 @@ public class SharingPolicyManager {
     /**
      * User accepts the incoming sharing he/she received
      * 
-     * @param user the user which received the incoming sharing
-     * @param policyID the sharingpolicy ID that contains the sharing for the user as sharedWith
+     * @param user
+     *            the user which received the incoming sharing
+     * @param policyID
+     *            the sharingpolicy ID that contains the sharing for the user as sharedWith
      */
     public void approveIncomingSharing(User user, Long policyID) {
         SharingPolicy p = this.sharingPolicyDao.getAllSharingPoliciesWithUserAndPolicyID(user, policyID);
@@ -313,11 +315,13 @@ public class SharingPolicyManager {
     }
 
     public List<SharingPolicy> getAllHeritagePoliciesOwnedByUser(User user) {
-        return this.heritagePolicyDao.getAllHeritagePoliciesFromUser(user);
+        return this.heritagePolicyDao.getAllSharingPoliciesFromUserInState(user,
+                ActivityState.HERITAGE_WAITING_FOR_ACTIVATION);
     }
 
     public List<SharingPolicy> getAllHeritagePoliciesSharedWithUser(User user) {
-        return this.heritagePolicyDao.getAllHeritagePoliciesWithUser(user);
+        return this.heritagePolicyDao.getAllSharingPoliciesWithUserInState(user,
+                ActivityState.HERITAGE_WAITING_FOR_ACTIVATION);
     }
 
     public SharingPolicy createAndAddHeritagePolicy(User owner, User sharingWith, SharingPolicies policy,
