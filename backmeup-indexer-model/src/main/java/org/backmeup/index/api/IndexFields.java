@@ -28,6 +28,15 @@ public class IndexFields {
     public static final String FIELD_INDEX_DOCUMENT_UUID = "indexrecord_uuid";
     public static final String FIELD_SHARED_BY_USER_ID = "shared_by_userId";
 
+    /*----Standardized metadata fields for Geo + Temporal information ----*/
+    public static final String FIELD_LOC_NAME = "location_name";
+    public static final String FIELD_LOC_CITY = "location_city";
+    public static final String FIELD_LOC_COUNTRY = "location_country";
+    public static final String FIELD_LOC_LATITUDE = "location_latitude";
+    public static final String FIELD_LOC_LONGITUDE = "location_longitude";
+    public static final String FIELD_DOC_AUTHOR = "document_author";
+    public static final String FIELD_DOC_CREATION_DATE = "document_creation_date";
+
     /*----Fields which are provided by Tika and are used to build up the ojbect's metadata-----*/
     public static final String TIKA_FIELDS_PREFIX = "tikaprop_";
 
