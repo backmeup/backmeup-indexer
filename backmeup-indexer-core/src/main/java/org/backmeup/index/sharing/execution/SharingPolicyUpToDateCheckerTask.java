@@ -14,6 +14,7 @@ import org.backmeup.index.model.User;
 import org.backmeup.index.sharing.policy.SharingPolicy;
 import org.backmeup.index.sharing.policy.SharingPolicy2DocumentUUIDConverter;
 import org.backmeup.index.sharing.policy.SharingPolicyManager;
+import org.backmeup.index.storage.ThemisDataSink;
 import org.backmeup.index.storage.ThemisEncryptedPartition;
 import org.backmeup.index.storage.ThemisEncryptedPartition.IndexFragmentType;
 import org.backmeup.index.utils.cdi.RunRequestScoped;
@@ -50,25 +51,33 @@ public class SharingPolicyUpToDateCheckerTask implements Runnable {
      * to sharing partners
      */
     private void checkExistingPolicies() {
-        checkImportSharings();
-        checkDeletionSharings();
+        checkDistributeIndexFragmentsToSharingPartners();
+        checkImportSharingsForCurrentUsers();
+        checkDeletionSharingsForCurrentUsers();
     }
 
-    private void checkImportSharings() {
+    /**
+     * We pre-distribute index-fragments to all Sharingpartners for policies (inkl. the ones that not yet been approved
+     * or waiting for timespan to start. Allowing users to import data right after they approve an incoming sharing
+     * policy (2-way instead of 3-way handshake)
+     */
+    private void checkDistributeIndexFragmentsToSharingPartners() {
+        //TODO AL Take also care of heritage sharings!!
+
         //get the list of active users
         for (User activeUser : this.activeUsers.getActiveUsers()) {
             //iterate over all policies for this given user
-            for (SharingPolicy policy : this.manager.getAllActivePoliciesOwnedByUser(activeUser)) {
+            for (SharingPolicy policy : this.manager.getAllWaiting4HandshakeAndScheduledAndActivePoliciesOwnedByUser(activeUser)) {
                 List<UUID> missingImports = this.pol2uuidConverter.getMissingDeltaToImportForSharingPartner(policy);
-                this.log.debug("found a delta of: " + missingImports.size() + " missing imports for policy: "
-                        + policy.toString());
+                this.log.debug("found a delta of: " + missingImports.size() + " missing elements for policy: " + policy.toString()
+                        + " for distribution to sharingpartner");
                 //iterate over missing elements
                 for (UUID missingUUID : missingImports) {
                     //fetch document from document owner's encrypted storage - it's accessible as he's the active user
                     IndexDocument doc;
                     try {
-                        doc = ThemisEncryptedPartition.getIndexFragment(missingUUID, activeUser,
-                                IndexFragmentType.IMPORTED_USER_OWNED, this.activeUsers.getMountedDrive(activeUser));
+                        doc = ThemisEncryptedPartition.getIndexFragment(missingUUID, activeUser, IndexFragmentType.IMPORTED_USER_OWNED,
+                                this.activeUsers.getMountedDrive(activeUser));
 
                         //add additional entries for sharing within the IndexDocument
                         doc.field(IndexFields.FIELD_SHARED_BY_USER_ID, activeUser.id());
@@ -76,10 +85,42 @@ public class SharingPolicyUpToDateCheckerTask implements Runnable {
                         doc.field(IndexFields.FIELD_OWNER_ID, policy.getWithUserID());
 
                         //check the different sharing policies and create according import tasks for doc
+                        this.policyExecution.distributeIndexFragmentToSharingParnter(policy, doc);
+
+                    } catch (IOException e) {
+                        this.log.debug("failed to distribute item: " + missingUUID + " for policy:" + policy.toString(), e);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Check on all incoming sharing policies for active users, fetch the pre-distributed indexfragments and create
+     * to_import statements.
+     */
+    private void checkImportSharingsForCurrentUsers() {
+        //get the list of active users
+        for (User activeUser : this.activeUsers.getActiveUsers()) {
+            //iterate over all policies for this given user
+            for (SharingPolicy policy : this.manager.getAllActivePoliciesSharedWithUser(activeUser)) {
+                List<UUID> missingImports = this.pol2uuidConverter.getMissingDeltaToImportForSharingPartner(policy);
+                this.log.debug("found a delta of: " + missingImports.size() + " missing elements for policy: " + policy.toString()
+                        + " to import");
+                //iterate over missing elements
+                for (UUID missingUUID : missingImports) {
+                    //fetch document from document owner's encrypted storage - it's accessible as he's the active user
+                    IndexDocument doc;
+                    try {
+                        //fetch the pre-distributed indexfragment from the user's public drop-off place
+                        doc = ThemisDataSink.getIndexFragment(missingUUID, activeUser,
+                                org.backmeup.index.storage.ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
+
+                        //check the different sharing policies and create according import tasks for doc
                         this.policyExecution.executeImportSharingParnter(policy, doc);
 
                     } catch (IOException e) {
-                        this.log.debug("failed to execute item: " + missingUUID + " for policy:" + policy.toString(), e);
+                        this.log.debug("failed to execute import for item: " + missingUUID + " for policy:" + policy.toString(), e);
                     }
                 }
             }
@@ -87,14 +128,13 @@ public class SharingPolicyUpToDateCheckerTask implements Runnable {
         }
     }
 
-    private void checkDeletionSharings() {
+    private void checkDeletionSharingsForCurrentUsers() {
         //get the list of active users
         for (User activeUser : this.activeUsers.getActiveUsers()) {
             //iterate over all policies for this given user
             for (SharingPolicy policy : this.manager.getAllWaitingForDeletionPoliciesOwnedByUser(activeUser)) {
                 List<UUID> missingDeletions = this.pol2uuidConverter.getMissingDeltaToDeleteForSharingPartner(policy);
-                this.log.debug("found a delta of: " + missingDeletions.size() + " missing deletions for policy: "
-                        + policy.toString());
+                this.log.debug("found a delta of: " + missingDeletions.size() + " missing deletions for policy: " + policy.toString());
                 //iterate over missing elements required for deletion for this policy
                 for (UUID missingUUID : missingDeletions) {
                     try {

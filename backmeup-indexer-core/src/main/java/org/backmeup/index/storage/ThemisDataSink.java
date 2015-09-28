@@ -69,8 +69,8 @@ public class ThemisDataSink {
         if (user.id() > -1 && (f.exists() && f.canRead())) {
             saveIndexTrueCryptContainer(new FileInputStream(f), user);
         } else {
-            throw new IOException("Error storing Index TrueCrypt Container file " + f.getAbsolutePath() + ": userID: "
-                    + user.id() + ", file exists? " + f.exists() + ", file is readable? " + f.canRead());
+            throw new IOException("Error storing Index TrueCrypt Container file " + f.getAbsolutePath() + ": userID: " + user.id()
+                    + ", file exists? " + f.exists() + ", file is readable? " + f.canRead());
         }
     }
 
@@ -97,8 +97,7 @@ public class ThemisDataSink {
      * Persists an IndexDocument within the user's public dropoffzone for index fragments in the DataSink. Distinguishes
      * IndexDocuments that are user owned and shared by other users
      */
-    public static UUID saveIndexFragment(IndexDocument indexFragment, User user, IndexFragmentType type)
-            throws IOException {
+    public static UUID saveIndexFragment(IndexDocument indexFragment, User user, IndexFragmentType type) throws IOException {
 
         if (indexFragment == null) {
             throw new IOException("IndexDocument may not be null");
@@ -122,8 +121,7 @@ public class ThemisDataSink {
         // serialize the IndexDocument to JSON
         String serializedIndexDoc = Json.serialize(indexFragment);
         if (serializedIndexDoc != null) {
-            File f = new File(getDataSinkHome(user) + "/dropoffzone/" + type.getStorageLocation() + uuid
-                    + ".serindexdocument");
+            File f = new File(getDataSinkHome(user) + "/dropoffzone/" + type.getStorageLocation() + uuid + ".serindexdocument");
             if (!f.getParentFile().exists()) {
                 mkDirs(f.getParentFile());
             }
@@ -132,9 +130,8 @@ public class ThemisDataSink {
 
         }
 
-        throw new IOException("Error persisting serialized IndexDocument in user space" + getDataSinkHome(user)
-                + "/user" + user.id() + "/dropoffzone/" + type.getStorageLocation() + uuid + ".serindexdocument"
-                + " for userID: " + user.id());
+        throw new IOException("Error persisting serialized IndexDocument in user space" + getDataSinkHome(user) + "/user" + user.id()
+                + "/dropoffzone/" + type.getStorageLocation() + uuid + ".serindexdocument" + " for userID: " + user.id());
 
     }
 
@@ -154,14 +151,12 @@ public class ThemisDataSink {
             return indexDoc;
         }
 
-        throw new IOException("Error getting index fragment: " + getDataSinkHome(user) + "/dropoffzone/"
-                + type.getStorageLocation() + objectID + ".serindexdocument" + ", file exists? " + f.exists()
-                + ", file is readable? " + f.canRead());
+        throw new IOException("Error getting index fragment: " + getDataSinkHome(user) + "/dropoffzone/" + type.getStorageLocation()
+                + objectID + ".serindexdocument" + ", file exists? " + f.exists() + ", file is readable? " + f.canRead());
     }
 
     private static File getIndexFragmentFile(UUID objectID, User user, IndexFragmentType type) {
-        return new File(getDataSinkHome(user) + "/dropoffzone/" + type.getStorageLocation() + objectID
-                + ".serindexdocument");
+        return new File(getDataSinkHome(user) + "/dropoffzone/" + type.getStorageLocation() + objectID + ".serindexdocument");
     }
 
     /**
@@ -202,9 +197,8 @@ public class ThemisDataSink {
         if (user.id() > -1 && (f.exists() && f.canRead())) {
             f.delete();
         } else {
-            throw new IOException("error deleting fragment: " + getDataSinkHome(user) + "/dropoffzone/"
-                    + type.getStorageLocation() + objectID + ".serindexdocument" + ", file exists? " + f.exists()
-                    + ", file is readable? " + f.canRead());
+            throw new IOException("error deleting fragment: " + getDataSinkHome(user) + "/dropoffzone/" + type.getStorageLocation()
+                    + objectID + ".serindexdocument" + ", file exists? " + f.exists() + ", file is readable? " + f.canRead());
         }
     }
 
@@ -237,8 +231,7 @@ public class ThemisDataSink {
         if (f.isDirectory() && f.exists()) {
             return f.getAbsolutePath();
         }
-        throw new IllegalArgumentException("user home dir does not exist or is not accessible to system "
-                + f.getAbsolutePath());
+        throw new IllegalArgumentException("user home dir does not exist or is not accessible to system " + f.getAbsolutePath());
     }
 
     /**
@@ -255,11 +248,9 @@ public class ThemisDataSink {
             if (f.isDirectory() && f.exists()) {
                 return f.getAbsolutePath();
             }
-            throw new IllegalArgumentException("datasink home dir does not exist or is not accessible to system "
-                    + f.getAbsolutePath());
+            throw new IllegalArgumentException("datasink home dir does not exist or is not accessible to system " + f.getAbsolutePath());
         }
-        throw new IllegalArgumentException(
-                "datasink home dir not properly configured within backmeup-indexer.properties");
+        throw new IllegalArgumentException("datasink home dir not properly configured within backmeup-indexer.properties");
     }
 
     private static void mkDirs(File f) {

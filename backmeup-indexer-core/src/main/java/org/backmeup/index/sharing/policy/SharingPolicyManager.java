@@ -49,6 +49,10 @@ public class SharingPolicyManager {
         return this.sharingPolicyDao.getAllSharingPoliciesFromUserInState(user, ActivityState.ACCEPTED_AND_ACTIVE);
     }
 
+    public List<SharingPolicy> getAllActivePoliciesSharedWithUser(User user) {
+        return this.sharingPolicyDao.getAllSharingPoliciesWithUserInState(user, ActivityState.ACCEPTED_AND_ACTIVE);
+    }
+
     public List<SharingPolicy> getAllWaiting4HandshakeAndScheduledAndActivePoliciesOwnedByUser(User user) {
         return this.sharingPolicyDao.getAllSharingPoliciesFromUserInState(user, ActivityState.ACCEPTED_AND_ACTIVE,
                 ActivityState.ACCEPTED_AND_WAITING_FOR_TIMSPAN_START, ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
@@ -62,8 +66,8 @@ public class SharingPolicyManager {
      * @param t
      * @return
      */
-    public List<SharingPolicy> getAllWaiting4HandshakeAndScheduledAndActivePoliciesOwnedByUserContainingTaggedCollection(
-            User user, TaggedCollection t) {
+    public List<SharingPolicy> getAllWaiting4HandshakeAndScheduledAndActivePoliciesOwnedByUserContainingTaggedCollection(User user,
+            TaggedCollection t) {
         List<SharingPolicy> activePolicies = this.sharingPolicyDao.getAllSharingPoliciesFromUserInState(user,
                 ActivityState.ACCEPTED_AND_ACTIVE, ActivityState.ACCEPTED_AND_WAITING_FOR_TIMSPAN_START,
                 ActivityState.CREATED_AND_WAITING_FOR_HANDSHAKE);
@@ -78,8 +82,7 @@ public class SharingPolicyManager {
      * @param t
      * @return
      */
-    public List<SharingPolicy> getAllActiveSharingPoliciesOwnedByUserContainingTaggedCollection(User user,
-            TaggedCollection t) {
+    public List<SharingPolicy> getAllActiveSharingPoliciesOwnedByUserContainingTaggedCollection(User user, TaggedCollection t) {
         List<SharingPolicy> activePolicies = this.sharingPolicyDao.getAllSharingPoliciesFromUserInStateAndOfType(user,
                 SharingPolicies.SHARE_TAGGED_COLLECTION, ActivityState.ACCEPTED_AND_ACTIVE);
         return filterMatchingTaggedCollection(activePolicies, t);
@@ -91,8 +94,7 @@ public class SharingPolicyManager {
     }
 
     public List<SharingPolicy> getAllActivePoliciesBetweenUsers(User fromUser, User sharingP) {
-        return this.sharingPolicyDao.getAllSharingPoliciesBetweenUserInState(fromUser, sharingP,
-                ActivityState.ACCEPTED_AND_ACTIVE);
+        return this.sharingPolicyDao.getAllSharingPoliciesBetweenUserInState(fromUser, sharingP, ActivityState.ACCEPTED_AND_ACTIVE);
     }
 
     public List<SharingPolicy> getAllWaitingForDeletionPoliciesOwnedByUser(User user) {
@@ -131,8 +133,7 @@ public class SharingPolicyManager {
         return createAndAddSharingPolicy(owner, sharingWith, policy, null, null, null);
     }
 
-    public SharingPolicy createAndAddSharingPolicy(User owner, User sharingWith, SharingPolicies policy, String name,
-            String description) {
+    public SharingPolicy createAndAddSharingPolicy(User owner, User sharingWith, SharingPolicies policy, String name, String description) {
         return createAndAddSharingPolicy(owner, sharingWith, policy, null, name, description);
     }
 
@@ -145,20 +146,19 @@ public class SharingPolicyManager {
      *            either the IndexDocument UUID for SHARE_DOCUMENT or the BackupJobID for ShareBackupJob
      * @return
      */
-    public SharingPolicy createAndAddSharingPolicy(User owner, User sharingWith, SharingPolicies policy,
-            String sharedElementID, String name, String description) {
+    public SharingPolicy createAndAddSharingPolicy(User owner, User sharingWith, SharingPolicies policy, String sharedElementID,
+            String name, String description) {
         return createAndAddSharingPolicy(owner, sharingWith, policy, sharedElementID, name, description, null, null);
     }
 
-    public SharingPolicy createAndAddSharingPolicy(User owner, User sharingWith, SharingPolicies policy,
-            String sharedElementID, String name, String description, Date lifespanStartDate, Date lifespanEndDate) {
-        return createAndAddPolicy(owner, sharingWith, policy, sharedElementID, name, description, lifespanStartDate,
-                lifespanEndDate, Type.SHARING);
+    public SharingPolicy createAndAddSharingPolicy(User owner, User sharingWith, SharingPolicies policy, String sharedElementID,
+            String name, String description, Date lifespanStartDate, Date lifespanEndDate) {
+        return createAndAddPolicy(owner, sharingWith, policy, sharedElementID, name, description, lifespanStartDate, lifespanEndDate,
+                Type.SHARING);
     }
 
-    private SharingPolicy createAndAddPolicy(User owner, User sharingWith, SharingPolicies policy,
-            String sharedElementID, String name, String description, Date lifespanStartDate, Date lifespanEndDate,
-            Type t) {
+    private SharingPolicy createAndAddPolicy(User owner, User sharingWith, SharingPolicies policy, String sharedElementID, String name,
+            String description, Date lifespanStartDate, Date lifespanEndDate, Type t) {
         //create the policy calling the default constructor
         SharingPolicy shPol = new SharingPolicy(owner, sharingWith, policy, sharedElementID, name, description);
         //check if we're setting a custom lifespan for the policy
@@ -197,8 +197,7 @@ public class SharingPolicyManager {
      * other fields cannot be updated for an already existing policy
      * 
      */
-    public SharingPolicy updateSharingPolicy(User user, Long policyID, String name, String description,
-            Date lifespanstart, Date lifespanend) {
+    public SharingPolicy updateSharingPolicy(User user, Long policyID, String name, String description, Date lifespanstart, Date lifespanend) {
 
         SharingPolicy p = this.sharingPolicyDao.getAllSharingPoliciesFromUserAndPolicyID(user, policyID);
         return updatePolicy(user, policyID, p, name, description, lifespanstart, lifespanend);
@@ -207,8 +206,8 @@ public class SharingPolicyManager {
     /**
      * private helper to update sharing and heritage policies
      */
-    private SharingPolicy updatePolicy(User user, Long policyID, SharingPolicy p, String name, String description,
-            Date lifespanstart, Date lifespanend) {
+    private SharingPolicy updatePolicy(User user, Long policyID, SharingPolicy p, String name, String description, Date lifespanstart,
+            Date lifespanend) {
         if (p != null) {
             if (name != null) {
                 p.setName(name);
@@ -231,8 +230,7 @@ public class SharingPolicyManager {
             this.log.debug("updated sharing policy for user: " + user.id() + " and SharingPolicy " + p.getId());
             return p;
         } else {
-            String s = "unable to update sharing for user: " + user.id() + " and SharingPolicy " + policyID
-                    + " - policy does not exist";
+            String s = "unable to update sharing for user: " + user.id() + " and SharingPolicy " + policyID + " - policy does not exist";
             this.log.debug(s);
             throw new IllegalArgumentException(s);
         }
@@ -315,23 +313,21 @@ public class SharingPolicyManager {
     }
 
     public List<SharingPolicy> getAllHeritagePoliciesOwnedByUser(User user) {
-        return this.heritagePolicyDao.getAllSharingPoliciesFromUserInState(user,
-                ActivityState.HERITAGE_WAITING_FOR_ACTIVATION);
+        return this.heritagePolicyDao.getAllSharingPoliciesFromUserInState(user, ActivityState.HERITAGE_WAITING_FOR_ACTIVATION);
     }
 
     public List<SharingPolicy> getAllHeritagePoliciesSharedWithUser(User user) {
-        return this.heritagePolicyDao.getAllSharingPoliciesWithUserInState(user,
-                ActivityState.HERITAGE_WAITING_FOR_ACTIVATION);
+        return this.heritagePolicyDao.getAllSharingPoliciesWithUserInState(user, ActivityState.HERITAGE_WAITING_FOR_ACTIVATION);
     }
 
-    public SharingPolicy createAndAddHeritagePolicy(User owner, User sharingWith, SharingPolicies policy,
-            String sharedElementID, String name, String description, Date lifespanStartDate, Date lifespanEndDate) {
-        return createAndAddPolicy(owner, sharingWith, policy, sharedElementID, name, description, lifespanStartDate,
-                lifespanEndDate, Type.HERITAGE);
+    public SharingPolicy createAndAddHeritagePolicy(User owner, User sharingWith, SharingPolicies policy, String sharedElementID,
+            String name, String description, Date lifespanStartDate, Date lifespanEndDate) {
+        return createAndAddPolicy(owner, sharingWith, policy, sharedElementID, name, description, lifespanStartDate, lifespanEndDate,
+                Type.HERITAGE);
     }
 
-    public SharingPolicy updateHeritagePolicy(User user, Long policyID, String name, String description,
-            Date lifespanstart, Date lifespanend) {
+    public SharingPolicy updateHeritagePolicy(User user, Long policyID, String name, String description, Date lifespanstart,
+            Date lifespanend) {
         SharingPolicy p = this.heritagePolicyDao.getHeritagePolicyFromUserAndPolicyID(user, policyID);
         return updatePolicy(user, policyID, p, name, description, lifespanstart, lifespanend);
     }
