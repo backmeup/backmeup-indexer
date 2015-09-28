@@ -132,7 +132,7 @@ public class SharingPolicyUpToDateCheckerTask implements Runnable {
         //get the list of active users
         for (User activeUser : this.activeUsers.getActiveUsers()) {
             //iterate over all policies for this given user
-            for (SharingPolicy policy : this.manager.getAllWaitingForDeletionPoliciesOwnedByUser(activeUser)) {
+            for (SharingPolicy policy : this.manager.getAllWaitingForDeletionPoliciesSharedWithUser(activeUser)) {
                 List<UUID> missingDeletions = this.pol2uuidConverter.getMissingDeltaToDeleteForSharingPartner(policy);
                 this.log.debug("found a delta of: " + missingDeletions.size() + " missing deletions for policy: " + policy.toString());
                 //iterate over missing elements required for deletion for this policy

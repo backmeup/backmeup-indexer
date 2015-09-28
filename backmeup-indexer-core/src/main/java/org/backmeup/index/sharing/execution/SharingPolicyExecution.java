@@ -55,6 +55,8 @@ public class SharingPolicyExecution {
                     backupJobID, dateBackupAt);
             this.entryStatusDao.save(status);
             this.log.debug("distributed and stored owned IndexFragment: " + docUUID.toString() + " for userID: " + owner.id());
+            this.log.debug("waiting_for_import status created. moved owned IndexFragment: " + docUUID.toString()
+                    + " to encryped storage. for userID: " + owner.id());
         }
     }
 
@@ -134,8 +136,8 @@ public class SharingPolicyExecution {
         ThemisDataSink.saveIndexFragment(doc, shareWithUser, IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
         //create a status object
         createWaitingForImportEntry(doc, shareWithUser, actualDocOwner);
-        this.log.debug("distributed and stored shared IndexFragment: " + docUUID.toString() + " for userID: " + shareWithUser.id()
-                + " policy: " + policy.toString());
+        this.log.debug("waiting_for_import status created. moved shared IndexFragment: " + docUUID.toString()
+                + " to encryped storage. for userID: " + shareWithUser.id() + " policy: " + policy.toString());
     }
 
     private void executeImportShareAllAfterNow(SharingPolicy policy, IndexDocument doc, UUID docUUID, User shareWithUser,
@@ -149,8 +151,8 @@ public class SharingPolicyExecution {
                 ThemisDataSink.saveIndexFragment(doc, shareWithUser, IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
                 //create a status object
                 createWaitingForImportEntry(doc, shareWithUser, actualDocOwner);
-                this.log.debug("distributed and stored shared IndexFragment: " + docUUID.toString() + " for userID: " + shareWithUser.id()
-                        + " policy: " + policy.toString());
+                this.log.debug("waiting_for_import status created. moved shared IndexFragment: " + docUUID.toString()
+                        + " to encryped storage. for userID: " + shareWithUser.id() + " policy: " + policy.toString());
             }
         }
     }
@@ -164,8 +166,8 @@ public class SharingPolicyExecution {
             ThemisDataSink.saveIndexFragment(doc, shareWithUser, IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
             //create a status object
             createWaitingForImportEntry(doc, shareWithUser, actualDocOwner);
-            this.log.debug("distributed and stored shared IndexFragment: " + docUUID.toString() + " for userID: " + shareWithUser.id()
-                    + " policy: " + policy.toString());
+            this.log.debug("waiting_for_import status created. moved shared IndexFragment: " + docUUID.toString()
+                    + " to encryped storage. for userID: " + shareWithUser.id() + " policy: " + policy.toString());
         }
     }
 
@@ -177,8 +179,8 @@ public class SharingPolicyExecution {
             ThemisDataSink.saveIndexFragment(doc, shareWithUser, IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
             //create a status object
             createWaitingForImportEntry(doc, shareWithUser, actualDocOwner);
-            this.log.debug("distributed and stored shared IndexFragment: " + docUUID.toString() + " for userID: " + shareWithUser.id()
-                    + " policy: " + policy.toString());
+            this.log.debug("waiting_for_import status created. moved shared IndexFragment: " + docUUID.toString()
+                    + " to encryped storage. for userID: " + shareWithUser.id() + " policy: " + policy.toString());
         }
     }
 
@@ -196,8 +198,8 @@ public class SharingPolicyExecution {
                     ThemisDataSink.saveIndexFragment(doc, shareWithUser, IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
                     //create a status object
                     createWaitingForImportEntry(doc, shareWithUser, actualDocOwner);
-                    this.log.debug("distributed and stored shared IndexFragment: " + docUUID.toString() + " for userID: "
-                            + shareWithUser.id() + " policy: " + policy.toString());
+                    this.log.debug("waiting_for_import status created. moved shared IndexFragment: " + docUUID.toString()
+                            + " to encryped storage. for userID: " + shareWithUser.id() + " policy: " + policy.toString());
                 }
             }
         }
@@ -218,8 +220,8 @@ public class SharingPolicyExecution {
                     ThemisDataSink.saveIndexFragment(doc, shareWithUser, IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
                     //create a status object
                     createWaitingForImportEntry(doc, shareWithUser, actualDocOwner);
-                    this.log.debug("distributed and stored shared IndexFragment: " + docUUID.toString() + " for userID: "
-                            + shareWithUser.id() + " policy: " + policy.toString());
+                    this.log.debug("waiting_for_import status created. moved shared IndexFragment: " + docUUID.toString()
+                            + " to encryped storage. for userID: " + shareWithUser.id() + " policy: " + policy.toString());
                 }
             }
         }
