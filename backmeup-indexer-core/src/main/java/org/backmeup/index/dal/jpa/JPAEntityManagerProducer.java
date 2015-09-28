@@ -21,7 +21,7 @@ public class JPAEntityManagerProducer {
     @RequestScoped
     public EntityManager createConnectionForEachRequest() {
         EntityManager manager = createNewManager();
-        log.debug("Created new EntityManager for request " + manager);
+        //log.debug("Created new EntityManager for request " + manager);
         return manager;
     }
 
@@ -31,7 +31,7 @@ public class JPAEntityManagerProducer {
 
     public void destroy(@Disposes EntityManager manager) {
         if (manager.isOpen()) {
-            log.debug("Destroyed EntityManager " + manager);
+            //log.debug("Destroyed EntityManager " + manager);
             manager.close();
         }
     }
