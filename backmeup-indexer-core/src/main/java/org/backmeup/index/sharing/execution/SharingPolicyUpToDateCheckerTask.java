@@ -1,6 +1,7 @@
 package org.backmeup.index.sharing.execution;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -59,18 +60,24 @@ public class SharingPolicyUpToDateCheckerTask implements Runnable {
     /**
      * We pre-distribute index-fragments to all Sharingpartners for policies (inkl. the ones that not yet been approved
      * or waiting for timespan to start. Allowing users to import data right after they approve an incoming sharing
-     * policy (2-way instead of 3-way handshake)
+     * policy (2-way instead of 3-way handshake). Distribution is done for SharingPolicies and HeritagePolicies
      */
     private void checkDistributeIndexFragmentsToSharingPartners() {
-        //TODO AL Take also care of heritage sharings!!
 
         //get the list of active users
         for (User activeUser : this.activeUsers.getActiveUsers()) {
             //iterate over all policies for this given user
-            for (SharingPolicy policy : this.manager.getAllWaiting4HandshakeAndScheduledAndActivePoliciesOwnedByUser(activeUser)) {
+            List<SharingPolicy> policies = new ArrayList<SharingPolicy>();
+            policies.addAll(this.manager.getAllHeritagePoliciesOwnedByUser(activeUser));
+            policies.addAll(this.manager.getAllWaiting4HandshakeAndScheduledAndActivePoliciesOwnedByUser(activeUser));
+
+            //distribute serealized index fragments contained in the policies
+            for (SharingPolicy policy : policies) {
                 List<UUID> missingImports = this.pol2uuidConverter.getMissingDeltaToImportForSharingPartner(policy);
-                this.log.debug("found a delta of: " + missingImports.size() + " missing elements for policy: " + policy.toString()
-                        + " for distribution to sharingpartner");
+                //TODO AL: currently we distribute the doc over and over again until it's imported by the sharing partner 
+                //e.g. hold a db table of what we already distributed to avoid noise
+                this.log.debug("found a delta of: " + missingImports.size() + " missing elements for policy: " + policy.getId()
+                        + " which have not yet been distributed and imported by the sharing partner");
                 //iterate over missing elements
                 for (UUID missingUUID : missingImports) {
                     //fetch document from document owner's encrypted storage - it's accessible as he's the active user

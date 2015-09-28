@@ -51,9 +51,9 @@ public class SharingPolicyImportNewPluginDataTask implements Runnable {
             IndexDocument doc = this.queue.getNext();
 
             try {//distribute to owner
-                distributeToOwner(doc);
+                distributeAndImportToOwner(doc);
                 //distribute to all sharing users according to the policy set
-                distributeToSharingPartners(doc);
+                distributeAndImportToSharingPartners(doc);
             } catch (IOException e) {
                 //TODO cleanup if one of the two operations failed?
                 this.log.info("Exception distributing IndexDocument to user dropoffzone ", e);
@@ -67,7 +67,7 @@ public class SharingPolicyImportNewPluginDataTask implements Runnable {
      * 
      * @param doc
      */
-    private void distributeToOwner(IndexDocument doc) throws IOException {
+    private void distributeAndImportToOwner(IndexDocument doc) throws IOException {
         this.policyExecution.executeImportOwner(doc);
     }
 
@@ -77,11 +77,12 @@ public class SharingPolicyImportNewPluginDataTask implements Runnable {
      * 
      * @param doc
      */
-    private void distributeToSharingPartners(IndexDocument doc) throws IOException {
+    private void distributeAndImportToSharingPartners(IndexDocument doc) throws IOException {
         //user that submitted this document within a themis workflow
         long ownerID = Long.parseLong(doc.getFields().get(IndexFields.FIELD_OWNER_ID).toString());
 
-        //iterate over all sharing policies that a given user has defined
+        //iterate over all active sharing policies that a given user has defined
+        //Note: heritage sharings and other non-active policies will only be distributed once the owner logs into the system
         List<SharingPolicy> policies = this.manager.getAllActivePoliciesOwnedByUser(new User(ownerID));
         for (SharingPolicy policy : policies) {
 
