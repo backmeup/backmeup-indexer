@@ -35,7 +35,7 @@ class TCMountHandler {
         if (SystemUtils.IS_OS_LINUX) {
             // sample command to create a 100 MB TC container without user interaction in Linux
             // /usr/bin/truecrypt -t --size=104857600 --password=12345 -k "" --random-source=/dev/urandom --volume-type=normal --encryption=AES --hash=SHA-512 --filesystem=FAT -c myvolume.tc 
-            command = "sudo " + getTrueCryptExe() + " -t --size=" + sizeInBytes + " --password " + password + " -k \"\""
+            command = "sudo " + getTrueCryptExe() + " -t --size=" + sizeInBytes + " --password=" + password + " -k \"\""
                     + " --random-source=/dev/urandom --volume-type=normal --encryption=AES --hash=SHA-512 --filesystem=FAT -c " + filename;
 
             //execute the command
