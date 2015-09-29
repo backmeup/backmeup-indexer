@@ -16,17 +16,15 @@ public class TCMountHandlerTest {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
+    private File tempFile = null;
 
     // The Password for the TestTCVol1.tc file is 12345
 
     @Before
     @After
-    public void unmountAllDrives() {
-        try {
-            TCMountHandler.unmountAll();
-        } catch (Exception e) {
-            System.out.println(e);
-        }
+    public void testSetup() {
+        unmountAllDrives();
+        cleanupTempFiles();
     }
 
     @Test
@@ -45,8 +43,7 @@ public class TCMountHandlerTest {
         String drive = TCMountHandler.mount(tcTestFile, "12345", "J");
         Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true, TCMountHandler.isDriveMounted(drive));
         TCMountHandler.unmount(drive);
-        Assert.assertEquals("TrueCrypt Testvolume did not get unmounted properly", false,
-                TCMountHandler.isDriveMounted(drive));
+        Assert.assertEquals("TrueCrypt Testvolume did not get unmounted properly", false, TCMountHandler.isDriveMounted(drive));
 
     }
 
@@ -58,12 +55,10 @@ public class TCMountHandlerTest {
             String mountingPoint = TCMountHandler.mount(tcTestFile, "12345", "/media/themis/volume0");
             System.out.println(mountingPoint);
 
-            Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true,
-                    TCMountHandler.isDriveMounted(mountingPoint));
+            Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true, TCMountHandler.isDriveMounted(mountingPoint));
 
             TCMountHandler.unmount(mountingPoint);
-            Assert.assertEquals("TrueCrypt Testvolume did not get unmounted properly", false,
-                    TCMountHandler.isDriveMounted(mountingPoint));
+            Assert.assertEquals("TrueCrypt Testvolume did not get unmounted properly", false, TCMountHandler.isDriveMounted(mountingPoint));
 
         } catch (Exception e) {
             System.out.println(e.toString());
@@ -81,8 +76,7 @@ public class TCMountHandlerTest {
         try {
             String mountingPoint = TCMountHandler.mount(tcTestFile, "12345", "/media/themis/volume0");
 
-            Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true,
-                    TCMountHandler.isDriveMounted(mountingPoint));
+            Assert.assertEquals("TrueCrypt Testvolume did not get mounted", true, TCMountHandler.isDriveMounted(mountingPoint));
 
             TCMountHandler.mount(tcTestFile, "12345", mountingPoint);
             Assert.fail("IOException should have been thronw. TestFile " + tcTestFile.getAbsolutePath());
@@ -144,6 +138,35 @@ public class TCMountHandlerTest {
         Assert.assertFalse("TrueCrypt Testvolume did not get mounted", TCMountHandler.isDriveMounted(d1));
         Assert.assertFalse("TrueCrypt Testvolume did not get mounted", TCMountHandler.isDriveMounted(d2));
 
+    }
+
+    @Test
+    public void generateTCVolume() throws IOException, InterruptedException {
+        Assume.assumeTrue(SystemUtils.IS_OS_LINUX);
+        //try to generate a new truecrypt volume
+        File tempFile = TCMountHandler.generateTrueCryptVolume(10, "ABCD");
+        Assert.assertTrue(tempFile.exists());
+        Assert.assertTrue(tempFile.canRead());
+        String d1 = "I";
+        d1 = TCMountHandler.mount(tempFile, "ABCD", d1);
+        Assert.assertTrue("TrueCrypt Testvolume did not get mounted", TCMountHandler.isDriveMounted(d1));
+    }
+
+    public void unmountAllDrives() {
+        try {
+            TCMountHandler.unmountAll();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    public void cleanupTempFiles() {
+        try {
+            if (this.tempFile != null) {
+                this.tempFile.delete();
+            }
+        } catch (Exception ex) {
+        }
     }
 
 }

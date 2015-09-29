@@ -37,8 +37,8 @@ public class ThemisEncryptedPartition {
      * Persists an IndexDocument within the user's mounted storage partition. Distinguishes between owned and shared
      * IndexDocuments
      */
-    public static UUID saveIndexFragment(IndexDocument indexFragment, User user, IndexFragmentType type,
-            String mountedDrive) throws IOException {
+    public static UUID saveIndexFragment(IndexDocument indexFragment, User user, IndexFragmentType type, String mountedDrive)
+            throws IOException {
 
         if (indexFragment == null) {
             throw new IOException("IndexDocument may not be null");
@@ -61,8 +61,7 @@ public class ThemisEncryptedPartition {
         String serializedIndexDoc = Json.serialize(indexFragment);
         if (serializedIndexDoc != null) {
 
-            File f = new File(getIndexFragmentStorageZone(mountedDrive) + "/" + type.getStorageLocation() + uuid
-                    + ".serindexdocument");
+            File f = new File(getIndexFragmentStorageZone(mountedDrive) + "/" + type.getStorageLocation() + uuid + ".serindexdocument");
             if (!f.getParentFile().exists()) {
                 mkDirs(f.getParentFile());
             }
@@ -71,8 +70,8 @@ public class ThemisEncryptedPartition {
 
         }
         throw new IOException("Error persisting serialized IndexDocument in encrypted partition"
-                + getIndexFragmentStorageZone(mountedDrive) + "/" + type.getStorageLocation() + uuid
-                + ".serindexdocument" + " for userID: " + user.id());
+                + getIndexFragmentStorageZone(mountedDrive) + "/" + type.getStorageLocation() + uuid + ".serindexdocument"
+                + " for userID: " + user.id());
     }
 
     /**
@@ -85,8 +84,7 @@ public class ThemisEncryptedPartition {
      * @return
      * @throws IOException
      */
-    public static IndexDocument getIndexFragment(UUID objectID, User user, IndexFragmentType type, String mountedDrive)
-            throws IOException {
+    public static IndexDocument getIndexFragment(UUID objectID, User user, IndexFragmentType type, String mountedDrive) throws IOException {
         File f = getIndexFragmentFile(objectID, user, type, mountedDrive);
 
         if (user.id() > -1 && (f.exists() && f.canRead())) {
@@ -103,14 +101,12 @@ public class ThemisEncryptedPartition {
         }
 
         throw new IOException("Error getting index fragment: " + getIndexFragmentStorageZone(mountedDrive) + "/"
-                + type.getStorageLocation() + objectID + ".serindexdocument" + ", file exists? " + f.exists()
-                + ", file is readable? " + f.canRead());
+                + type.getStorageLocation() + objectID + ".serindexdocument" + ", file exists? " + f.exists() + ", file is readable? "
+                + f.canRead());
     }
 
-    private static File getIndexFragmentFile(UUID objectID, User user, IndexFragmentType type, String mountedDrive)
-            throws IOException {
-        return new File(getIndexFragmentStorageZone(mountedDrive) + "/" + type.getStorageLocation() + objectID
-                + ".serindexdocument");
+    private static File getIndexFragmentFile(UUID objectID, User user, IndexFragmentType type, String mountedDrive) throws IOException {
+        return new File(getIndexFragmentStorageZone(mountedDrive) + "/" + type.getStorageLocation() + objectID + ".serindexdocument");
     }
 
     /**
@@ -123,16 +119,15 @@ public class ThemisEncryptedPartition {
      * @return
      * @throws IOException
      */
-    public static void deleteIndexFragment(UUID objectID, User user, IndexFragmentType type, String mountedDrive)
-            throws IOException {
+    public static void deleteIndexFragment(UUID objectID, User user, IndexFragmentType type, String mountedDrive) throws IOException {
         File f = getIndexFragmentFile(objectID, user, type, mountedDrive);
 
         if (user.id() > -1 && (f.exists() && f.canRead())) {
             f.delete();
         } else {
             throw new IOException("Error deleting index fragment: " + getIndexFragmentStorageZone(mountedDrive) + "/"
-                    + type.getStorageLocation() + objectID + ".serindexdocument" + ", file exists? " + f.exists()
-                    + ", file is readable? " + f.canRead());
+                    + type.getStorageLocation() + objectID + ".serindexdocument" + ", file exists? " + f.exists() + ", file is readable? "
+                    + f.canRead());
         }
     }
 

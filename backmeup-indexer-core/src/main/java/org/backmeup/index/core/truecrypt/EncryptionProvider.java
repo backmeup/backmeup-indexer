@@ -11,8 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Encryption provider handles the encryption related operation but delegates to
- * a low level encryption handler for the real, encryption specific work.
+ * Encryption provider handles the encryption related operation but delegates to a low level encryption handler for the
+ * real, encryption specific work.
  * 
  * @author <a href="http://www.code-cop.org/">Peter Kofler</a>
  */
@@ -53,6 +53,10 @@ public class EncryptionProvider {
         } catch (IOException | InterruptedException e) {
             this.log.debug("cleanupRude: unmounting all TC volumes failed", e);
         }
+    }
+
+    public static File generateNewCryptVolume() throws IOException {
+        return TCMountHandler.generateTrueCryptVolume(100, "12345");
     }
 
 }

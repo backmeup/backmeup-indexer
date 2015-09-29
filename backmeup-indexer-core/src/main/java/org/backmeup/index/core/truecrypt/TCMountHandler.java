@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.SystemUtils;
 import org.backmeup.index.config.Configuration;
@@ -20,6 +22,45 @@ class TCMountHandler {
     private static final Logger log = LoggerFactory.getLogger(TCMountHandler.class);
 
     /**
+     * Creates a Truecrypt volume (if possible, i.e. on Linux) of requested size and password and returns the File
+     * handle on the volume.
+     * 
+     */
+    public static File generateTrueCryptVolume(int sizeInMB, String password) throws IOException {
+        String command = null;
+        long sizeInBytes = sizeInMB * 1014 * 1024;
+        Random randomGenerator = new Random();
+        String filename = randomGenerator.nextInt(100000) + "myvolume.tc";
+
+        if (SystemUtils.IS_OS_LINUX) {
+            // sample command to create a 100 MB TC container without user interaction in Linux
+            // /usr/bin/truecrypt -t --size=104857600 --password=12345 -k "" --random-source=/dev/urandom --volume-type=normal --encryption=AES --hash=SHA-512 --filesystem=FAT -c myvolume.tc 
+            command = "sudo " + getTrueCryptExe() + "-t --size=" + sizeInBytes + " --password " + password + " -k \"\""
+                    + " --random-source=/dev/urandom --volume-type=normal --encryption=AES --hash=SHA-512 --filesystem=FAT -c myvolume.tc";
+
+            //execute the command
+            int exitVal = CommandLineUtils.executeCommandLine(command, 6, TimeUnit.SECONDS);
+            if (exitVal != 0) {
+                throw new IOException("error in generating Truecrypt volume executing command " + command + " exit value: " + exitVal);
+            }
+
+            //check the file was properly created
+            File f = new File(filename);
+            if ((f != null) && f.exists()) {
+                //TODO AL chown -R to tomcat7 user required??
+                return f;
+            } else {
+                throw new IOException("truecrypt on windows does not support the generation of truecrypt volumes via command line");
+            }
+        }
+        if (SystemUtils.IS_OS_WINDOWS) {
+            throw new IOException("truecrypt on windows does not support the generation of truecrypt volumes via command line");
+        }
+        throw new IOException("truecrypt on this operating system does not support the generation of truecrypt volumes via command line");
+
+    }
+
+    /**
      * @param tcVolume
      *            the truecrypt volume
      * @param password
@@ -29,8 +70,8 @@ class TCMountHandler {
      *            drive
      * @return returns the drive where the partition has been mounted
      */
-    public static String mount(File tcVolume, String password, String proposedDriveLetter) throws IOException,
-            InterruptedException, ExceptionInInitializerError, IllegalArgumentException {
+    public static String mount(File tcVolume, String password, String proposedDriveLetter) throws IOException, InterruptedException,
+            ExceptionInInitializerError, IllegalArgumentException {
 
         // 1. check if a driveLetter is given and if it's allowed according to
         // config
@@ -101,8 +142,8 @@ class TCMountHandler {
 
         // now check if the drive got properly mounted
         if (!isDriveMounted(driveLetter)) {
-            throw new IOException("Executing TrueCrypt on " + command + " did not mount the volume "
-                    + tcVolume.getAbsolutePath() + " on " + driveLetter);
+            throw new IOException("Executing TrueCrypt on " + command + " did not mount the volume " + tcVolume.getAbsolutePath() + " on "
+                    + driveLetter);
         }
 
         // finally return the drive letter which has been used to mount the
@@ -144,13 +185,13 @@ class TCMountHandler {
 
         String command = null;
         if (SystemUtils.IS_OS_LINUX) {
-            command = "sudo " + getTrueCryptExe() + " --password=" + password + " --non-interactive "
-                    + tcVolume.getAbsolutePath() + " " + driveLetter;
+            command = "sudo " + getTrueCryptExe() + " --password=" + password + " --non-interactive " + tcVolume.getAbsolutePath() + " "
+                    + driveLetter;
             //command =  getTrueCryptExe() + " " + tcVolume.getAbsolutePath() + " " + driveLetter + " --password=" + password + " --non-interactive";
         }
         if (SystemUtils.IS_OS_WINDOWS) {
-            command = "\"" + getTrueCryptExe() + "\"" + " " + "/q background " + "/s " + "/v " + "\""
-                    + tcVolume.getAbsolutePath() + "\" " + "/l " + driveLetter + " /p " + password;
+            command = "\"" + getTrueCryptExe() + "\"" + " " + "/q background " + "/s " + "/v " + "\"" + tcVolume.getAbsolutePath() + "\" "
+                    + "/l " + driveLetter + " /p " + password;
         }
 
         return command;
@@ -282,8 +323,8 @@ class TCMountHandler {
      * @param driveLetter
      *            without any special chars, just e.g. H or K
      */
-    public static void unmount(String driveLetter) throws IllegalArgumentException, ExceptionInInitializerError,
-            IOException, InterruptedException {
+    public static void unmount(String driveLetter) throws IllegalArgumentException, ExceptionInInitializerError, IOException,
+            InterruptedException {
 
         // check if drive is mounted, throw exception when illegal driveLetter
         if (!isAllowedDriveLetter(driveLetter)) {

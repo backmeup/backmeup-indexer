@@ -4,12 +4,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.channels.FileChannel;
 
 import javax.enterprise.context.ApplicationScoped;
 
 import org.backmeup.index.UserDataWorkingDir;
 import org.backmeup.index.core.model.RunningIndexUserConfig;
+import org.backmeup.index.core.truecrypt.EncryptionProvider;
 import org.backmeup.index.model.User;
 import org.backmeup.index.storage.ThemisDataSink;
 import org.slf4j.Logger;
@@ -59,15 +61,31 @@ public class UserDataStorage {
      * Init a user specific elasticsearch instance i.e. copies the container file and registers it within the
      * themis-datasink
      */
+    @SuppressWarnings("resource")
     private void init(User userID) {
-        // TODO fix weakness currently all copied TC container files have the
-        // same default password as this cannot be changed via TC command line
-        // interface. idea: keep default password but encrypt the container file
+
+        InputStream cryptoVolume = null;
+        File f = null;
         try {
-            ThemisDataSink.saveIndexTrueCryptContainer(getClass().getClassLoader().getResourceAsStream(CRYPT_TEMPLATE),
-                    userID);
+            //try to generate a new truecrypt volume
+            f = EncryptionProvider.generateNewCryptVolume();
+            cryptoVolume = new FileInputStream(f);
+        } catch (IOException e1) {
+            //if this fails (e.g. under windows) use the default container template is used
+            cryptoVolume = getClass().getClassLoader().getResourceAsStream(CRYPT_TEMPLATE);
+        }
+        try {
+            ThemisDataSink.saveIndexTrueCryptContainer(cryptoVolume, userID);
         } catch (IOException e) {
             throw new UserDataStorageException("IndexManager init ES instance failed for user" + userID, e);
+        } finally {
+            //try to cleanup the temp file if created
+            try {
+                if (f != null) {
+                    f.delete();
+                }
+            } catch (Exception ex) {
+            }
         }
     }
 
@@ -82,8 +100,7 @@ public class UserDataStorage {
     }
 
     private File copyTCContainerFileToLocalWorkingDir(File fTCContainerOnDataSink, User userID) throws IOException {
-        return copyFileUsingChannel(fTCContainerOnDataSink, new File(UserDataWorkingDir.getDir(userID) + "/index/"
-                + CRYPT_FILE));
+        return copyFileUsingChannel(fTCContainerOnDataSink, new File(UserDataWorkingDir.getDir(userID) + "/index/" + CRYPT_FILE));
     }
 
     /**
@@ -119,8 +136,7 @@ public class UserDataStorage {
         User userID = runningInstanceConfig.getUser();
         try {
 
-            ThemisDataSink.saveIndexTrueCryptContainer(new File(runningInstanceConfig.getMountedContainerLocation()),
-                    userID);
+            ThemisDataSink.saveIndexTrueCryptContainer(new File(runningInstanceConfig.getMountedContainerLocation()), userID);
             this.log.debug("shutdownInstance for userID: " + userID + " step4 - ok");
 
         } catch (IOException e) {
