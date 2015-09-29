@@ -14,6 +14,7 @@ import org.backmeup.index.core.model.RunningIndexUserConfig;
 import org.backmeup.index.core.truecrypt.EncryptionProvider;
 import org.backmeup.index.model.User;
 import org.backmeup.index.storage.ThemisDataSink;
+import org.backmeup.index.utils.cmd.CommandLineUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,6 +70,8 @@ public class UserDataStorage {
         try {
             //try to generate a new truecrypt volume
             f = EncryptionProvider.generateNewCryptVolume();
+            //grant tomcat7 process access as owner
+            CommandLineUtils.chownRTomcat7(f);
             cryptoVolume = new FileInputStream(f);
         } catch (IOException e1) {
             //if this fails (e.g. under windows) use the default container template is used

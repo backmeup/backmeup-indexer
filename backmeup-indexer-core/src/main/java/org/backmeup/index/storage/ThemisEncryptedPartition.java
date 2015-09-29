@@ -170,7 +170,7 @@ public class ThemisEncryptedPartition {
                 }
                 //encrypted partition runs as root user. change owner of the top level folder and all files in it 
                 //to tomcat7 user and group so the application can read/create files
-                chownRTomcat7(f);
+                CommandLineUtils.chownRTomcat7(f);
             } catch (IOException e) {
                 throw new IllegalArgumentException("error executing command " + command, e);
             }
@@ -179,17 +179,4 @@ public class ThemisEncryptedPartition {
         }
     }
 
-    private static void chownRTomcat7(File f) {
-        if (SystemUtils.IS_OS_LINUX) {
-            String command = "sudo chown -R tomcat7:tomcat7 " + f.getAbsolutePath();
-            try {
-                int exitVal = CommandLineUtils.executeCommandLine(command, 2, TimeUnit.SECONDS);
-                if (exitVal != 0) {
-                    throw new IllegalArgumentException("error executing command " + command + " exit value: " + exitVal);
-                }
-            } catch (IOException e) {
-                throw new IllegalArgumentException("error executing command " + command, e);
-            }
-        }
-    }
 }

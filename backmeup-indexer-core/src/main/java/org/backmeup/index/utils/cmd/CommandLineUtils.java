@@ -1,5 +1,6 @@
 package org.backmeup.index.utils.cmd;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.concurrent.TimeUnit;
@@ -119,6 +120,20 @@ public class CommandLineUtils {
         }
         log.debug("Executing CommandLine call with PID of " + pid);
         return pid;
+    }
+
+    public static void chownRTomcat7(File f) {
+        if (SystemUtils.IS_OS_LINUX) {
+            String command = "sudo chown -R tomcat7:tomcat7 " + f.getAbsolutePath();
+            try {
+                int exitVal = CommandLineUtils.executeCommandLine(command, 2, TimeUnit.SECONDS);
+                if (exitVal != 0) {
+                    throw new IllegalArgumentException("error executing command " + command + " exit value: " + exitVal);
+                }
+            } catch (IOException e) {
+                throw new IllegalArgumentException("error executing command " + command, e);
+            }
+        }
     }
 
 }
