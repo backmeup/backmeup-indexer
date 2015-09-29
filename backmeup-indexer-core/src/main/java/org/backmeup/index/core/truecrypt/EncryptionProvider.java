@@ -56,7 +56,7 @@ public class EncryptionProvider {
     }
 
     public static File generateNewCryptVolume() throws IOException {
-        return TCMountHandler.generateTrueCryptVolume(100, "12345");
+        return TCMountHandler.generateTrueCryptVolume(150, "12345");
     }
 
 }

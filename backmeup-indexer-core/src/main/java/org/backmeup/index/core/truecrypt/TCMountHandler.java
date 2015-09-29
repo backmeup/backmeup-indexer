@@ -36,21 +36,26 @@ class TCMountHandler {
             // sample command to create a 100 MB TC container without user interaction in Linux
             // /usr/bin/truecrypt -t --size=104857600 --password=12345 -k "" --random-source=/dev/urandom --volume-type=normal --encryption=AES --hash=SHA-512 --filesystem=FAT -c myvolume.tc 
             command = "sudo " + getTrueCryptExe() + "-t --size=" + sizeInBytes + " --password " + password + " -k \"\""
-                    + " --random-source=/dev/urandom --volume-type=normal --encryption=AES --hash=SHA-512 --filesystem=FAT -c myvolume.tc";
+                    + " --random-source=/dev/urandom --volume-type=normal --encryption=AES --hash=SHA-512 --filesystem=FAT -c " + filename;
 
             //execute the command
             int exitVal = CommandLineUtils.executeCommandLine(command, 6, TimeUnit.SECONDS);
             if (exitVal != 0) {
-                throw new IOException("error in generating Truecrypt volume executing command " + command + " exit value: " + exitVal);
+                String t = "error in generating Truecrypt volume executing command " + command + " exit value: " + exitVal;
+                log.debug(t);
+                throw new IOException(t);
             }
 
             //check the file was properly created
             File f = new File(filename);
             if ((f != null) && f.exists()) {
-                //TODO AL chown -R to tomcat7 user required??
+                log.debug("successfully generated truecrypt container with {}MB storage and password: {} at temp location: {}", sizeInMB,
+                        password, f.getAbsolutePath());
                 return f;
             } else {
-                throw new IOException("truecrypt on windows does not support the generation of truecrypt volumes via command line");
+                String t = "error in generating Truecrypt volume: generated TC volume is not accessible or does not exist";
+                log.debug(t);
+                throw new IOException(t);
             }
         }
         if (SystemUtils.IS_OS_WINDOWS) {
