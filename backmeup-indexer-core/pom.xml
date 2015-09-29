@@ -20,6 +20,11 @@
             <artifactId>backmeup-indexer-model</artifactId>
             <version>${project.version}</version>
         </dependency>
+		<dependency>
+			<groupId>org.backmeup</groupId>
+			<artifactId>backmeup-keyserver-client</artifactId>
+			<version>1.1-SNAPSHOT</version>
+		</dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
