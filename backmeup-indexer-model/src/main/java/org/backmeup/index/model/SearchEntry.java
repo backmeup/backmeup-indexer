@@ -29,9 +29,9 @@ public class SearchEntry {
     public SearchEntry() {
     }
 
-    public SearchEntry(String fileId, String ownerId, boolean isSharing, Date timeStamp, String type, String title,
-            String downloadUrl, String thumbnailUrl, String datasource, String datasink, String jobName,
-            String preview, Map<String, String> properties, Map<String, String> metadata) {
+    public SearchEntry(String fileId, String ownerId, boolean isSharing, Date timeStamp, String type, String title, String downloadUrl,
+            String thumbnailUrl, String datasource, String datasink, String jobName, String preview, Map<String, String> properties,
+            Map<String, String> metadata) {
         this.fileId = fileId;
         this.ownerId = ownerId;
         this.isSharing = isSharing;
@@ -221,14 +221,24 @@ public class SearchEntry {
         }
     }
 
+    public void copyStandardizedGeoAndTemporalMetadataIfExist(Map<String, Object> source) {
+        for (String key : source.keySet()) {
+            if (key.matches("(" + IndexFields.FIELD_DOC_AUTHOR + "|" + IndexFields.FIELD_DOC_CREATION_DATE + "|"
+                    + IndexFields.FIELD_LOC_CITY + "|" + IndexFields.FIELD_LOC_COUNTRY + "|" + IndexFields.FIELD_LOC_LATITUDE + "|"
+                    + IndexFields.FIELD_LOC_LONGITUDE + "|" + IndexFields.FIELD_LOC_NAME + ").*")) {
+                //return the standardized values within the metadata field
+                setMetadata(key, source.get(key).toString());
+            }
+        }
+    }
+
     @Override
     public String toString() {
-        return "SearchEntry [fileId=" + this.fileId + ", ownerId=" + this.ownerId + ", isSahring=" + this.isSharing
-                + ", timeStamp=" + this.timeStamp + ", title=" + this.title + ", type=" + this.type + ", thumbnailUrl="
-                + this.thumbnailUrl + ", datasource=" + this.datasource + ", datasourceId=" + this.datasourceId
-                + ", datasink=" + this.datasink + ", datasinkId=" + this.datasinkId + ", jobName=" + this.jobName
-                + ", preview=" + this.preview + ", properties=[" + this.properties + "], metadata=[" + this.metadata
-                + "]";
+        return "SearchEntry [fileId=" + this.fileId + ", ownerId=" + this.ownerId + ", isSahring=" + this.isSharing + ", timeStamp="
+                + this.timeStamp + ", title=" + this.title + ", type=" + this.type + ", thumbnailUrl=" + this.thumbnailUrl
+                + ", datasource=" + this.datasource + ", datasourceId=" + this.datasourceId + ", datasink=" + this.datasink
+                + ", datasinkId=" + this.datasinkId + ", jobName=" + this.jobName + ", preview=" + this.preview + ", properties=["
+                + this.properties + "], metadata=[" + this.metadata + "]";
     }
 
 }

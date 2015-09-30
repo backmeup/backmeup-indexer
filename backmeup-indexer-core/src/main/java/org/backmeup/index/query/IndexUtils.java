@@ -56,8 +56,7 @@ class IndexUtils {
             if (source.get(IndexFields.FIELD_SINK_DOWNLOAD_BASE) != null) {
                 if (source.get(IndexFields.FIELD_THUMBNAIL_PATH) != null) {
                     String sinkDownloadBaseURL = (String) source.get(IndexFields.FIELD_SINK_DOWNLOAD_BASE);
-                    fileItem.setThumbnailURL(sinkDownloadBaseURL + "###TOKEN###/"
-                            + source.get(IndexFields.FIELD_THUMBNAIL_PATH).toString());
+                    fileItem.setThumbnailURL(sinkDownloadBaseURL + "###TOKEN###/" + source.get(IndexFields.FIELD_THUMBNAIL_PATH).toString());
                 }
             }
 
@@ -79,8 +78,8 @@ class IndexUtils {
         Long timestamp = (Long) source.get(IndexFields.FIELD_BACKUP_AT);
         FileInfo fi = new FileInfo();
         fi.setFileId(owner + ":" + hash + ":" + timestamp);
-        fi.setSource(source.get(IndexFields.FIELD_BACKUP_SOURCE_AUTH_TITLE) + " ("
-                + source.get(IndexFields.FIELD_BACKUP_SOURCE_PROFILE_ID) + ")");
+        fi.setSource(source.get(IndexFields.FIELD_BACKUP_SOURCE_AUTH_TITLE) + " (" + source.get(IndexFields.FIELD_BACKUP_SOURCE_PROFILE_ID)
+                + ")");
         fi.setSourceId(source.get(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_ID).toString());
         fi.setTimeStamp(timestamp.longValue());
         fi.setTitle(source.get(IndexFields.FIELD_FILENAME).toString());
@@ -94,8 +93,7 @@ class IndexUtils {
         return fi;
     }
 
-    public static List<SearchEntry> convertSearchEntries(org.elasticsearch.action.search.SearchResponse esResponse,
-            String userName) {
+    public static List<SearchEntry> convertSearchEntries(org.elasticsearch.action.search.SearchResponse esResponse, String userName) {
         List<SearchEntry> entries = new ArrayList<>();
 
         LOGGER.debug("converting " + esResponse.getHits().totalHits() + " search results");
@@ -145,8 +143,7 @@ class IndexUtils {
                 entry.setDatasource(sID);
                 if (source.get(IndexFields.FIELD_BACKUP_SOURCE_AUTH_TITLE) != null) {
                     //e.g. org.backmeup.facebook (Wolfgang Eibner)"
-                    entry.setDatasource(sID + " (" + source.get(IndexFields.FIELD_BACKUP_SOURCE_AUTH_TITLE).toString()
-                            + ")");
+                    entry.setDatasource(sID + " (" + source.get(IndexFields.FIELD_BACKUP_SOURCE_AUTH_TITLE).toString() + ")");
                 }
             }
 
@@ -155,8 +152,7 @@ class IndexUtils {
                 entry.setDatasinkId(sID);
                 entry.setDatasink(sID);
                 if (source.get(IndexFields.FIELD_BACKUP_SINK_AUTH_TITLE) != null) {
-                    entry.setDatasink(sID + " (" + source.get(IndexFields.FIELD_BACKUP_SINK_AUTH_TITLE).toString()
-                            + ")");
+                    entry.setDatasink(sID + " (" + source.get(IndexFields.FIELD_BACKUP_SINK_AUTH_TITLE).toString() + ")");
                 }
             }
 
@@ -194,19 +190,22 @@ class IndexUtils {
                 }
             }
 
-            //get Tika Metadata fields from ES and add to Metadata properties list
+            //get Tika Metadata fields from ES and add to Metadata properties 
             entry.copyTikaMetadataIfExist(source);
+            //get the standardized Geo and Temporal Metadata properties
+            entry.copyStandardizedGeoAndTemporalMetadataIfExist(source);
+            //add md5 hash
             entry.setMetadata(IndexFields.FIELD_FILE_HASH, hash);
 
             // Custom props for e.g. facebook, mail plugin
-            entry.copyPropertyIfExist("destination", source);
+            /*entry.copyPropertyIfExist("destination", source);
             entry.copyPropertyIfExist("message", source);
             entry.copyPropertyIfExist("parent", source);
             entry.copyPropertyIfExist("author", source);
             entry.copyPropertyIfExist("source", source);
             entry.copyPropertyIfExist("likes", source);
             entry.copyPropertyIfExist("tags", source);
-            entry.copyPropertyIfExist("modified", source);
+            entry.copyPropertyIfExist("modified", source);*/
 
             entries.add(entry);
         }
@@ -230,8 +229,7 @@ class IndexUtils {
         return groupByContentOwner(esResponse);
     }
 
-    public static List<CountedEntry> getByTag(org.elasticsearch.action.search.SearchResponse esResponse,
-            TaggedCollectionDao dao) {
+    public static List<CountedEntry> getByTag(org.elasticsearch.action.search.SearchResponse esResponse, TaggedCollectionDao dao) {
         return groupByTaggedCollection(esResponse, dao);
     }
 
@@ -242,8 +240,7 @@ class IndexUtils {
             if (hit.getSource().get(IndexFields.FIELD_JOB_ID) != null) {
                 String backupSourceAuthTitle = "";
                 if (hit.getSource().get(IndexFields.FIELD_BACKUP_SOURCE_AUTH_TITLE) != null) {
-                    backupSourceAuthTitle = " ("
-                            + hit.getSource().get(IndexFields.FIELD_BACKUP_SOURCE_AUTH_TITLE).toString() + ")";
+                    backupSourceAuthTitle = " (" + hit.getSource().get(IndexFields.FIELD_BACKUP_SOURCE_AUTH_TITLE).toString() + ")";
                 }
                 String backupSourcePluginID = hit.getSource().get(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_ID).toString();
                 //e.g. org.backmeup.facebook (Wolfgang Eibner)"
@@ -356,8 +353,8 @@ class IndexUtils {
         return countedEntries;
     }
 
-    private static List<CountedEntry> groupByTaggedCollection(
-            org.elasticsearch.action.search.SearchResponse esResponse, TaggedCollectionDao dao) {
+    private static List<CountedEntry> groupByTaggedCollection(org.elasticsearch.action.search.SearchResponse esResponse,
+            TaggedCollectionDao dao) {
 
         Map<String, Integer> groupedHits = new HashMap<>();
         for (SearchHit hit : esResponse.getHits()) {
@@ -366,8 +363,7 @@ class IndexUtils {
                 documentUUID = hit.getSource().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString();
                 userId = hit.getSource().get(IndexFields.FIELD_OWNER_ID).toString();
                 //fetch the names and collection id of the tagged collections where this document is contained in
-                List<TaggedCollection> elementInCollections = dao.getAllActiveFromUserContainingDocumentIds(
-                        new User(Long.valueOf(userId)),
+                List<TaggedCollection> elementInCollections = dao.getAllActiveFromUserContainingDocumentIds(new User(Long.valueOf(userId)),
                         new ArrayList<UUID>(Arrays.asList(UUID.fromString(documentUUID))));
                 for (TaggedCollection element : elementInCollections) {
                     String label = element.getName() + " (" + element.getId() + ")";
@@ -489,8 +485,8 @@ class IndexUtils {
                 // get out the job name
                 String jobname = filter.substring(0, filter.length() - 16);
 
-                filterstr.append("(" + IndexFields.FIELD_BACKUP_AT + ":" + timestamp + " AND "
-                        + IndexFields.FIELD_JOB_NAME + ":" + jobname + ") OR ");
+                filterstr.append("(" + IndexFields.FIELD_BACKUP_AT + ":" + timestamp + " AND " + IndexFields.FIELD_JOB_NAME + ":" + jobname
+                        + ") OR ");
             }
 
             // remove the last " OR " and close the search string for this part
@@ -585,8 +581,7 @@ class IndexUtils {
                     profile = profile.substring(1, profile.length() - 1);
 
                     tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_BACKUP_SOURCE_PLUGIN_ID, source));
-                    tempbuilder.must(QueryBuilders
-                            .matchPhraseQuery(IndexFields.FIELD_BACKUP_SOURCE_AUTH_TITLE, profile));
+                    tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_BACKUP_SOURCE_AUTH_TITLE, profile));
                 } else {
                     //we don't have a profile set
                     String source = filter;
@@ -649,8 +644,7 @@ class IndexUtils {
                     //it's a user owned data element
                     tempbuilder.must(QueryBuilders.matchPhraseQuery(IndexFields.FIELD_OWNER_ID, dataOwnerId));
                     //as owner is set for all entities within the index we need to check that shared_by is not set
-                    MissingFilterBuilder noFieldSharedBy = FilterBuilders
-                            .missingFilter(IndexFields.FIELD_SHARED_BY_USER_ID);
+                    MissingFilterBuilder noFieldSharedBy = FilterBuilders.missingFilter(IndexFields.FIELD_SHARED_BY_USER_ID);
                     tempbuilder.must(QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(), noFieldSharedBy));
                 } else {
                     //it's a shared data element
@@ -678,14 +672,13 @@ class IndexUtils {
                 BoolQueryBuilder tempbuilder = new BoolQueryBuilder();
 
                 // extract the collection id
-                long collectionId = Long
-                        .valueOf(filter.substring(filter.lastIndexOf("(") + 1, filter.lastIndexOf(")")));
+                long collectionId = Long.valueOf(filter.substring(filter.lastIndexOf("(") + 1, filter.lastIndexOf(")")));
                 TaggedCollection collection = dao.getByEntityId(collectionId);
                 List<UUID> documentsInCollection = collection.getDocumentIds();
 
                 //look for docUUIDs that are contained in the tagged collection.
-                TermsFilterBuilder docIDsInListofDocs = FilterBuilders.termsFilter(
-                        IndexFields.FIELD_INDEX_DOCUMENT_UUID, documentsInCollection);
+                TermsFilterBuilder docIDsInListofDocs = FilterBuilders.termsFilter(IndexFields.FIELD_INDEX_DOCUMENT_UUID,
+                        documentsInCollection);
 
                 tempbuilder.must(QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(), docIDsInListofDocs));
 
