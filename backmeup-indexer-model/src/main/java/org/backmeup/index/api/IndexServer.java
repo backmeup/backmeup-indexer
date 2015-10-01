@@ -18,19 +18,18 @@ import org.backmeup.index.model.User;
  */
 public interface IndexServer {
 
-    SearchResultAccumulator query(User userId, String query, String filterBySource, String filterByType,
-            String filterByJob, String filterByOwner, String filterByTag, String username, Long queryOffSetStart,
-            Long queryMaxResults);
+    SearchResultAccumulator query(User user, String query, String filterBySource, String filterByType, String filterByJob,
+            String filterByOwner, String filterByTag, String username, Long queryOffSetStart, Long queryMaxResults);
 
-    Set<FileItem> filesForJob(User userId, Long jobId);
+    Set<FileItem> filesForJob(User user, Long jobId);
 
-    FileInfo fileInfoForFile(User userId, String fileId);
+    FileInfo fileInfoForFile(User user, String fileId);
 
-    String thumbnailPathForFile(User userId, String fileId);
+    String thumbnailPathForFile(User user, String fileId);
 
-    String delete(User userId, Long jobId, Date timestamp);
+    String delete(User userId, Long job, Date timestamp);
 
-    String delete(User userId, UUID indexFragmentUUID);
+    String delete(User user, UUID indexFragmentUUID);
 
     /**
      * starts the physical indexing process for a given document. i.e. spins up a private Index instance (e.g. ES) and
@@ -42,6 +41,6 @@ public interface IndexServer {
      * @return
      * @throws IOException
      */
-    String index(User userId, IndexDocument document) throws IOException;
+    String index(User user, IndexDocument document) throws IOException;
 
 }

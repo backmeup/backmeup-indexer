@@ -25,10 +25,9 @@ public class RestUrlsIndex {
         this.basePath = config.basepath + "/index";
     }
 
-    public URI forQuery(User userId, String query, String filterBySource, String filterByType, String filterByJob,
-            String filterByOwner, String filterByTag, String username, Long queryOffSetStart, Long queryMaxResults)
-            throws URISyntaxException {
-        URIBuilder urlBuilder = startWithBaseUrl(userId, "");
+    public URI forQuery(User user, String query, String filterBySource, String filterByType, String filterByJob, String filterByOwner,
+            String filterByTag, String username, Long queryOffSetStart, Long queryMaxResults) throws URISyntaxException {
+        URIBuilder urlBuilder = startWithBaseUrl(user, "");
         addMandatoryParameter(urlBuilder, "query", query);
         addOptionalParameter(urlBuilder, "source", filterBySource);
         addOptionalParameter(urlBuilder, "type", filterByType);
@@ -41,41 +40,44 @@ public class RestUrlsIndex {
         return urlBuilder.build();
     }
 
-    public URI forFilesOfJob(User userId, Long jobId) throws URISyntaxException {
-        URIBuilder urlBuilder = startWithBaseUrl(userId, "files");
+    public URI forFilesOfJob(User user, Long jobId) throws URISyntaxException {
+        URIBuilder urlBuilder = startWithBaseUrl(user, "files");
         addMandatoryParameter(urlBuilder, "job", jobId);
         return urlBuilder.build();
     }
 
-    public URI forFileInfo(User userId, String fileId) throws URISyntaxException {
-        return startWithBaseUrl(userId, "/files/" + fileId + "/info").build();
+    public URI forFileInfo(User user, String fileId) throws URISyntaxException {
+        return startWithBaseUrl(user, "/files/" + fileId + "/info").build();
     }
 
-    public URI forThumbnail(User userId, String fileId) throws URISyntaxException {
-        return startWithBaseUrl(userId, "/files/" + fileId + "/thumbnail").build();
+    public URI forThumbnail(User user, String fileId) throws URISyntaxException {
+        return startWithBaseUrl(user, "/files/" + fileId + "/thumbnail").build();
     }
 
-    public URI forDelete(User userId, Long jobId, Date timestamp) throws URISyntaxException {
-        URIBuilder urlBuilder = startWithBaseUrl(userId, "");
+    public URI forDelete(User user, Long jobId, Date timestamp) throws URISyntaxException {
+        URIBuilder urlBuilder = startWithBaseUrl(user, "");
         addOptionalParameter(urlBuilder, "job", jobId);
         addOptionalParameter(urlBuilder, "time", timestamp.getTime());
         return urlBuilder.build();
     }
 
-    public URI forDelete(User userId, UUID indexFragmentUUID) throws URISyntaxException {
-        URIBuilder urlBuilder = startWithBaseUrl(userId, "");
+    public URI forDelete(User user, UUID indexFragmentUUID) throws URISyntaxException {
+        URIBuilder urlBuilder = startWithBaseUrl(user, "");
         addMandatoryParameter(urlBuilder, "document", indexFragmentUUID);
         return urlBuilder.build();
     }
 
-    public URI forNewDocument(User userId) throws URISyntaxException {
-        return startWithBaseUrl(userId, "").build();
+    public URI forNewDocument(User user) throws URISyntaxException {
+        return startWithBaseUrl(user, "").build();
     }
 
     // private
 
-    private URIBuilder startWithBaseUrl(User userId, String path) throws URISyntaxException {
-        return new URIBuilder("http://" + this.host + ":" + this.port + this.basePath + "/" + userId + "/" + path);
+    private URIBuilder startWithBaseUrl(User user, String path) throws URISyntaxException {
+        URIBuilder urlBuilder = new URIBuilder("http://" + this.host + ":" + this.port + this.basePath + "/" + user.id() + "/" + path);
+        //every request requires the mandatory keyserver token to be passed along
+        addMandatoryParameter(urlBuilder, "kstoken", user.getKeyServerInternalToken().toTokenString());
+        return urlBuilder;
     }
 
     private void addMandatoryParameter(URIBuilder url, String key, String value) {

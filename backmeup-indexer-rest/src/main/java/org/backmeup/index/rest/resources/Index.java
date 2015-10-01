@@ -26,6 +26,7 @@ import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.SearchResultAccumulator;
 import org.backmeup.index.model.User;
 import org.backmeup.index.query.ElasticSearchSetup;
+import org.backmeup.keyserver.model.dto.TokenDTO;
 
 @Path("index")
 @Produces(MediaType.APPLICATION_JSON)
@@ -34,15 +35,14 @@ public class Index implements IndexServer {
     @Inject
     private ElasticSearchSetup clientFactory;
 
-    private IndexClient getIndexClient(User userId) {
-        return this.clientFactory.createIndexClient(userId);
+    private IndexClient getIndexClient(User user) {
+        return this.clientFactory.createIndexClient(user);
     }
 
-    @Override
     @GET
     @Path("/{userId}")
-    public SearchResultAccumulator query( //
-            @PathParam("userId") User userId, // 
+    public SearchResultAccumulator queryRS( //
+            @PathParam("userId") Long userId, // 
             @QueryParam("query") String query, //
             @QueryParam("source") String filterBySource, //
             @QueryParam("type") String filterByType, //
@@ -51,76 +51,99 @@ public class Index implements IndexServer {
             @QueryParam("tag") String filterByTag, //
             @QueryParam("username") String username,//
             @QueryParam("offset") Long offSetStart, //
-            @QueryParam("maxresults") Long maxResults) {
+            @QueryParam("maxresults") Long maxResults,//
+            @QueryParam("kstoken") String kstoken) {
         mandatory("query", query);
         mandatory("username", username);
+        mandatory("kstoken", kstoken);
 
-        try (IndexClient indexClient = getIndexClient(userId)) {
+        User user = new User(userId, TokenDTO.fromTokenString(kstoken));
+        return this.query(user, query, filterBySource, filterByType, filterByJob, filterByOwner, filterByTag, username, offSetStart,
+                maxResults);
 
-            return indexClient.queryBackup(query, filterBySource, filterByType, filterByJob, filterByOwner,
-                    filterByTag, username, offSetStart, maxResults);
-
-        }
     }
 
     @Override
+    public SearchResultAccumulator query(User user, String query, String filterBySource, String filterByType, String filterByJob,
+            String filterByOwner, String filterByTag, String username, Long queryOffSetStart, Long queryMaxResults) {
+        try (IndexClient indexClient = getIndexClient(user)) {
+            return indexClient.queryBackup(query, filterBySource, filterByType, filterByJob, filterByOwner, filterByTag, username,
+                    queryOffSetStart, queryMaxResults);
+        }
+    }
+
     @GET
     @Path("/{userId}/files")
-    public Set<FileItem> filesForJob( //
-            @PathParam("userId") User userId, // 
-            @QueryParam("job") Long jobId) {
+    public Set<FileItem> filesForJobRS( //
+            @PathParam("userId") Long userId, // 
+            @QueryParam("job") Long jobId,//
+            @QueryParam("kstoken") String kstoken) {
         mandatory("job", jobId);
+        mandatory("kstoken", kstoken);
 
-        try (IndexClient indexClient = getIndexClient(userId)) {
+        User user = new User(userId, TokenDTO.fromTokenString(kstoken));
+        return this.filesForJob(user, jobId);
 
-            return indexClient.searchAllFileItemsForJob(jobId);
-
-        }
     }
 
     @Override
+    public Set<FileItem> filesForJob(User user, Long jobId) {
+        try (IndexClient indexClient = getIndexClient(user)) {
+            return indexClient.searchAllFileItemsForJob(jobId);
+        }
+    }
+
     @GET
     @Path("/{userId}/files/{fileId}/info")
     public FileInfo fileInfoForFile( //
-            @PathParam("userId") User userId, // 
-            @PathParam("fileId") String fileId) {
+            @PathParam("userId") Long userId, // 
+            @PathParam("fileId") String fileId, //
+            @QueryParam("kstoken") String kstoken) {
         mandatory("fileId", fileId);
+        mandatory("kstoken", kstoken);
 
-        try (IndexClient indexClient = getIndexClient(userId)) {
-
-            return indexClient.getFileInfoForFile(fileId);
-
-        }
+        User user = new User(userId, TokenDTO.fromTokenString(kstoken));
+        return this.fileInfoForFile(user, fileId);
     }
 
     @Override
+    public FileInfo fileInfoForFile(User user, String fileId) {
+        try (IndexClient indexClient = getIndexClient(user)) {
+            return indexClient.getFileInfoForFile(fileId);
+        }
+    }
+
     @GET
     @Path("/{userId}/files/{fileId}/thumbnail")
-    public String thumbnailPathForFile( //
-            @PathParam("userId") User userId, // 
-            @PathParam("fileId") String fileId) {
+    public String thumbnailPathForFileRS( //
+            @PathParam("userId") Long userId, // 
+            @PathParam("fileId") String fileId, //
+            @QueryParam("kstoken") String kstoken) {
         mandatory("fileId", fileId);
+        mandatory("kstoken", kstoken);
 
-        try (IndexClient indexClient = getIndexClient(userId)) {
+        User user = new User(userId, TokenDTO.fromTokenString(kstoken));
+        return this.thumbnailPathForFile(user, fileId);
+    }
 
+    @Override
+    public String thumbnailPathForFile(User user, String fileId) {
+        try (IndexClient indexClient = getIndexClient(user)) {
             return indexClient.getThumbnailPathForFile(fileId);
-
         }
     }
 
     @Override
     public String delete( //
-            User userId, //
+            User user, //
             Long jobId, //  
             Date timestamp) { // optional
 
-        try (IndexClient indexClient = getIndexClient(userId)) {
-
+        try (IndexClient indexClient = getIndexClient(user)) {
             if (jobId != null && jobId != 0) {
                 indexClient.deleteRecordsForUserAndJobAndTimestamp(jobId, timestamp);
                 return "index records of job " + jobId + " and timestamp " + timestamp.toString() + " deleted for user";
             }
-
             indexClient.deleteRecordsForUser();
             return "all index records of user deleted";
 
@@ -139,31 +162,35 @@ public class Index implements IndexServer {
     @DELETE
     @Path("/{userId}")
     public Response deleteRS( //
-            @PathParam("userId") User userId, //
+            @PathParam("userId") Long userId, //
             @QueryParam("job") Long jobId, // delete either via user and timestamp OR
             @QueryParam("time") Long timestamp, //
-            @QueryParam("document") UUID indexFragmentUUID) { //delete via document UUID
+            @QueryParam("document") UUID indexFragmentUUID, //delete via document UUID
+            @QueryParam("kstoken") String kstoken) {
+        mandatory("kstoken", kstoken);
+
+        User user = new User(userId, TokenDTO.fromTokenString(kstoken));
 
         //scenario1: delete record for user via job and timestamp
         if ((jobId != null) && (jobId != 0)) {
             mandatory("job", jobId);
             mandatory("time", timestamp);
-            return status(Response.Status.ACCEPTED, delete(userId, jobId, new Date(timestamp)));
+            return status(Response.Status.ACCEPTED, delete(user, jobId, new Date(timestamp)));
         }
         if ((timestamp != null) && (timestamp != 0)) {
             mandatory("job", jobId);
             mandatory("time", timestamp);
-            return status(Response.Status.ACCEPTED, delete(userId, jobId, new Date(timestamp)));
+            return status(Response.Status.ACCEPTED, delete(user, jobId, new Date(timestamp)));
         }
 
         //scenario2: delete record fors user via document uuid
         if (indexFragmentUUID != null) {
             mandatory("document", indexFragmentUUID);
-            return status(Response.Status.ACCEPTED, delete(userId, indexFragmentUUID));
+            return status(Response.Status.ACCEPTED, delete(user, indexFragmentUUID));
         }
 
         //scenario3: no parameters used, delete entire index for user
-        return status(Response.Status.ACCEPTED, delete(userId, null, null));
+        return status(Response.Status.ACCEPTED, delete(user, null, null));
 
     }
 
@@ -172,8 +199,8 @@ public class Index implements IndexServer {
             User userId, //
             IndexDocument document) throws IOException {
 
+        //TODO AL: We need to get the backupjob key (not user key) here for keyserver authentication
         try (IndexClient indexClient = getIndexClient(userId)) {
-
             indexClient.index(document);
             return "document indexed";
 

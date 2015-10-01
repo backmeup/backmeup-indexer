@@ -31,13 +31,11 @@ public class RestApiIndexServerStub implements IndexServer {
     }
 
     @Override
-    public SearchResultAccumulator query(User userId, String query, String filterBySource, String filterByType,
-            String filterByJob, String filterByOwner, String filterByTag, String username, Long queryOffSetStart,
-            Long queryMaxResults) {
+    public SearchResultAccumulator query(User user, String query, String filterBySource, String filterByType, String filterByJob,
+            String filterByOwner, String filterByTag, String username, Long queryOffSetStart, Long queryMaxResults) {
         try {
-
-            URI url = this.urls.forQuery(userId, query, filterBySource, filterByType, filterByJob, filterByOwner,
-                    filterByTag, username, queryOffSetStart, queryMaxResults);
+            URI url = this.urls.forQuery(user, query, filterBySource, filterByType, filterByJob, filterByOwner, filterByTag, username,
+                    queryOffSetStart, queryMaxResults);
             String body = this.http.get(url, 200);
             return Json.deserialize(body, SearchResultAccumulator.class);
 
@@ -47,10 +45,9 @@ public class RestApiIndexServerStub implements IndexServer {
     }
 
     @Override
-    public Set<FileItem> filesForJob(User userId, Long jobId) {
+    public Set<FileItem> filesForJob(User user, Long jobId) {
         try {
-
-            URI url = this.urls.forFilesOfJob(userId, jobId);
+            URI url = this.urls.forFilesOfJob(user, jobId);
             String body = this.http.get(url, 200);
             return Json.deserializeSetOfFileItems(body);
 
@@ -60,10 +57,10 @@ public class RestApiIndexServerStub implements IndexServer {
     }
 
     @Override
-    public FileInfo fileInfoForFile(User userId, String fileId) {
+    public FileInfo fileInfoForFile(User user, String fileId) {
         try {
 
-            URI url = this.urls.forFileInfo(userId, fileId);
+            URI url = this.urls.forFileInfo(user, fileId);
             String body = this.http.get(url, 200);
             return Json.deserialize(body, FileInfo.class);
 
@@ -73,10 +70,10 @@ public class RestApiIndexServerStub implements IndexServer {
     }
 
     @Override
-    public String thumbnailPathForFile(User userId, String fileId) {
+    public String thumbnailPathForFile(User user, String fileId) {
         try {
 
-            URI url = this.urls.forThumbnail(userId, fileId);
+            URI url = this.urls.forThumbnail(user, fileId);
             String body = this.http.get(url, 200);
             return body;
 
@@ -86,10 +83,10 @@ public class RestApiIndexServerStub implements IndexServer {
     }
 
     @Override
-    public String delete(User userId, Long jobId, Date timestamp) {
+    public String delete(User user, Long jobId, Date timestamp) {
         try {
 
-            URI url = this.urls.forDelete(userId, jobId, timestamp);
+            URI url = this.urls.forDelete(user, jobId, timestamp);
             String body = this.http.delete(url, 202);
             return body;
 
@@ -99,9 +96,9 @@ public class RestApiIndexServerStub implements IndexServer {
     }
 
     @Override
-    public String delete(User userId, UUID indexFragmentUUID) {
+    public String delete(User user, UUID indexFragmentUUID) {
         try {
-            URI url = this.urls.forDelete(userId, indexFragmentUUID);
+            URI url = this.urls.forDelete(user, indexFragmentUUID);
             String body = this.http.delete(url, 202);
             return body;
 
@@ -111,10 +108,10 @@ public class RestApiIndexServerStub implements IndexServer {
     }
 
     @Override
-    public String index(User userId, IndexDocument document) throws IOException {
+    public String index(User user, IndexDocument document) throws IOException {
         try {
 
-            URI url = this.urls.forNewDocument(userId);
+            URI url = this.urls.forNewDocument(user);
             String jsonPayload = Json.serialize(document);
             String body = this.http.post(url, jsonPayload, 201);
             return body;

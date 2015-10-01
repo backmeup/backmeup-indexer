@@ -21,43 +21,42 @@ import org.backmeup.index.model.User;
 public class RestApiIndexClient implements IndexClient {
 
     private final IndexServer server = new RestApiIndexServerStub(RestApiConfig.DEFAULT);
-    private final User userId;
+    private final User user;
 
-    public RestApiIndexClient(User userId) {
-        this.userId = userId;
+    public RestApiIndexClient(User currUser) {
+        this.user = currUser;
     }
 
     @Override
-    public SearchResultAccumulator queryBackup(String query, String filterBySource, String filterByType,
-            String filterByJob, String filterByOwner, String filterByTag, String username, Long queryOffSetStart,
-            Long queryMaxResults) {
-        return this.server.query(this.userId, query, filterBySource, filterByType, filterByJob, filterByOwner,
-                filterByTag, username, queryOffSetStart, queryMaxResults);
+    public SearchResultAccumulator queryBackup(String query, String filterBySource, String filterByType, String filterByJob,
+            String filterByOwner, String filterByTag, String username, Long queryOffSetStart, Long queryMaxResults) {
+        return this.server.query(this.user, query, filterBySource, filterByType, filterByJob, filterByOwner, filterByTag, username,
+                queryOffSetStart, queryMaxResults);
     }
 
     @Override
     public Set<FileItem> searchAllFileItemsForJob(Long jobId) {
-        return this.server.filesForJob(this.userId, jobId);
+        return this.server.filesForJob(this.user, jobId);
     }
 
     @Override
     public FileInfo getFileInfoForFile(String fileId) {
-        return this.server.fileInfoForFile(this.userId, fileId);
+        return this.server.fileInfoForFile(this.user, fileId);
     }
 
     @Override
     public String getThumbnailPathForFile(String fileId) {
-        return this.server.thumbnailPathForFile(this.userId, fileId);
+        return this.server.thumbnailPathForFile(this.user, fileId);
     }
 
     @Override
     public void deleteRecordsForUser() {
-        this.server.delete(this.userId, null, null);
+        this.server.delete(this.user, null, null);
     }
 
     @Override
     public void deleteRecordsForUserAndJobAndTimestamp(Long jobId, Date timestamp) {
-        this.server.delete(this.userId, jobId, timestamp);
+        this.server.delete(this.user, jobId, timestamp);
     }
 
     @Override
@@ -67,7 +66,7 @@ public class RestApiIndexClient implements IndexClient {
 
     @Override
     public void index(IndexDocument document) throws IOException {
-        this.server.index(this.userId, document);
+        this.server.index(this.user, document);
     }
 
     @Override

@@ -1,5 +1,7 @@
 package org.backmeup.index.model;
 
+import org.backmeup.keyserver.model.dto.TokenDTO;
+
 /**
  * ID of the index partition, we use the Backmeup user id here.
  * 
@@ -7,7 +9,8 @@ package org.backmeup.index.model;
  */
 public class User {
 
-    private final Long id;
+    private final Long id; //corresponds to the BackmeUpUserID
+    private TokenDTO ksInternalToken; //used to authenticate the curr user on keyserver
 
     public User(Long id) {
         if (id <= -1) {
@@ -16,13 +19,31 @@ public class User {
         this.id = id;
     }
 
+    /**
+     * Second constructor which takes a keyserver internal token as second parameter for all calls where we need to
+     * validate calls for the curr user against the keyserver
+     * 
+     * @param id
+     * @param ksInternalToken
+     */
+    public User(Long id, TokenDTO ksInternalToken) {
+        this(id);
+        if (ksInternalToken != null) {
+            this.ksInternalToken = ksInternalToken;
+        }
+    }
+
     public Long id() {
-        return id;
+        return this.id;
+    }
+
+    public TokenDTO getKeyServerInternalToken() {
+        return this.ksInternalToken;
     }
 
     @Override
     public int hashCode() {
-        return id.hashCode();
+        return this.id.hashCode();
     }
 
     @Override
@@ -34,12 +55,12 @@ public class User {
             return false;
         }
         User other = (User) obj;
-        return id.equals(other.id);
+        return this.id.equals(other.id);
     }
 
     @Override
     public String toString() {
-        return id.toString();
+        return this.id.toString();
     }
 
     public static User valueOf(String value) {

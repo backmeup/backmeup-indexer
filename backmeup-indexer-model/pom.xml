@@ -21,6 +21,11 @@
             <artifactId>gson</artifactId>
             <version>${version.com.google.code.gson}</version>
         </dependency>
+		<dependency>
+			<groupId>org.backmeup</groupId>
+			<artifactId>backmeup-keyserver-model</artifactId>
+			<version>1.1-SNAPSHOT</version>
+		</dependency>
     </dependencies>
 
     <build>

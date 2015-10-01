@@ -24,16 +24,16 @@ public class ElasticSearchSetup {
 
     @SuppressWarnings("resource")
     // this is a factory method
-    public IndexClient createIndexClient(User userId) {
-        Client elasticClient = startInstance(userId);
-        return createIndexClient(userId, elasticClient);
+    public IndexClient createIndexClient(User user) {
+        Client elasticClient = startInstance(user);
+        return createIndexClient(user, elasticClient);
     }
 
-    private Client startInstance(User userId) {
-        return this.indexManager.initAndCreateAndDoEverthing(userId);
+    private Client startInstance(User user) {
+        return this.indexManager.initAndCreateAndDoEverthing(user);
     }
 
-    private ElasticSearchIndexClient createIndexClient(User userId, Client elasticClient) {
-        return new ElasticSearchIndexClient(userId, elasticClient, this.taggedCollectionDao);
+    private ElasticSearchIndexClient createIndexClient(User user, Client elasticClient) {
+        return new ElasticSearchIndexClient(user, elasticClient, this.taggedCollectionDao);
     }
 }
