@@ -24,7 +24,6 @@ import org.backmeup.index.serializer.Json;
  * 
  */
 public class ThemisDataSink {
-    // TODO PK make an instance, extract interface of datasinks to have different types available
 
     public enum IndexFragmentType {
         TO_IMPORT_USER_OWNED("to-import/userowned/"), IMPORTED_USER_OWNED("imported/userowned/"), TO_IMPORT_SHARED_WITH_USER(

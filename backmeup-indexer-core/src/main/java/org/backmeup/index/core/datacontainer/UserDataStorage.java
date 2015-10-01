@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.nio.channels.FileChannel;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 import org.backmeup.index.UserDataWorkingDir;
 import org.backmeup.index.core.model.RunningIndexUserConfig;
@@ -26,6 +27,9 @@ import org.slf4j.LoggerFactory;
  */
 @ApplicationScoped
 public class UserDataStorage {
+
+    @Inject
+    private EncryptionProvider encryptionProvider;
 
     private static final String CRYPT_TEMPLATE = "elasticsearch_userdata_template_TC_150MB.tc";
     private static final String CRYPT_FILE = "elasticsearch_userdata_TC_150MB.tc";
@@ -63,13 +67,13 @@ public class UserDataStorage {
      * themis-datasink
      */
     @SuppressWarnings("resource")
-    private void init(User userID) {
+    private void init(User user) {
 
         InputStream cryptoVolume = null;
         File f = null;
         try {
             //try to generate a new truecrypt volume
-            f = EncryptionProvider.generateNewCryptVolume();
+            f = this.encryptionProvider.generateNewCryptVolume(user);
             //grant tomcat7 process access as owner
             CommandLineUtils.chownRTomcat7(f);
             cryptoVolume = new FileInputStream(f);
@@ -78,9 +82,9 @@ public class UserDataStorage {
             cryptoVolume = getClass().getClassLoader().getResourceAsStream(CRYPT_TEMPLATE);
         }
         try {
-            ThemisDataSink.saveIndexTrueCryptContainer(cryptoVolume, userID);
+            ThemisDataSink.saveIndexTrueCryptContainer(cryptoVolume, user);
         } catch (IOException e) {
-            throw new UserDataStorageException("IndexManager init ES instance failed for user" + userID, e);
+            throw new UserDataStorageException("IndexManager init ES instance failed for user" + user, e);
         } finally {
             //try to cleanup the temp file if created
             try {
@@ -138,7 +142,6 @@ public class UserDataStorage {
     public void copyCryptContainerDataBackIntoUserStorage(RunningIndexUserConfig runningInstanceConfig) {
         User userID = runningInstanceConfig.getUser();
         try {
-
             ThemisDataSink.saveIndexTrueCryptContainer(new File(runningInstanceConfig.getMountedContainerLocation()), userID);
             this.log.debug("shutdownInstance for userID: " + userID + " step4 - ok");
 
