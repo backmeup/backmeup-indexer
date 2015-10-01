@@ -26,7 +26,6 @@ import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.SearchResultAccumulator;
 import org.backmeup.index.model.User;
 import org.backmeup.index.query.ElasticSearchSetup;
-import org.backmeup.keyserver.model.dto.TokenDTO;
 
 @Path("index")
 @Produces(MediaType.APPLICATION_JSON)
@@ -57,7 +56,7 @@ public class Index implements IndexServer {
         mandatory("username", username);
         mandatory("kstoken", kstoken);
 
-        User user = new User(userId, TokenDTO.fromTokenString(kstoken));
+        User user = new User(userId, kstoken);
         return this.query(user, query, filterBySource, filterByType, filterByJob, filterByOwner, filterByTag, username, offSetStart,
                 maxResults);
 
@@ -81,7 +80,7 @@ public class Index implements IndexServer {
         mandatory("job", jobId);
         mandatory("kstoken", kstoken);
 
-        User user = new User(userId, TokenDTO.fromTokenString(kstoken));
+        User user = new User(userId, kstoken);
         return this.filesForJob(user, jobId);
 
     }
@@ -102,7 +101,7 @@ public class Index implements IndexServer {
         mandatory("fileId", fileId);
         mandatory("kstoken", kstoken);
 
-        User user = new User(userId, TokenDTO.fromTokenString(kstoken));
+        User user = new User(userId, kstoken);
         return this.fileInfoForFile(user, fileId);
     }
 
@@ -122,7 +121,7 @@ public class Index implements IndexServer {
         mandatory("fileId", fileId);
         mandatory("kstoken", kstoken);
 
-        User user = new User(userId, TokenDTO.fromTokenString(kstoken));
+        User user = new User(userId, kstoken);
         return this.thumbnailPathForFile(user, fileId);
     }
 
@@ -169,7 +168,7 @@ public class Index implements IndexServer {
             @QueryParam("kstoken") String kstoken) {
         mandatory("kstoken", kstoken);
 
-        User user = new User(userId, TokenDTO.fromTokenString(kstoken));
+        User user = new User(userId, kstoken);
 
         //scenario1: delete record for user via job and timestamp
         if ((jobId != null) && (jobId != 0)) {

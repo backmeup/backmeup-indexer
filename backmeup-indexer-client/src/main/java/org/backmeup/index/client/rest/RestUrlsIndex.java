@@ -76,7 +76,7 @@ public class RestUrlsIndex {
     private URIBuilder startWithBaseUrl(User user, String path) throws URISyntaxException {
         URIBuilder urlBuilder = new URIBuilder("http://" + this.host + ":" + this.port + this.basePath + "/" + user.id() + "/" + path);
         //every request requires the mandatory keyserver token to be passed along
-        addMandatoryParameter(urlBuilder, "kstoken", user.getKeyServerInternalToken().toTokenString());
+        addMandatoryParameter(urlBuilder, "kstoken", user.getKeyServerInternalToken());
         return urlBuilder;
     }
 

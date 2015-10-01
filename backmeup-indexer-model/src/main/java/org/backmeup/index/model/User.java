@@ -1,6 +1,5 @@
 package org.backmeup.index.model;
 
-import org.backmeup.keyserver.model.dto.TokenDTO;
 
 /**
  * ID of the index partition, we use the Backmeup user id here.
@@ -10,7 +9,7 @@ import org.backmeup.keyserver.model.dto.TokenDTO;
 public class User {
 
     private final Long id; //corresponds to the BackmeUpUserID
-    private TokenDTO ksInternalToken; //used to authenticate the curr user on keyserver
+    private String ksInternalToken; //used to authenticate the curr user on keyserver
 
     public User(Long id) {
         if (id <= -1) {
@@ -26,7 +25,7 @@ public class User {
      * @param id
      * @param ksInternalToken
      */
-    public User(Long id, TokenDTO ksInternalToken) {
+    public User(Long id, String ksInternalToken) {
         this(id);
         if (ksInternalToken != null) {
             this.ksInternalToken = ksInternalToken;
@@ -37,7 +36,7 @@ public class User {
         return this.id;
     }
 
-    public TokenDTO getKeyServerInternalToken() {
+    public String getKeyServerInternalToken() {
         return this.ksInternalToken;
     }
 

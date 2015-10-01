@@ -11,7 +11,6 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.backmeup.index.model.User;
-import org.backmeup.keyserver.model.dto.TokenDTO;
 
 @Entity
 public class RunningIndexUserConfig {
@@ -143,16 +142,13 @@ public class RunningIndexUserConfig {
         this.esPID = esPID;
     }
 
-    public TokenDTO getKeyServerUserAuthenticationToken() {
-        if (this.keyServerUserAuthenticationToken != null) {
-            return TokenDTO.fromTokenString(this.keyServerUserAuthenticationToken);
-        }
-        return null;
+    public String getKeyServerUserAuthenticationToken() {
+        return this.keyServerUserAuthenticationToken;
     }
 
-    public void setKeyServerUserAuthenticationToken(TokenDTO keyServerUserAuthenticationToken) {
+    public void setKeyServerUserAuthenticationToken(String keyServerUserAuthenticationToken) {
         if (keyServerUserAuthenticationToken != null) {
-            this.keyServerUserAuthenticationToken = keyServerUserAuthenticationToken.toTokenString();
+            this.keyServerUserAuthenticationToken = keyServerUserAuthenticationToken;
         }
     }
 

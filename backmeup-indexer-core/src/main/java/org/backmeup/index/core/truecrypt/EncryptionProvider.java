@@ -12,6 +12,7 @@ import org.backmeup.index.model.User;
 import org.backmeup.keyserver.client.KeyserverClient;
 import org.backmeup.keyserver.model.KeyserverException;
 import org.backmeup.keyserver.model.dto.AuthResponseDTO;
+import org.backmeup.keyserver.model.dto.TokenDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +35,8 @@ public class EncryptionProvider {
         //get the password from keyserver
         String password = null;
         try {
-            AuthResponseDTO auth = this.keyserverClient.authenticateWithInternalToken(user.getKeyServerInternalToken());
+            AuthResponseDTO auth = this.keyserverClient.authenticateWithInternalToken(TokenDTO.fromTokenString(user
+                    .getKeyServerInternalToken()));
             password = this.keyserverClient.getIndexKey(auth.getToken());
         } catch (KeyserverException e) {
             throw new EncryptionProviderException("startupInstance for userID: " + user + " step3 - obtaining container password failed", e);
@@ -72,7 +74,8 @@ public class EncryptionProvider {
 
     public File generateNewCryptVolume(User user) throws IOException {
         try {
-            AuthResponseDTO auth = this.keyserverClient.authenticateWithInternalToken(user.getKeyServerInternalToken());
+            AuthResponseDTO auth = this.keyserverClient.authenticateWithInternalToken(TokenDTO.fromTokenString(user
+                    .getKeyServerInternalToken()));
             //generate a random password
             String password = generateRandomPassword();
             try {
