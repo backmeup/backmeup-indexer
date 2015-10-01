@@ -75,7 +75,7 @@ public class SearchInstances {
         return esInstance1;
     }
 
-    public RunningIndexUserConfig createIndexUserConfig(User userID, File fTCContainer, String tcMountedDriveLetter) {
+    public RunningIndexUserConfig createIndexUserConfig(User user, File fTCContainer, String tcMountedDriveLetter) {
         try {
             // TODO currently when all available ports are in use the system will throw a NumberFormatException
             int tcpPort = getFreeESTCPPort();
@@ -84,11 +84,11 @@ public class SearchInstances {
             // TODO currently only one host machine for ES supported: localhost
             URI uri = new URI("http", InetAddress.getLocalHost().getHostAddress() + "", "", "");
             // keep a database record of this configuration
-            return new RunningIndexUserConfig(userID, uri.toURL(), tcpPort, httpPort, "user" + userID,
-                    tcMountedDriveLetter, fTCContainer.getAbsolutePath());
+            return new RunningIndexUserConfig(user, uri.toURL(), tcpPort, httpPort, "user" + user, tcMountedDriveLetter,
+                    fTCContainer.getAbsolutePath());
 
         } catch (URISyntaxException | UnknownHostException | MalformedURLException e1) {
-            throw new SearchInstanceException("startupInstance for userID: " + userID + " step5 - failed", e1);
+            throw new SearchInstanceException("startupInstance for userID: " + user + " step5 - failed", e1);
         }
     }
 
@@ -127,8 +127,8 @@ public class SearchInstances {
         try {
             int pid = ESConfigurationHandler.startElasticSearch(userID);
             this.log.debug("startupInstance for userID: " + userID + " step6 - ok");
-            this.log.info("started ES Instance " + runningConfig.getClusterName() + " on host: "
-                    + runningConfig.getHostAddress().getHost() + ":" + runningConfig.getHttpPort() + " and PID: " + pid);
+            this.log.info("started ES Instance " + runningConfig.getClusterName() + " on host: " + runningConfig.getHostAddress().getHost()
+                    + ":" + runningConfig.getHttpPort() + " and PID: " + pid);
             return pid;
         } catch (IOException | InterruptedException e1) {
             throw new SearchInstanceException("startupInstance for userID: " + userID + " step6 - failed", e1);

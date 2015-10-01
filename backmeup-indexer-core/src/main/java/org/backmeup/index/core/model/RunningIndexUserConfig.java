@@ -11,6 +11,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.backmeup.index.model.User;
+import org.backmeup.keyserver.model.dto.TokenDTO;
 
 @Entity
 public class RunningIndexUserConfig {
@@ -36,13 +37,16 @@ public class RunningIndexUserConfig {
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
+    //keyserver authentication tokens
+    private String keyServerUserAuthenticationToken;
+
     public RunningIndexUserConfig() {
         this.timestamp = new Date();
     }
 
-    public RunningIndexUserConfig(User userId, URL hostaddress, Integer tcpPort, Integer httpPort, String clusterName,
-            String mountedDrive, String mountedContainerLocation) {
-        this.setUserID(userId.id());
+    public RunningIndexUserConfig(User user, URL hostaddress, Integer tcpPort, Integer httpPort, String clusterName, String mountedDrive,
+            String mountedContainerLocation) {
+        this.setUserID(user.id());
         this.setTcpPort(tcpPort);
         this.setHttpPort(httpPort);
         this.setClusterName(clusterName);
@@ -51,6 +55,7 @@ public class RunningIndexUserConfig {
         this.setHostAddress(hostaddress);
         this.esPID = -1;
         this.timestamp = new Date();
+        this.setKeyServerUserAuthenticationToken(user.getKeyServerInternalToken());
     }
 
     public String getMountedTCDriveLetter() {
@@ -136,6 +141,19 @@ public class RunningIndexUserConfig {
 
     public void setEsPID(Integer esPID) {
         this.esPID = esPID;
+    }
+
+    public TokenDTO getKeyServerUserAuthenticationToken() {
+        if (this.keyServerUserAuthenticationToken != null) {
+            return TokenDTO.fromTokenString(this.keyServerUserAuthenticationToken);
+        }
+        return null;
+    }
+
+    public void setKeyServerUserAuthenticationToken(TokenDTO keyServerUserAuthenticationToken) {
+        if (keyServerUserAuthenticationToken != null) {
+            this.keyServerUserAuthenticationToken = keyServerUserAuthenticationToken.toTokenString();
+        }
     }
 
 }

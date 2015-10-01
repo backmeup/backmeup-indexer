@@ -28,8 +28,8 @@ public class IndexManager {
      * Startup or fetches a running ElasticSearch Instance for a given user and returns a client handle for
      * communication
      */
-    public synchronized Client initAndCreateAndDoEverthing(User userId) {
-        RunningIndexUserConfig conf = getRunningIndexUserConfig(userId);
+    public synchronized Client initAndCreateAndDoEverthing(User user) {
+        RunningIndexUserConfig conf = getRunningIndexUserConfig(user);
         try {
             if (conf != null) {
                 //checks if an ES instance is responding and returns a new client instance if so
@@ -37,27 +37,30 @@ public class IndexManager {
                 Client client = this.es.getESTransportClient(conf);
 
                 // sanity check cluster state
-                this.es.getESClusterState(userId, client, 1, 2);
+                this.es.getESClusterState(user, client, 1, 2);
+
+                // update the keyserver's user authentication token if it was sent along
+                updateKeyserverAuthenticationToken(user, conf);
 
                 //keep instance running for another 20 minutes
-                this.indexKeepAliveTimer.extendTTL20(userId);
+                this.indexKeepAliveTimer.extendTTL20(user);
 
                 //return the client handle
                 return client;
             }
         } catch (SearchInstanceException ex) {
-            this.shutdownInstance(userId);
+            this.shutdownInstance(user);
         }
 
         //in this case we need to fire up an ES instance for this user
         try {
-            return this.startupInstance(userId);
+            return this.startupInstance(user);
 
         } catch (Exception e1) {
             // rollback the startup steps that were already performed
-            this.shutdownInstance(userId);
-            this.log.error("failed to startup/connect with running instance and return a client object for user "
-                    + userId + ". Returning null", e1);
+            this.shutdownInstance(user);
+            this.log.error("failed to startup/connect with running instance and return a client object for user " + user
+                    + ". Returning null", e1);
 
             //in this case return null for now.
             throw e1;
@@ -124,20 +127,18 @@ public class IndexManager {
                         //register this instance for GarbageCollection
                         this.indexKeepAliveTimer.extendTTL20(config.getUser());
 
-                        this.log.debug("properly recovered running ElasticSearch instance for "
-                                + config.getHostAddress() + " and userID: " + config.getUserID() + " and httpPort: "
-                                + config.getHttpPort());
+                        this.log.debug("properly recovered running ElasticSearch instance for " + config.getHostAddress() + " and userID: "
+                                + config.getUserID() + " and httpPort: " + config.getHttpPort());
 
                     } catch (SearchInstanceException e) {
-                        this.log.debug("skipping recovery - instance not responding for " + config.getHostAddress()
-                                + " and userID: " + config.getUserID() + " and httpPort: " + config.getHttpPort());
+                        this.log.debug("skipping recovery - instance not responding for " + config.getHostAddress() + " and userID: "
+                                + config.getUserID() + " and httpPort: " + config.getHttpPort());
                         //not reachable - try to clean up the mess
                         this.shutdownInstance(config.getUser());
                     }
                 } else {
                     this.log.debug("skipping recovery - " + config.getHostAddress()
-                            + "  no longer supported. Deleting RunninInstanceUserConfig for userID: "
-                            + config.getUserID());
+                            + "  no longer supported. Deleting RunninInstanceUserConfig for userID: " + config.getUserID());
                     this.dao.delete(config);
                 }
             } else {
@@ -164,8 +165,7 @@ public class IndexManager {
         this.log.debug("startupInstance for userID: " + userID + " step1 - ok");
 
         // 2) get a local copy of the TrueCrypt container for the given user
-        File fTCContainer = this.dataContainer.copyUserStorageCryptContainerToLocalWorkingDir(userID,
-                fTCContainerOnDataSink);
+        File fTCContainer = this.dataContainer.copyUserStorageCryptContainerToLocalWorkingDir(userID, fTCContainerOnDataSink);
         this.log.debug("startupInstance for userID: " + userID + " step2 - ok");
 
         // 3) Now mount the ES data volume
@@ -173,8 +173,7 @@ public class IndexManager {
         this.log.debug("startupInstance for userID: " + userID + " step3 - ok");
 
         // 4) crate a user specific ElasticSearch startup configuration file
-        RunningIndexUserConfig runningConfig = this.searchInstance.createIndexUserConfig(userID, fTCContainer,
-                tcMountedDriveLetter);
+        RunningIndexUserConfig runningConfig = this.searchInstance.createIndexUserConfig(userID, fTCContainer, tcMountedDriveLetter);
 
         // this file contains the user specific ES startup config (data, ports, etc.)
         this.searchInstance.createIndexStartFile(runningConfig);
@@ -218,8 +217,7 @@ public class IndexManager {
         RunningIndexUserConfig runningInstanceConfig = getRunningIndexUserConfig(userID);
         if (runningInstanceConfig == null) {
             //if they are null we can't do anything
-            this.log.debug("shutdownInstance for userID: " + userID
-                    + " step1 - failed, no configuration persisted in db");
+            this.log.debug("shutdownInstance for userID: " + userID + " step1 - failed, no configuration persisted in db");
             return;
         }
         shutdownInstance(runningInstanceConfig);
@@ -285,8 +283,6 @@ public class IndexManager {
         this.searchInstance.initAvailableInstances();
         syncManagerAfterStartupFromDBRecords(this.searchInstance.getDefaultHost());
         this.log.debug("cleanupRude: completed reInitializing");
-
-        // TODO delete all working directories?
     }
 
     private RunningIndexUserConfig getRunningIndexUserConfig(User userID) {
@@ -297,7 +293,6 @@ public class IndexManager {
      * Configures and returns a Client to ElasticSearch to interact with for a specific user
      */
     public Client getESTransportClient(User userID) throws SearchInstanceException {
-        //TODO Keep Clients and last accessed timestamp? 
         RunningIndexUserConfig conf = getRunningIndexUserConfig(userID);
         return this.es.getESTransportClient(conf);
     }
@@ -316,6 +311,14 @@ public class IndexManager {
         } catch (SearchInstanceException e) {
             this.log.debug("Get ES cluster state for userID: " + userId + " threw exception: " + e.toString());
             throw new SearchInstanceException("Clusterstate for userID: " + userId + " " + "Cluster not responding");
+        }
+    }
+
+    private void updateKeyserverAuthenticationToken(User user, RunningIndexUserConfig conf) {
+        // update the keyserver's user authentication token if it was provided
+        if (user.getKeyServerInternalToken() != null) {
+            conf.setKeyServerUserAuthenticationToken(user.getKeyServerInternalToken());
+            conf = this.dao.save(conf);
         }
     }
 
