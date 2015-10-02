@@ -1,4 +1,4 @@
-package org.backmeup.data.dummy;
+package org.backmeup.index.storage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -15,7 +15,6 @@ import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
 import org.backmeup.index.serializer.Json;
-import org.backmeup.index.storage.ThemisDataSink;
 import org.backmeup.index.storage.ThemisDataSink.IndexFragmentType;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -128,8 +127,7 @@ public class ThemisDataSinkTest {
 
         assertTrue(lUUIDs.contains(fileID));
 
-        IndexDocument fragment = ThemisDataSink.getIndexFragment(fileID, _99998L,
-                IndexFragmentType.TO_IMPORT_USER_OWNED);
+        IndexDocument fragment = ThemisDataSink.getIndexFragment(fileID, _99998L, IndexFragmentType.TO_IMPORT_USER_OWNED);
         assertNotNull(fragment);
 
         ThemisDataSink.deleteIndexFragment(fileID, _99998L, IndexFragmentType.TO_IMPORT_USER_OWNED);
@@ -137,21 +135,17 @@ public class ThemisDataSinkTest {
 
     @Test
     public void testNoUUIDInRecordWhenPersisting() throws IOException {
-        assertFalse("Document should not contain an UUID yet",
-                this.indexDoc.getFields().containsKey(IndexFields.FIELD_INDEX_DOCUMENT_UUID));
-        try {
-            ThemisDataSink.saveIndexFragment(this.indexDoc, _99997L, IndexFragmentType.TO_IMPORT_USER_OWNED);
-        } catch (IOException e) {
-            assertTrue(e.toString().contains("The IndexFragment must have a document UUID assigned"));
-        }
+        assertFalse("Document should not contain an UUID yet", this.indexDoc.getFields().containsKey(IndexFields.FIELD_INDEX_DOCUMENT_UUID));
+
+        this.exception.expect(IOException.class); //Expecting exception when saving: IndexFragment must have a document UUID assigned
+        ThemisDataSink.saveIndexFragment(this.indexDoc, _99997L, IndexFragmentType.TO_IMPORT_USER_OWNED);
+
         UUID testUUID = UUID.randomUUID();
         this.indexDoc.field(IndexFields.FIELD_INDEX_DOCUMENT_UUID, testUUID.toString());
         UUID fileID = ThemisDataSink.saveIndexFragment(this.indexDoc, _99997L, IndexFragmentType.TO_IMPORT_USER_OWNED);
-        IndexDocument fragment = ThemisDataSink.getIndexFragment(fileID, _99997L,
-                IndexFragmentType.TO_IMPORT_USER_OWNED);
+        IndexDocument fragment = ThemisDataSink.getIndexFragment(fileID, _99997L, IndexFragmentType.TO_IMPORT_USER_OWNED);
         assertNotNull("The returned IndexDocument must not be null", fragment);
-        assertTrue("The UUID should be written within the object",
-                fragment.getFields().containsKey(IndexFields.FIELD_INDEX_DOCUMENT_UUID));
+        assertTrue("The UUID should be written within the object", fragment.getFields().containsKey(IndexFields.FIELD_INDEX_DOCUMENT_UUID));
     }
 
     @Test
