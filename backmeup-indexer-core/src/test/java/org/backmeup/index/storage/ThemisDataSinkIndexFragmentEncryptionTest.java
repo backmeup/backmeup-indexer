@@ -2,6 +2,7 @@ package org.backmeup.index.storage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
@@ -12,8 +13,11 @@ import java.nio.file.Files;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.List;
+import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
+import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
 import org.backmeup.index.serializer.Json;
@@ -81,9 +85,29 @@ public class ThemisDataSinkIndexFragmentEncryptionTest {
         assertEquals(TEST_MSG, message);
     }
 
-    @Test
     public void saveAndFetchEncryptedIndexDocument() throws IOException {
-        ThemisDataSink.saveIndexFragment(this.INDEXDOC, USER1_99997L, IndexFragmentType.TO_IMPORT_USER_OWNED);
+
+        //TODO implement functionality for EncryptedThemisDatasink
+    }
+
+    @Test
+    public void testPersistLoadAndDeleteIndexFragmentForUser() throws IOException {
+        UUID fileID = ThemisDataSink.saveIndexFragment(this.INDEXDOC, USER1_99997L, IndexFragmentType.TO_IMPORT_USER_OWNED,
+                this.ks.getPublicKey());
+        assertEquals(fileID.toString(), this.INDEXDOC.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID));
+
+        List<UUID> lUUIDs = ThemisDataSink.getAllIndexFragmentUUIDs(USER1_99997L, IndexFragmentType.TO_IMPORT_USER_OWNED);
+        assertNotNull(lUUIDs);
+        assertTrue(lUUIDs.contains(fileID));
+
+        IndexDocument fragment = ThemisDataSink.getIndexFragment(fileID, USER1_99997L, IndexFragmentType.TO_IMPORT_USER_OWNED,
+                this.ks.getPrivateKey());
+        assertNotNull(fragment);
+
+        ThemisDataSink.deleteIndexFragment(fileID, USER1_99997L, IndexFragmentType.TO_IMPORT_USER_OWNED);
+        lUUIDs = ThemisDataSink.getAllIndexFragmentUUIDs(USER1_99997L, IndexFragmentType.TO_IMPORT_USER_OWNED);
+        assertNotNull(lUUIDs);
+        assertTrue(!lUUIDs.contains(fileID));
     }
 
     private IndexDocument loadSampleIndexDocument() throws IOException {

@@ -1,10 +1,13 @@
 package org.backmeup.index.storage;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -15,12 +18,13 @@ import org.backmeup.index.config.Configuration;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
 import org.backmeup.index.serializer.Json;
+import org.backmeup.keyserver.fileencryption.EncryptionInputStream;
+import org.backmeup.keyserver.fileencryption.EncryptionOutputStream;
 
 /**
- * dummy implementation of a themis data sink currently with file operations for Truecrypt container files required to
- * persist the index data
- * 
- * @TODO add encryption for serialized IndexDocuments on disc
+ * Implementation of the indexer related Themis data store for file operations for persisting and fetching the Truecrypt
+ * container files on/from disk and storing the index-fragment files to public encrypted user space before they get
+ * imported on next user login
  * 
  */
 public class ThemisDataSink {
@@ -92,12 +96,11 @@ public class ThemisDataSink {
         f.delete();
     }
 
-    /**
-     * Persists an IndexDocument within the user's public dropoffzone for index fragments in the DataSink. Distinguishes
-     * IndexDocuments that are user owned and shared by other users
-     */
-    public static UUID saveIndexFragment(IndexDocument indexFragment, User user, IndexFragmentType type) throws IOException {
-
+    private static UUID saveIndexFragment(IndexDocument indexFragment, User user, IndexFragmentType type, boolean encrypt,
+            PublicKey userPubKey) throws IOException {
+        if (encrypt && (userPubKey == null)) {
+            throw new IOException("encryption requires publicKey for user");
+        }
         if (indexFragment == null) {
             throw new IOException("IndexDocument may not be null");
         }
@@ -124,32 +127,129 @@ public class ThemisDataSink {
             if (!f.getParentFile().exists()) {
                 mkDirs(f.getParentFile());
             }
-            FileUtils.writeStringToFile(f, serializedIndexDoc);
+
+            //check if we're persisting encrypted or not
+            if (encrypt) {
+                persistAndEncryptIndexFragment(serializedIndexDoc, f, user.id(), userPubKey);
+            } else {
+                //persist indexfragment as non encrypted file on disk
+                FileUtils.writeStringToFile(f, serializedIndexDoc);
+            }
             return uuid;
 
         }
-
         throw new IOException("Error persisting serialized IndexDocument in user space" + getDataSinkHome(user) + "/user" + user.id()
                 + "/dropoffzone/" + type.getStorageLocation() + uuid + ".serindexdocument" + " for userID: " + user.id());
 
     }
 
-    public static IndexDocument getIndexFragment(UUID objectID, User user, IndexFragmentType type) throws IOException {
+    /**
+     * Mainly for testing ThemisDataSink for JUnit tests without encryption
+     */
+    @Deprecated
+    protected static UUID saveIndexFragment(IndexDocument indexFragment, User user, IndexFragmentType type) throws IOException {
+        return saveIndexFragment(indexFragment, user, type, false, null);
+    }
+
+    /**
+     * Persists an IndexDocument within the user's public dropoffzone for index fragments in the DataSink. Distinguishes
+     * IndexDocuments that are user owned and shared by other users. IndexFragments are encrypted with the public key of
+     * the according user (owner or sharing partner)
+     */
+    public static UUID saveIndexFragment(IndexDocument indexFragment, User user, IndexFragmentType type, PublicKey userPubKey)
+            throws IOException {
+        return saveIndexFragment(indexFragment, user, type, true, userPubKey);
+    }
+
+    /**
+     * Takes a serealized index fragment and writes it to the destFile on disk using public key encryption
+     */
+    private static File persistAndEncryptIndexFragment(String serializedIndexDoc, File destFile, Long userId, PublicKey pubkey)
+            throws IOException {
+        EncryptionOutputStream out = new EncryptionOutputStream(destFile, userId + "", pubkey); // file ist ein File-Objekt oder es geht auch ein String mit dem Pfad
+        try {
+            // EncryptedOutputStream ist wie ein "normaler" FileOutputStream zu benutzen
+            out.write(serializedIndexDoc.getBytes("UTF-8"));
+            out.close();
+            return destFile;
+        } catch (Exception e) {
+            throw new IOException("exception persisting serealized index fragment (publically encrypted) to ThemisDataSink " + e.toString());
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (Exception ex) {
+                }
+            }
+        }
+    }
+
+    /**
+     * Reads a index fragment (publically encrypted) from disk, decrypts it and hands back the the serealized index
+     * fragment as String
+     */
+    private static String readAndDecryptIndexFragment(File f, Long userId, PrivateKey userPrivateKey) throws IOException {
+        EncryptionInputStream ein = new EncryptionInputStream(f, userId + "", userPrivateKey);
+        try {
+            byte[] block = new byte[8];
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            int read = 0;
+            while ((read = ein.read(block)) != -1) {
+                buffer.write(block, 0, read);
+            }
+            ein.close();
+            return buffer.toString("UTF-8");
+        } catch (Exception e) {
+            throw new IOException("exception reading and decrypting serealized index fragment (publically encrypted) from ThemisDataSink "
+                    + e.toString());
+        } finally {
+            if (ein != null) {
+                try {
+                    ein.close();
+                } catch (Exception ex) {
+                }
+            }
+        }
+    }
+
+    /**
+     * Only for JUnit testing without encryption
+     */
+    @Deprecated
+    protected static IndexDocument getIndexFragment(UUID objectID, User user, IndexFragmentType type) throws IOException {
+        return getIndexFragment(objectID, user, type, false, null);
+    }
+
+    public static IndexDocument getIndexFragment(UUID objectID, User user, IndexFragmentType type, PrivateKey userPrivateKey)
+            throws IOException {
+        return getIndexFragment(objectID, user, type, true, userPrivateKey);
+    }
+
+    private static IndexDocument getIndexFragment(UUID objectID, User user, IndexFragmentType type, boolean encrypted,
+            PrivateKey userPrivateKey) throws IOException {
         File f = getIndexFragmentFile(objectID, user, type);
 
         if (user.id() > -1 && (f.exists() && f.canRead())) {
-            List<String> lines = FileUtils.readLines(f, "UTF-8");
-
-            String serObject = "";
-            for (String l : lines) {
-                serObject += l;
+            String serIndexDoc;
+            if (encrypted) {
+                if (userPrivateKey == null) {
+                    throw new IOException("publickey of user " + user.id() + " required for getting serealized indexdocument "
+                            + objectID.toString());
+                }
+                //deal with the encrypted file
+                serIndexDoc = readAndDecryptIndexFragment(f, user.id(), userPrivateKey);
+            } else {
+                //only if encryption is turned off
+                List<String> lines = FileUtils.readLines(f, "UTF-8");
+                serIndexDoc = "";
+                for (String l : lines) {
+                    serIndexDoc += l;
+                }
             }
             // deserialize the object
-            IndexDocument indexDoc = Json.deserialize(serObject, IndexDocument.class);
-
+            IndexDocument indexDoc = Json.deserialize(serIndexDoc, IndexDocument.class);
             return indexDoc;
         }
-
         throw new IOException("Error getting index fragment: " + getDataSinkHome(user) + "/dropoffzone/" + type.getStorageLocation()
                 + objectID + ".serindexdocument" + ", file exists? " + f.exists() + ", file is readable? " + f.canRead());
     }
