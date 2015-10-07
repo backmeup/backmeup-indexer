@@ -8,7 +8,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 
-import org.backmeup.index.IndexManager;
+import org.backmeup.index.ActiveUsers;
 import org.backmeup.index.api.IndexClient;
 import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.core.elasticsearch.SearchInstanceException;
@@ -37,13 +37,13 @@ public class IndexContentManager {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Inject
-    private IndexManager indexManager;
-    @Inject
     private IndexFragmentEntryStatusDao entryStatusDao;
     @Inject
     private RunningIndexUserConfigDao runninInstancesDao;
     @Inject
     private ElasticSearchSetup esSetup;
+    @Inject
+    private ActiveUsers activeUsers;
 
     /**
      * The ES index gets dropped. Iterate over all import, deletion operations of IndexDocuments (shared and user owned)
@@ -69,8 +69,7 @@ public class IndexContentManager {
             this.entryStatusDao.merge(importTask);
             //4. finally move the serialized Index Document to the encrypted partition
             moveFragmentToEncryptedUserStorage(doc, user, importTask.isUserOwned());
-            this.log.debug("Content Import index fragment " + importTask.getDocumentUUID() + " for user " + user.id()
-                    + " completed");
+            this.log.debug("Content Import index fragment " + importTask.getDocumentUUID() + " for user " + user.id() + " completed");
 
         } catch (ContentUpdateException | SearchInstanceException e) {
             this.log.debug("Failed to execute content import task", e);
@@ -87,8 +86,7 @@ public class IndexContentManager {
             this.entryStatusDao.merge(deletionTask);
             //3. finally delete the serialized Index Document from the encrypted partition
             deleteFragmentFromEncryptedUserStorage(deletionTask.getDocumentUUID(), user, deletionTask.isUserOwned());
-            this.log.debug("Content Deletion of index fragment " + deletionTask.getDocumentUUID() + " for user "
-                    + user.id() + " completed");
+            this.log.debug("Content Deletion of index fragment " + deletionTask.getDocumentUUID() + " for user " + user.id() + " completed");
 
         } catch (ContentUpdateException | SearchInstanceException e) {
             this.log.debug("Failed to execute content deletion task", e);
@@ -102,15 +100,13 @@ public class IndexContentManager {
      * @param user
      */
     public void executeContentUpdates(User user) {
-        List<IndexFragmentEntryStatus> lToImport = this.entryStatusDao.getAllFromUserOfType(user,
-                StatusType.WAITING_FOR_IMPORT);
+        List<IndexFragmentEntryStatus> lToImport = this.entryStatusDao.getAllFromUserOfType(user, StatusType.WAITING_FOR_IMPORT);
         for (IndexFragmentEntryStatus toImport : lToImport) {
             //execute the import task
             importIndexFragment(user, toImport);
         }
 
-        List<IndexFragmentEntryStatus> lToDelete = this.entryStatusDao.getAllFromUserOfType(user,
-                StatusType.WAITING_FOR_DELETION);
+        List<IndexFragmentEntryStatus> lToDelete = this.entryStatusDao.getAllFromUserOfType(user, StatusType.WAITING_FOR_DELETION);
         for (IndexFragmentEntryStatus toDelete : lToDelete) {
             //execute the deletion task
             deleteIndexFragment(user, toDelete);
@@ -128,8 +124,7 @@ public class IndexContentManager {
             //TODO AL: use same connection to index multiple documents - big overhead to init index client for every call
             try (IndexClient indexClient = this.esSetup.createIndexClient(user)) {
                 indexClient.index(doc);
-                this.log.debug("document indexed by ElasticSearch. userID=" + user.id() + " document: "
-                        + Json.serialize(doc));
+                this.log.debug("document indexed by ElasticSearch. userID=" + user.id() + " document: " + Json.serialize(doc));
             }
         } catch (SearchInstanceException e) {
             this.log.error("failed to add IndexDocument " + Json.serialize(doc) + " for userID: " + user.id() + " " + e);
@@ -170,18 +165,15 @@ public class IndexContentManager {
     private void moveFragmentToEncryptedUserStorage(IndexDocument doc, User user, boolean userOwned) {
         try {
             if (userOwned) {
-                ThemisEncryptedPartition.saveIndexFragment(doc, user,
-                        ThemisEncryptedPartition.IndexFragmentType.IMPORTED_USER_OWNED, getMountedTCDriveLetter(user));
-                ThemisDataSink.deleteIndexFragment(
-                        UUID.fromString(doc.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString()), user,
-                        ThemisDataSink.IndexFragmentType.TO_IMPORT_USER_OWNED);
-            } else {
-                ThemisEncryptedPartition.saveIndexFragment(doc, user,
-                        ThemisEncryptedPartition.IndexFragmentType.IMPORTED_SHARED_WITH_USER,
+                ThemisEncryptedPartition.saveIndexFragment(doc, user, ThemisEncryptedPartition.IndexFragmentType.IMPORTED_USER_OWNED,
                         getMountedTCDriveLetter(user));
-                ThemisDataSink.deleteIndexFragment(
-                        UUID.fromString(doc.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString()), user,
-                        ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
+                ThemisDataSink.deleteIndexFragment(UUID.fromString(doc.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString()),
+                        user, ThemisDataSink.IndexFragmentType.TO_IMPORT_USER_OWNED);
+            } else {
+                ThemisEncryptedPartition.saveIndexFragment(doc, user, ThemisEncryptedPartition.IndexFragmentType.IMPORTED_SHARED_WITH_USER,
+                        getMountedTCDriveLetter(user));
+                ThemisDataSink.deleteIndexFragment(UUID.fromString(doc.getFields().get(IndexFields.FIELD_INDEX_DOCUMENT_UUID).toString()),
+                        user, ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
             }
         } catch (Exception e) {
             throw new ContentUpdateException("Copying index fragment to encrypted user partition failed", e);
@@ -191,12 +183,11 @@ public class IndexContentManager {
     private void deleteFragmentFromEncryptedUserStorage(UUID docUUID, User user, boolean userOwned) {
         try {
             if (userOwned) {
-                ThemisEncryptedPartition.deleteIndexFragment(docUUID, user,
-                        ThemisEncryptedPartition.IndexFragmentType.IMPORTED_USER_OWNED, getMountedTCDriveLetter(user));
+                ThemisEncryptedPartition.deleteIndexFragment(docUUID, user, ThemisEncryptedPartition.IndexFragmentType.IMPORTED_USER_OWNED,
+                        getMountedTCDriveLetter(user));
             } else {
                 ThemisEncryptedPartition.deleteIndexFragment(docUUID, user,
-                        ThemisEncryptedPartition.IndexFragmentType.IMPORTED_SHARED_WITH_USER,
-                        getMountedTCDriveLetter(user));
+                        ThemisEncryptedPartition.IndexFragmentType.IMPORTED_SHARED_WITH_USER, getMountedTCDriveLetter(user));
             }
         } catch (Exception e) {
             throw new ContentUpdateException("deleting index fragment from encrypted user partition failed", e);
@@ -205,26 +196,29 @@ public class IndexContentManager {
 
     private IndexDocument getDocumentFromStorage(IndexFragmentEntryStatus importTask) {
         IndexDocument doc = null;
+
         //check where to fetch the IndexDocument from
         if (importTask.isUserOwned()) {
             try {
                 doc = ThemisDataSink.getIndexFragment(importTask.getDocumentUUID(), new User(importTask.getUserID()),
-                        ThemisDataSink.IndexFragmentType.TO_IMPORT_USER_OWNED);
+                        ThemisDataSink.IndexFragmentType.TO_IMPORT_USER_OWNED, this.activeUsers.getPrivateKey(importTask.getUserID()));
 
             } catch (IOException e) {
-                String s = "Error fetching document for import; documentUUID: " + importTask.getDocumentUUID()
-                        + " userOwned?: " + importTask.isUserOwned() + " for user: " + importTask.getUserID();
+                String s = "Error fetching document for import; documentUUID: " + importTask.getDocumentUUID() + " userOwned?: "
+                        + importTask.isUserOwned() + " for user: " + importTask.getUserID();
                 this.log.error(s, e);
                 throw new ContentUpdateException(s, e);
             }
         } else {
             try {
-                doc = ThemisDataSink.getIndexFragment(importTask.getDocumentUUID(), new User(importTask.getUserID()),
-                        ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
+                doc = ThemisDataSink
+                        .getIndexFragment(importTask.getDocumentUUID(), new User(importTask.getUserID()),
+                                ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER,
+                                this.activeUsers.getPrivateKey(importTask.getUserID()));
 
             } catch (IOException e) {
-                String s = "Error fetching document for import; documentUUID: " + importTask.getDocumentUUID()
-                        + " userOwned?: " + importTask.isUserOwned() + " for user: " + importTask.getUserID();
+                String s = "Error fetching document for import; documentUUID: " + importTask.getDocumentUUID() + " userOwned?: "
+                        + importTask.isUserOwned() + " for user: " + importTask.getUserID();
                 this.log.error(s, e);
                 throw new ContentUpdateException(s, e);
             }

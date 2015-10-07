@@ -121,7 +121,8 @@ public class SharingPolicyUpToDateCheckerTask implements Runnable {
                     try {
                         //fetch the pre-distributed indexfragment from the user's public drop-off place
                         doc = ThemisDataSink.getIndexFragment(missingUUID, activeUser,
-                                org.backmeup.index.storage.ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER);
+                                org.backmeup.index.storage.ThemisDataSink.IndexFragmentType.TO_IMPORT_SHARED_WITH_USER,
+                                this.activeUsers.getPrivateKey(activeUser.id()));
 
                         //check the different sharing policies and create according import tasks for doc
                         this.policyExecution.executeImportSharingParnter(policy, doc);

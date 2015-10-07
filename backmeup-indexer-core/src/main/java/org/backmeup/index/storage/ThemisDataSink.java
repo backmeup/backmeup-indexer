@@ -144,10 +144,10 @@ public class ThemisDataSink {
     }
 
     /**
-     * Mainly for testing ThemisDataSink for JUnit tests without encryption
+     * Only for testing ThemisDataSink for JUnit tests without encryption
      */
     @Deprecated
-    protected static UUID saveIndexFragment(IndexDocument indexFragment, User user, IndexFragmentType type) throws IOException {
+    public static UUID saveIndexFragment(IndexDocument indexFragment, User user, IndexFragmentType type) throws IOException {
         return saveIndexFragment(indexFragment, user, type, false, null);
     }
 
@@ -216,7 +216,7 @@ public class ThemisDataSink {
      * Only for JUnit testing without encryption
      */
     @Deprecated
-    protected static IndexDocument getIndexFragment(UUID objectID, User user, IndexFragmentType type) throws IOException {
+    public static IndexDocument getIndexFragment(UUID objectID, User user, IndexFragmentType type) throws IOException {
         return getIndexFragment(objectID, user, type, false, null);
     }
 

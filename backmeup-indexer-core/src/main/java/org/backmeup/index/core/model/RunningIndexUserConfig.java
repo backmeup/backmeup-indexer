@@ -131,7 +131,7 @@ public class RunningIndexUserConfig {
     }
 
     public User getUser() {
-        return new User(getUserID());
+        return new User(getUserID(), getKeyServerUserAuthenticationToken());
     }
 
     public Integer getEsPID() {
