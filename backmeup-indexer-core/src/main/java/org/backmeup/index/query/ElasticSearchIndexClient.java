@@ -33,10 +33,15 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * A client to access ElasticSearch specific functionality within the project e.g. query a backup
+ *
+ */
 public class ElasticSearchIndexClient implements IndexClient {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -61,8 +66,7 @@ public class ElasticSearchIndexClient implements IndexClient {
     }
 
     private void createIndexIfNeeded() {
-        IndicesExistsResponse existsResponse = this.client.admin().indices().prepareExists(INDEX_NAME).execute()
-                .actionGet();
+        IndicesExistsResponse existsResponse = this.client.admin().indices().prepareExists(INDEX_NAME).execute().actionGet();
         if (!existsResponse.isExists()) {
             //create the index and define dynamic templates field mappings
             CreateIndexRequestBuilder cirb = this.client.admin().indices().prepareCreate(INDEX_NAME)
@@ -70,8 +74,7 @@ public class ElasticSearchIndexClient implements IndexClient {
             CreateIndexResponse createIndexResponse = cirb.execute().actionGet();
 
             //update specific field mappings
-            PutMappingRequestBuilder pmrb = this.client.admin().indices().preparePutMapping(INDEX_NAME)
-                    .setType(DOCUMENT_TYPE_BACKUP);
+            PutMappingRequestBuilder pmrb = this.client.admin().indices().preparePutMapping(INDEX_NAME).setType(DOCUMENT_TYPE_BACKUP);
             pmrb.setSource(this.getIndexCustomFieldMapping());
             PutMappingResponse putMappingResponse = pmrb.execute().actionGet();
             if ((!createIndexResponse.isAcknowledged()) || (!putMappingResponse.isAcknowledged())) {
@@ -84,8 +87,7 @@ public class ElasticSearchIndexClient implements IndexClient {
         //backward compatibility: check if we have an outdated version of the index - if so delete and recreate with mapping
         else if (!checkIndexFieldMappingsOK()) {
             this.client.admin().indices().prepareDelete(INDEX_NAME).execute().actionGet();
-            this.logger.debug("Deleted [" + INDEX_NAME + " ]"
-                    + "due to missing dynamic template or field mapping configuration");
+            this.logger.debug("Deleted [" + INDEX_NAME + " ]" + "due to missing dynamic template or field mapping configuration");
             createIndexIfNeeded();
         }
     }
@@ -180,8 +182,8 @@ public class ElasticSearchIndexClient implements IndexClient {
     }
 
     @Override
-    public SearchResultAccumulator queryBackup(String query, String source, String type, String job, String owner,
-            String tag, String username, Long offSetStart, Long maxResults) {
+    public SearchResultAccumulator queryBackup(String query, String source, String type, String job, String owner, String tag,
+            String username, Long offSetStart, Long maxResults) {
         Map<String, List<String>> filters = createFiltersFor(source, type, job, owner, tag);
         return queryBackup(query, filters, username, offSetStart, maxResults);
     }
@@ -226,8 +228,8 @@ public class ElasticSearchIndexClient implements IndexClient {
         return filters;
     }
 
-    public SearchResultAccumulator queryBackup(String query, Map<String, List<String>> filters, String username,
-            Long offSetStart, Long maxResults) {
+    public SearchResultAccumulator queryBackup(String query, Map<String, List<String>> filters, String username, Long offSetStart,
+            Long maxResults) {
         //size Indicates the number of results that should be returned, defaults to 10 
         if (maxResults == null || maxResults < 0) {
             maxResults = Long.valueOf(100);
@@ -252,8 +254,7 @@ public class ElasticSearchIndexClient implements IndexClient {
         return result;
     }
 
-    private SearchResponse queryBackup(String query, Map<String, List<String>> filters, Long offSetStart,
-            Long maxElements) {
+    private SearchResponse queryBackup(String query, Map<String, List<String>> filters, Long offSetStart, Long maxElements) {
         String queryString = buildQuery(query);
 
         /*
@@ -266,8 +267,10 @@ public class ElasticSearchIndexClient implements IndexClient {
         this.logger.debug("#######################################");
 
         return this.client.prepareSearch(INDEX_NAME).setQuery(qBuilder)
-                .addSort(IndexFields.FIELD_BACKUP_AT, SortOrder.DESC).addHighlightedField(IndexFields.FIELD_FULLTEXT)
-                .setSize(maxElements.intValue()).setFrom(offSetStart.intValue()).execute().actionGet();
+                .addSort(SortBuilders.fieldSort(IndexFields.FIELD_DOC_CREATION_DATE).order(SortOrder.DESC).missing("_last"))
+                .addSort(SortBuilders.fieldSort(IndexFields.FIELD_BACKUP_AT).order(SortOrder.DESC).missing("_last"))
+                .addHighlightedField(IndexFields.FIELD_FULLTEXT).setSize(maxElements.intValue()).setFrom(offSetStart.intValue()).execute()
+                .actionGet();
     }
 
     private String buildQuery(String query) {
@@ -321,8 +324,7 @@ public class ElasticSearchIndexClient implements IndexClient {
         String hash = bmuId[1];
         Long timestamp = Long.parseLong(bmuId[2]);
 
-        QueryBuilder qBuilder = QueryBuilders.boolQuery()
-                .must(QueryBuilders.matchQuery(IndexFields.FIELD_OWNER_ID, owner))
+        QueryBuilder qBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchQuery(IndexFields.FIELD_OWNER_ID, owner))
                 .must(QueryBuilders.matchQuery(IndexFields.FIELD_FILE_HASH, hash))
                 .must(QueryBuilders.matchQuery(IndexFields.FIELD_BACKUP_AT, timestamp));
 
@@ -345,18 +347,16 @@ public class ElasticSearchIndexClient implements IndexClient {
 
     @Override
     public void deleteRecordsForUser() {
-        boolean hasIndex = this.client.admin().indices().exists(new IndicesExistsRequest(INDEX_NAME)).actionGet()
-                .isExists();
+        boolean hasIndex = this.client.admin().indices().exists(new IndicesExistsRequest(INDEX_NAME)).actionGet().isExists();
         if (hasIndex) {
-            this.client.prepareDeleteByQuery(INDEX_NAME)
-                    .setQuery(QueryBuilders.matchQuery(IndexFields.FIELD_OWNER_ID, this.userId)).execute().actionGet();
+            this.client.prepareDeleteByQuery(INDEX_NAME).setQuery(QueryBuilders.matchQuery(IndexFields.FIELD_OWNER_ID, this.userId))
+                    .execute().actionGet();
         }
     }
 
     @Override
     public void deleteRecordsForUserAndJobAndTimestamp(Long jobId, Date timestamp) {
-        QueryBuilder qBuilder = QueryBuilders.boolQuery()
-                .must(QueryBuilders.matchQuery(IndexFields.FIELD_JOB_ID, jobId))
+        QueryBuilder qBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchQuery(IndexFields.FIELD_JOB_ID, jobId))
                 .must(QueryBuilders.matchQuery(IndexFields.FIELD_BACKUP_AT, timestamp.getTime()));
 
         this.client.prepareDeleteByQuery(INDEX_NAME).setQuery(qBuilder).execute().actionGet();
@@ -364,8 +364,7 @@ public class ElasticSearchIndexClient implements IndexClient {
 
     @Override
     public void deleteRecordsForUserAndDocumentUUID(UUID documentUUID) {
-        QueryBuilder qBuilder = QueryBuilders.boolQuery()
-                .must(QueryBuilders.matchQuery(IndexFields.FIELD_OWNER_ID, this.userId))
+        QueryBuilder qBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchQuery(IndexFields.FIELD_OWNER_ID, this.userId))
                 .must(QueryBuilders.matchQuery(IndexFields.FIELD_INDEX_DOCUMENT_UUID, documentUUID));
 
         this.client.prepareDeleteByQuery(INDEX_NAME).setQuery(qBuilder).execute().actionGet();
@@ -382,10 +381,9 @@ public class ElasticSearchIndexClient implements IndexClient {
     public void index(IndexDocument document) throws IOException {
         this.logger.debug("Pushing to ES index...");
         try (XContentBuilder elasticBuilder = new ElasticContentBuilder(document).asElastic()) {
-            IndexResponse response = this.client.prepareIndex(INDEX_NAME, DOCUMENT_TYPE_BACKUP)
-                    .setSource(elasticBuilder).setRefresh(true).execute().actionGet();
-            this.logger.debug("ingested in index: " + response.getIndex() + " type: " + response.getType() + " id: "
-                    + response.getId());
+            IndexResponse response = this.client.prepareIndex(INDEX_NAME, DOCUMENT_TYPE_BACKUP).setSource(elasticBuilder).setRefresh(true)
+                    .execute().actionGet();
+            this.logger.debug("ingested in index: " + response.getIndex() + " type: " + response.getType() + " id: " + response.getId());
         }
         this.logger.debug("Done sending IndexDocument to ES");
     }
