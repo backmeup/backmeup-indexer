@@ -74,8 +74,9 @@ public class UserDataStorage {
         try {
             //try to generate a new truecrypt volume
             f = this.encryptionProvider.generateNewCryptVolume(user);
-            //grant tomcat7 process access as owner
+            //grant tomcat7 process access as owner and set user permissions
             CommandLineUtils.chownRTomcat7(f);
+            CommandLineUtils.chmod755(f);
             cryptoVolume = new FileInputStream(f);
         } catch (IOException e1) {
             //if this fails (e.g. under windows) use the default container template is used

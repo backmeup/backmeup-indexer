@@ -136,4 +136,18 @@ public class CommandLineUtils {
         }
     }
 
+    public static void chmod755(File f) {
+        if (SystemUtils.IS_OS_LINUX) {
+            String command = "sudo chmod 755 " + f.getAbsolutePath();
+            try {
+                int exitVal = CommandLineUtils.executeCommandLine(command, 2, TimeUnit.SECONDS);
+                if (exitVal != 0) {
+                    throw new IllegalArgumentException("error executing command " + command + " exit value: " + exitVal);
+                }
+            } catch (IOException e) {
+                throw new IllegalArgumentException("error executing command " + command, e);
+            }
+        }
+    }
+
 }
