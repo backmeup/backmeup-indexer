@@ -75,8 +75,7 @@ public class RestApiTaggedCollectionServerStub implements TaggedCollectionServer
     }
 
     @Override
-    public TaggedCollectionEntry createAndAddTaggedCollection(User user, String name, String description,
-            List<UUID> containedDocumentIDs) {
+    public TaggedCollectionEntry createAndAddTaggedCollection(User user, String name, String description, List<UUID> containedDocumentIDs) {
         try {
             URI url = this.urls.forCreateAndAddTaggedCollection(user, name, description, containedDocumentIDs);
             String body = this.http.post(url, "", 200);
@@ -124,6 +123,6 @@ public class RestApiTaggedCollectionServerStub implements TaggedCollectionServer
     }
 
     private IndexClientException failedToContactServer(Exception problem) {
-        return new IndexClientException("faled to contact tagged document management server", problem);
+        return new IndexClientException("failed to contact tagged document management server", problem);
     }
 }

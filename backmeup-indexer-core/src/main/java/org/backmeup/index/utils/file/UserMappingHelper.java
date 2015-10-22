@@ -3,6 +3,7 @@ package org.backmeup.index.utils.file;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  * A simple helper database table connecting BMU userID with the the corresponding user's keyserverID This is only
@@ -11,6 +12,7 @@ import javax.persistence.Id;
  *
  */
 @Entity
+@Table(name = "useridmapping")
 public class UserMappingHelper {
 
     @Id

@@ -266,6 +266,7 @@ public class ElasticSearchIndexClient implements IndexClient {
         this.logger.debug("QueryString:\n" + qBuilder.toString());
         this.logger.debug("#######################################");
 
+        //TODO AL note: cannot execute query if ES does not contain a record with the FIELD_DOC_CREATION_DATE (which is provided by Tika)
         return this.client.prepareSearch(INDEX_NAME).setQuery(qBuilder)
                 .addSort(SortBuilders.fieldSort(IndexFields.FIELD_DOC_CREATION_DATE).order(SortOrder.DESC).missing("_last"))
                 .addSort(SortBuilders.fieldSort(IndexFields.FIELD_BACKUP_AT).order(SortOrder.DESC).missing("_last"))
