@@ -1,10 +1,8 @@
 package org.backmeup.index.model;
 
-
 /**
- * ID of the index partition, we use the Backmeup user id here.
- * 
- * @author <a href="http://www.code-cop.org/">Peter Kofler</a>
+ * Simple internal User class provides mandatory user specific elements for the indexing component e.g. as BMU user id,
+ * keyserver internal token for this user, etc.
  */
 public class User {
 

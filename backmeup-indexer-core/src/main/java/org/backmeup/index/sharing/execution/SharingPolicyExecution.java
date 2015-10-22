@@ -15,6 +15,7 @@ import org.backmeup.index.core.model.IndexFragmentEntryStatus;
 import org.backmeup.index.core.model.IndexFragmentEntryStatus.StatusType;
 import org.backmeup.index.dal.IndexFragmentEntryStatusDao;
 import org.backmeup.index.dal.TaggedCollectionDao;
+import org.backmeup.index.dal.UserMappingHelperDao;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.model.User;
 import org.backmeup.index.sharing.policy.SharingPolicies;
@@ -22,6 +23,7 @@ import org.backmeup.index.sharing.policy.SharingPolicy;
 import org.backmeup.index.storage.ThemisDataSink;
 import org.backmeup.index.storage.ThemisDataSink.IndexFragmentType;
 import org.backmeup.index.tagging.TaggedCollection;
+import org.backmeup.index.utils.file.UserMappingHelper;
 import org.backmeup.keyserver.client.KeyserverClient;
 import org.backmeup.keyserver.model.KeyserverException;
 import org.slf4j.Logger;
@@ -38,6 +40,8 @@ public class SharingPolicyExecution {
     private TaggedCollectionDao taggedCollectionDao;
     @Inject
     private KeyserverClient keyserverClient;
+    @Inject
+    private UserMappingHelperDao userMappingHelperDao;
 
     public void distributeIndexFragmentToSharingParnter(SharingPolicy policy, IndexDocument doc) throws IOException {
         User shareWithUser = new User(policy.getWithUserID());
@@ -275,7 +279,9 @@ public class SharingPolicyExecution {
     private PublicKey getPublicKey(User user) throws IOException {
         byte[] publickey;
         try {
-            publickey = this.keyserverClient.getPublicKey(user.id() + "");
+            //TODO AL get the public key here the user's keyserverUserId here. Kept in a mapping table
+            UserMappingHelper userHelper = this.userMappingHelperDao.getByBMUUserId(user.id());
+            publickey = this.keyserverClient.getPublicKey(userHelper.getKsUserId());
             PublicKey publicKey = KeyserverClient.decodePublicKey(publickey);
             return publicKey;
         } catch (KeyserverException e) {
