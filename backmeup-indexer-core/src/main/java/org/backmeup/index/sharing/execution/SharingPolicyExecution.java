@@ -49,26 +49,24 @@ public class SharingPolicyExecution {
     @Inject
     private ActiveUsers activeUsers;
 
+    /**
+     * Distributes a given index document of a current user to the public dropp off zone for the sharing partner and
+     * grants file access rights on themis storage for the sharing partner
+     * 
+     */
     public void distributeIndexFragmentToSharingParnter(SharingPolicy policy, IndexDocument doc) throws IOException {
-        System.out.println(doc.getFields().toString());
         User shareWithUser = new User(policy.getWithUserID());
         //drop off document in public user drop off zone
         ThemisDataSink.saveIndexFragment(doc, shareWithUser, IndexFragmentType.TO_IMPORT_SHARED_WITH_USER, getPublicKey(shareWithUser));
 
-        //START TESTING
-        Long fromUserId = policy.getFromUserID();
-        boolean isBMUStore = isBackmeupSinkStorage(doc);
-        updateFileAccessRights(fromUserId, doc);
-        //END TESTING
+        //check existing file access rights on storage and grant them if required
+        updateStorageFileAccessRights(policy.getFromUserID(), policy.getWithUserID(), doc);
     }
 
     /**
      * Check if this document is using the backmeup storage plugin as backup sink
      * 
-     * @param doc
-     * @return
      */
-    //TODO in eigene Klasse raus ziehen
     private boolean isBackmeupSinkStorage(IndexDocument doc) {
         if (doc.getFields().containsKey("backup_sink_plugin_id")) {
             String sink = doc.getFields().get("backup_sink_plugin_id").toString();
@@ -80,30 +78,66 @@ public class SharingPolicyExecution {
         return false;
     }
 
-    //TODO in eigene Klasse raus ziehen
-    private void updateFileAccessRights(Long fromUserId, IndexDocument doc) {
+    /**
+     * Check on existing file access rights both for owner and sharing partner and if file access rights on themis
+     * storage are missing grant them due to the existing sharing policy
+     * 
+     */
+    private void updateStorageFileAccessRights(Long fromUserId, Long withUserId, IndexDocument doc) throws IOException {
         //check if we're using backmeup storage as sink 
         if (isBackmeupSinkStorage(doc)) {
-            //in this case make sure to update the access rights for the sharing partner on the file itself
-            //TODO JUST TESTING FOR NOW
-            //get the keyserver token from the running user configuration
-            String userKSToken;
-            UserMappingHelper fromUser;
-            try {
-                userKSToken = this.activeUsers.getKeyserverAuthenticationToken(fromUserId);
-                fromUser = this.userMappingHelperDao.getByBMUUserId(fromUserId);
-                String filePath = doc.getFields().get("path").toString();
-                try {
-                    boolean bAccessRight = this.storageClient.hasFileAccessRights(userKSToken, fromUserId + "", filePath,
-                            fromUser.getKsUserId(), fromUser.getBmuUserId());
-                    System.out.println("has file access?" + bAccessRight);
-                } catch (IOException e) {
-                    System.out.println(e.toString());
-                }
-            } catch (IOException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
+            String filePath = doc.getFields().get("path").toString();
+            //check existing file access rights on storage for user and sharing partner
+            boolean bAccessFromUser = isFromUserStorageFileAccessRightOK(fromUserId, withUserId, filePath);
+            boolean bAccessWithUser = isWithUserStorageFileAccessRightOK(fromUserId, withUserId, filePath);
+
+            if (!bAccessFromUser) {
+                this.log.error("error on storage file access rights for owner: " + fromUserId + " on filePath: " + filePath);
             }
+            if (!bAccessWithUser) {
+                //grant sharing partner access rights on file
+
+            }
+        }
+    }
+
+    private boolean isFromUserStorageFileAccessRightOK(Long fromUserId, Long withUserid, String filePath) throws IOException {
+        try {
+            return isStorageFileAccessRightOK(fromUserId, null, filePath);
+        } catch (IOException e) {
+            this.log.debug("error checking storage access right on " + filePath + " for currUser:" + fromUserId + " with his credentials"
+                    + e.toString());
+            throw e;
+        }
+    }
+
+    private boolean isWithUserStorageFileAccessRightOK(Long fromUserId, Long withUserid, String filePath) throws IOException {
+        try {
+            return isStorageFileAccessRightOK(fromUserId, withUserid, filePath);
+        } catch (IOException e) {
+            this.log.debug("error checking storage access right on: " + filePath + " for sharingpartner: " + withUserid
+                    + "through currUser:" + fromUserId + " credentials" + e.toString());
+            throw e;
+        }
+    }
+
+    private boolean isStorageFileAccessRightOK(Long fromUserId, Long withUserId, String filePath) throws IOException {
+        //get the keyserver token from the running user configuration
+        String userKSToken;
+        UserMappingHelper fromUser;
+
+        //fromUser must be current user as his authentication token is required
+        userKSToken = this.activeUsers.getKeyserverAuthenticationToken(fromUserId);
+        fromUser = this.userMappingHelperDao.getByBMUUserId(fromUserId);
+
+        if (withUserId == null) {
+            //check access rights for the user himself/herself
+            return this.storageClient.hasFileAccessRights(userKSToken, fromUserId + "", filePath, fromUser.getKsUserId(),
+                    fromUser.getBmuUserId(), null);
+        } else {
+            //check access rights for the sharing partner
+            return this.storageClient.hasFileAccessRights(userKSToken, fromUserId + "", filePath, fromUser.getKsUserId(),
+                    fromUser.getBmuUserId(), withUserId);
         }
     }
 
