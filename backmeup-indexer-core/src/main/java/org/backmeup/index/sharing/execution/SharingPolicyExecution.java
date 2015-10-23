@@ -10,6 +10,7 @@ import java.util.UUID;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import org.backmeup.index.ActiveUsers;
 import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.core.model.IndexFragmentEntryStatus;
 import org.backmeup.index.core.model.IndexFragmentEntryStatus.StatusType;
@@ -26,6 +27,7 @@ import org.backmeup.index.tagging.TaggedCollection;
 import org.backmeup.index.utils.file.UserMappingHelper;
 import org.backmeup.keyserver.client.KeyserverClient;
 import org.backmeup.keyserver.model.KeyserverException;
+import org.backmeup.storage.api.StorageClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,11 +44,67 @@ public class SharingPolicyExecution {
     private KeyserverClient keyserverClient;
     @Inject
     private UserMappingHelperDao userMappingHelperDao;
+    @Inject
+    private StorageClient storageClient;
+    @Inject
+    private ActiveUsers activeUsers;
 
     public void distributeIndexFragmentToSharingParnter(SharingPolicy policy, IndexDocument doc) throws IOException {
+        System.out.println(doc.getFields().toString());
         User shareWithUser = new User(policy.getWithUserID());
         //drop off document in public user drop off zone
         ThemisDataSink.saveIndexFragment(doc, shareWithUser, IndexFragmentType.TO_IMPORT_SHARED_WITH_USER, getPublicKey(shareWithUser));
+
+        //START TESTING
+        Long fromUserId = policy.getFromUserID();
+        boolean isBMUStore = isBackmeupSinkStorage(doc);
+        updateFileAccessRights(fromUserId, doc);
+        //END TESTING
+    }
+
+    /**
+     * Check if this document is using the backmeup storage plugin as backup sink
+     * 
+     * @param doc
+     * @return
+     */
+    //TODO in eigene Klasse raus ziehen
+    private boolean isBackmeupSinkStorage(IndexDocument doc) {
+        if (doc.getFields().containsKey("backup_sink_plugin_id")) {
+            String sink = doc.getFields().get("backup_sink_plugin_id").toString();
+            if (sink.equals("org.backmeup.storage")) {
+                //we're using the backmeup storage plugin as sink
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //TODO in eigene Klasse raus ziehen
+    private void updateFileAccessRights(Long fromUserId, IndexDocument doc) {
+        //check if we're using backmeup storage as sink 
+        if (isBackmeupSinkStorage(doc)) {
+            //in this case make sure to update the access rights for the sharing partner on the file itself
+            //TODO JUST TESTING FOR NOW
+            //get the keyserver token from the running user configuration
+            String userKSToken;
+            UserMappingHelper fromUser;
+            try {
+                userKSToken = this.activeUsers.getKeyserverAuthenticationToken(fromUserId);
+                fromUser = this.userMappingHelperDao.getByBMUUserId(fromUserId);
+                String filePath = doc.getFields().get("path").toString();
+                try {
+                    boolean bAccessRight = this.storageClient.hasFileAccessRights(userKSToken, fromUserId + "", filePath,
+                            fromUser.getKsUserId(), fromUser.getBmuUserId());
+                    System.out.println("has file access?" + bAccessRight);
+                } catch (IOException e) {
+                    System.out.println(e.toString());
+                }
+            } catch (IOException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+        }
     }
 
     public void executeImportOwner(IndexDocument doc) throws IOException {

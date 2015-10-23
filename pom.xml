@@ -35,6 +35,10 @@
 		<config.tomcat.manager.url>http://127.0.0.1:8080/manager/text</config.tomcat.manager.url>
 		<config.tomcat.authentication.id>backmeup.indexer.tomcat</config.tomcat.authentication.id>
 
+		<!--Dependency version backmeup components-->
+		<version.backmeup.storage>0.0.1-SNAPSHOT</version.backmeup.storage>
+		<version.backmeup.keyserver>1.1-SNAPSHOT</version.backmeup.keyserver>
+		
 		<!-- Dependency versions
 			 Please keep alphabetical
 			 Properties should be in form "version.<groupId>", or in case where

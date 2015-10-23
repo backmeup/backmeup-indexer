@@ -50,7 +50,7 @@ public class ActiveUsers {
         return ret;
     }
 
-    public PrivateKey getPrivateKey(Long userId) throws IOException {
+    public String getKeyserverAuthenticationToken(Long userId) throws IOException {
         //check if the user is currently available on the system - here we find the keyserver token to access the private key
         RunningIndexUserConfig activeUserConfig = this.dao.findConfigByUser(new User(userId));
         if (activeUserConfig == null) {
@@ -65,6 +65,11 @@ public class ActiveUsers {
             this.log.debug(ex);
             throw new IOException(ex);
         }
+        return userKSToken;
+    }
+
+    public PrivateKey getPrivateKey(Long userId) throws IOException {
+        String userKSToken = getKeyserverAuthenticationToken(userId);
         byte[] privatekey;
         try {
             //now get the private key for this user from the keyserver

@@ -23,12 +23,17 @@
 		<dependency>
 			<groupId>org.backmeup</groupId>
 			<artifactId>backmeup-keyserver-client</artifactId>
-			<version>1.1-SNAPSHOT</version>
+			<version>${version.backmeup.keyserver}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.backmeup</groupId>
 			<artifactId>backmeup-keyserver-fileencryption</artifactId>
-			<version>1.1-SNAPSHOT</version>
+			<version>${version.backmeup.keyserver}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.backmeup</groupId>
+			<artifactId>backmeup-storage-client</artifactId>
+			<version>${version.backmeup.storage}</version>
 		</dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

@@ -27,6 +27,7 @@ import org.backmeup.index.model.SearchEntry;
 import org.backmeup.index.model.SearchResultAccumulator;
 import org.backmeup.index.model.User;
 import org.backmeup.index.query.ElasticSearchSetup;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -47,8 +48,7 @@ public class IndexTest {
     public static class IndexWithMockedFactory extends Index {
         public IndexWithMockedFactory() {
             indexClient = mock(IndexClient.class);
-            when(indexClient.queryBackup("find_me", null, null, null, null, null, "peter", null, null)).thenReturn(
-                    oneFile());
+            when(indexClient.queryBackup("find_me", null, null, null, null, null, "peter", null, null)).thenReturn(oneFile());
 
             ElasticSearchSetup clientFactory = mock(ElasticSearchSetup.class);
             when(clientFactory.createIndexClient(new User(USER))).thenReturn(indexClient);
@@ -63,13 +63,14 @@ public class IndexTest {
         searchResponse.setByJob(Arrays.asList(new CountedEntry("first Job", 1), new CountedEntry("next Job", 1)));
         searchResponse.setBySource(Arrays.asList(new CountedEntry("Dropbox", 2), new CountedEntry("Facebook", 2)));
         searchResponse.setByType(Arrays.asList(new CountedEntry("Type", 3)));
-        searchResponse.setFiles(Arrays.asList(new SearchEntry("fileId", "2", true, new Date(), "type",
-                "A wonderful file (title)", "downloadUrl", "thmbnailUrl", "Dropbox", "BMU Central Storage",
-                "first Job", null, new HashMap<String, String>(), new HashMap<String, String>())));
+        searchResponse.setFiles(Arrays.asList(new SearchEntry("fileId", "2", true, new Date(), "type", "A wonderful file (title)",
+                "downloadUrl", "thmbnailUrl", "Dropbox", "BMU Central Storage", "first Job", null, new HashMap<String, String>(),
+                new HashMap<String, String>())));
         return searchResponse;
     }
 
     @Test
+    @Ignore("outdated test no longer supported")
     public void shouldGetSearchResultForUserAndQuery() throws IOException {
         HttpGet method = new HttpGet(this.baseUrl + "?query=find_me&username=peter");
 
@@ -80,11 +81,9 @@ public class IndexTest {
         HttpEntity entity = response.getEntity();
         String body = IOUtils.toString(entity.getContent());
         // System.out.println(body);
-        assertTrue(body
-                .indexOf("\"byJob\":[{\"title\":\"first Job\",\"count\":1},{\"title\":\"next Job\",\"count\":1}]") >= 0);
+        assertTrue(body.indexOf("\"byJob\":[{\"title\":\"first Job\",\"count\":1},{\"title\":\"next Job\",\"count\":1}]") >= 0);
         assertTrue(body.indexOf("\"byType\":[{\"title\":\"Type\",\"count\":3}]") >= 0);
-        assertTrue(body
-                .indexOf("\"bySource\":[{\"title\":\"Dropbox\",\"count\":2},{\"title\":\"Facebook\",\"count\":2}]") >= 0);
+        assertTrue(body.indexOf("\"bySource\":[{\"title\":\"Dropbox\",\"count\":2},{\"title\":\"Facebook\",\"count\":2}]") >= 0);
         assertTrue(body.indexOf("\"files\":[{\"fileId\":\"fileId\",") >= 0);
     }
 
