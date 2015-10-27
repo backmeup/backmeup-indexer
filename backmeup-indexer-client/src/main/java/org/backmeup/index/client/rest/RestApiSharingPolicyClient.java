@@ -9,6 +9,8 @@ import org.backmeup.index.client.config.Configuration;
 import org.backmeup.index.model.User;
 import org.backmeup.index.model.sharing.SharingPolicyEntry;
 import org.backmeup.index.model.sharing.SharingPolicyEntry.SharingPolicyTypeEntry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Adapts the local sharing policy client to the remote sharing policy server.
@@ -16,6 +18,7 @@ import org.backmeup.index.model.sharing.SharingPolicyEntry.SharingPolicyTypeEntr
  */
 public class RestApiSharingPolicyClient implements SharingPolicyClient {
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private final SharingPolicyServer server;
     private final User currUser;
 
@@ -26,13 +29,19 @@ public class RestApiSharingPolicyClient implements SharingPolicyClient {
 
     private RestApiConfig getRESTServerEndpointLocation() {
         RestApiConfig config;
-        String host = Configuration.getProperty("backmeup.indexer.rest.host");
-        String port = Configuration.getProperty("backmeup.indexer.rest.port");
-        String baseurl = Configuration.getProperty("backmeup.indexer.rest.baseurl");
-        //check if a configuration was provided or if we're using the default config
-        if ((host != null) && (port != null) && (baseurl != null)) {
-            config = new RestApiConfig(host, Integer.valueOf(port), baseurl);
-        } else {
+        try {
+            String host = Configuration.getProperty("backmeup.indexer.rest.host");
+            String port = Configuration.getProperty("backmeup.indexer.rest.port");
+            String baseurl = Configuration.getProperty("backmeup.indexer.rest.baseurl");
+            //check if a configuration was provided or if we're using the default config
+            if ((host != null) && (port != null) && (baseurl != null)) {
+                config = new RestApiConfig(host, Integer.valueOf(port), baseurl);
+            } else {
+                config = RestApiConfig.DEFAULT;
+            }
+        } catch (Exception e) {
+            this.logger
+                    .info("not able to read host, port or baseurl from backmeup-index-client.properties for index-client REST endpoint location, defaulting to static configuration");
             config = RestApiConfig.DEFAULT;
         }
         return config;
