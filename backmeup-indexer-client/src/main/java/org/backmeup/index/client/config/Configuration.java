@@ -21,10 +21,11 @@ public class Configuration {
     }
 
     private static void loadPropertiesFromClasspath() throws IOException {
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-
-        try (InputStream stream = loader.getResourceAsStream(PROPERTYFILE_CLIENT_CONFIG)) {
+        //also needs to work within an osgi environment
+        try (InputStream stream = Configuration.class.getClassLoader().getResourceAsStream(PROPERTYFILE_CLIENT_CONFIG)) {
             properties.load(stream);
+        } catch (Exception e) {
+            throw new IOException("unable to load properties file: " + PROPERTYFILE_CLIENT_CONFIG, e);
         }
 
         // check if properties were loaded
