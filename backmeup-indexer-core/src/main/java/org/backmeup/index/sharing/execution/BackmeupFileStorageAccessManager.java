@@ -45,13 +45,13 @@ public class BackmeupFileStorageAccessManager {
      * storage are missing grant them due to the existing sharing policy
      * 
      */
-    public void updateStorageFileAccessRights(Long fromUserId, Long withUserId, IndexDocument doc) throws IOException {
+    public void addStorageFileAccessRights(Long fromUserId, Long withUserId, IndexDocument doc) throws IOException {
         //check if we're using backmeup storage as sink 
         if (isBackmeupSinkStorage(doc)) {
             String filePath = doc.getFields().get("path").toString();
             //check existing file access rights on storage for user and sharing partner
-            boolean bAccessFromUser = isFromUserStorageFileAccessRightOK(fromUserId, withUserId, filePath);
-            boolean bAccessWithUser = isWithUserStorageFileAccessRightOK(fromUserId, withUserId, filePath);
+            boolean bAccessFromUser = fromUserHasStorageFileAccessRight(fromUserId, withUserId, filePath);
+            boolean bAccessWithUser = withUserHasStorageFileAccessRight(fromUserId, withUserId, filePath);
 
             if (!bAccessFromUser) {
                 this.log.error("error on storage file access rights for owner: " + fromUserId + " on filePath: " + filePath);
@@ -61,12 +61,12 @@ public class BackmeupFileStorageAccessManager {
                 this.log.debug("discovered missing file access rights for sharingpartner: " + withUserId + " on file" + fromUserId + "/"
                         + filePath);
                 //call addPermission on storage client
-                this.callStorageUpdateFileAccessRights(fromUserId, withUserId, filePath);
+                this.callStorageAddFileAccessRights(fromUserId, withUserId, filePath);
             }
         }
     }
 
-    private void callStorageUpdateFileAccessRights(Long fromUserId, Long withUserId, String filePath) throws IOException {
+    private void callStorageAddFileAccessRights(Long fromUserId, Long withUserId, String filePath) throws IOException {
         try {
             //get the keyserver token from the running user configuration
             String userKSToken;
@@ -89,9 +89,9 @@ public class BackmeupFileStorageAccessManager {
 
     }
 
-    private boolean isFromUserStorageFileAccessRightOK(Long fromUserId, Long withUserid, String filePath) throws IOException {
+    private boolean fromUserHasStorageFileAccessRight(Long fromUserId, Long withUserid, String filePath) throws IOException {
         try {
-            return isStorageFileAccessRightOK(fromUserId, null, filePath);
+            return hasStorageFileAccessRight(fromUserId, null, filePath);
         } catch (IOException e) {
             this.log.debug("error checking storage access right on " + filePath + " for currUser:" + fromUserId + " with his credentials"
                     + e.toString());
@@ -99,9 +99,9 @@ public class BackmeupFileStorageAccessManager {
         }
     }
 
-    private boolean isWithUserStorageFileAccessRightOK(Long fromUserId, Long withUserid, String filePath) throws IOException {
+    private boolean withUserHasStorageFileAccessRight(Long fromUserId, Long withUserid, String filePath) throws IOException {
         try {
-            return isStorageFileAccessRightOK(fromUserId, withUserid, filePath);
+            return hasStorageFileAccessRight(fromUserId, withUserid, filePath);
         } catch (IOException e) {
             this.log.debug("error checking storage access right on: " + filePath + " for sharingpartner: " + withUserid
                     + "through currUser:" + fromUserId + " credentials" + e.toString());
@@ -109,7 +109,7 @@ public class BackmeupFileStorageAccessManager {
         }
     }
 
-    private boolean isStorageFileAccessRightOK(Long fromUserId, Long withUserId, String filePath) throws IOException {
+    private boolean hasStorageFileAccessRight(Long fromUserId, Long withUserId, String filePath) throws IOException {
         //get the keyserver token from the running user configuration
         String userKSToken;
         UserMappingHelper fromUser;
@@ -130,4 +130,47 @@ public class BackmeupFileStorageAccessManager {
         }
     }
 
+    /**
+     * Check on existing file access rights both for owner and sharing partner and if file access rights on themis
+     * storage are missing grant them due to the existing sharing policy
+     * 
+     */
+    public void removeStorageFileAccessRights(Long fromUserId, Long withUserId, IndexDocument doc) throws IOException {
+        //check if we're using backmeup storage as sink 
+        if (isBackmeupSinkStorage(doc)) {
+            String filePath = doc.getFields().get("path").toString();
+            //check existing file access rights on storage for user and sharing partner
+            boolean bAccessWithUser = withUserHasStorageFileAccessRight(fromUserId, withUserId, filePath);
+
+            if (bAccessWithUser) {
+                //revoke sharing partner access rights on this file
+                this.log.debug("discovered required file access permission right removal for sharingpartner: " + withUserId + " on file"
+                        + fromUserId + "/" + filePath);
+                //call removePermission on storage client
+                this.callStorageRemoveFileAccessRights(fromUserId, withUserId, filePath);
+            }
+        }
+    }
+
+    private void callStorageRemoveFileAccessRights(Long fromUserId, Long withUserId, String filePath) throws IOException {
+        try {
+            //get the keyserver token from the running user configuration
+            String userKSToken;
+            UserMappingHelper withUser;
+
+            //withUser must be current user as his authentication token is required
+            userKSToken = this.activeUsers.getKeyserverAuthenticationToken(withUserId);
+            //get the keyserverUserIDs for the given bmuUserIDs
+            withUser = this.userMappingHelperDao.getByBMUUserId(withUserId);
+            //call the storage client to remove access of withUser (sharingpartner) on the given file 
+            this.storageClient.removeFileAccessRights(userKSToken, fromUserId + "", filePath, withUser.getKsUserId(),
+                    withUser.getBmuUserId(), withUser.getBmuUserId());
+        } catch (IOException e) {
+            this.log.debug(
+                    "error setting storage access rights on file {} for withUser: {}  with his/her provided credentials for withUser: {} "
+                            + e.toString(), filePath, fromUserId, withUserId);
+            throw e;
+        }
+
+    }
 }

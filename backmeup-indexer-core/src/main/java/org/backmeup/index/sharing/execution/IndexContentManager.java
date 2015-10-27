@@ -44,6 +44,8 @@ public class IndexContentManager {
     private ElasticSearchSetup esSetup;
     @Inject
     private ActiveUsers activeUsers;
+    @Inject
+    private BackmeupFileStorageAccessManager storageFileAccessManager;
 
     /**
      * The ES index gets dropped. Iterate over all import, deletion operations of IndexDocuments (shared and user owned)
@@ -81,14 +83,16 @@ public class IndexContentManager {
         try {
             //1. remove from ElasticSearch
             this.deleteFromESIndex(deletionTask.getDocumentUUID(), user);
-            //2. update status in database
+            //2. revoke file access rights from storage
+            this.revokeFileAccessFromStorage(user, deletionTask);
+            //3. update status in database
             deletionTask.setStatusType(StatusType.DELETED);
             this.entryStatusDao.merge(deletionTask);
-            //3. finally delete the serialized Index Document from the encrypted partition
+            //4. finally delete the serialized Index Document from the encrypted partition
             deleteFragmentFromEncryptedUserStorage(deletionTask.getDocumentUUID(), user, deletionTask.isUserOwned());
             this.log.debug("Content Deletion of index fragment " + deletionTask.getDocumentUUID() + " for user " + user.id() + " completed");
 
-        } catch (ContentUpdateException | SearchInstanceException e) {
+        } catch (ContentUpdateException | SearchInstanceException | IOException e) {
             this.log.debug("Failed to execute content deletion task", e);
         }
     }
@@ -224,6 +228,14 @@ public class IndexContentManager {
             }
         }
         return doc;
+    }
+
+    private void revokeFileAccessFromStorage(User user, IndexFragmentEntryStatus deletionTask) throws IOException {
+        IndexDocument doc = ThemisEncryptedPartition.getIndexFragment(deletionTask.getDocumentUUID(), user,
+                ThemisEncryptedPartition.IndexFragmentType.IMPORTED_SHARED_WITH_USER, getMountedTCDriveLetter(user));
+        Long fromUserId = Long.valueOf(doc.getFields().get("shared_by_userId").toString());
+        Long withUserId = Long.valueOf(doc.getFields().get("owner_id").toString());
+        this.storageFileAccessManager.removeStorageFileAccessRights(fromUserId, withUserId, doc);
     }
 
     @RequestScoped

@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @ApplicationScoped
-public class SharingPolicyExecution extends BackmeupFileStorageAccessManager {
+public class SharingPolicyExecution {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -42,6 +42,8 @@ public class SharingPolicyExecution extends BackmeupFileStorageAccessManager {
     private KeyserverClient keyserverClient;
     @Inject
     private UserMappingHelperDao userMappingHelperDao;
+    @Inject
+    private BackmeupFileStorageAccessManager fileStorageAccessManager;
 
     /**
      * Distributes a given index document of a current user to the public dropp off zone for the sharing partner and
@@ -54,7 +56,7 @@ public class SharingPolicyExecution extends BackmeupFileStorageAccessManager {
         ThemisDataSink.saveIndexFragment(doc, shareWithUser, IndexFragmentType.TO_IMPORT_SHARED_WITH_USER, getPublicKey(shareWithUser));
 
         //check existing file access rights on storage and grant them if required
-        updateStorageFileAccessRights(policy.getFromUserID(), policy.getWithUserID(), doc);
+        this.fileStorageAccessManager.addStorageFileAccessRights(policy.getFromUserID(), policy.getWithUserID(), doc);
     }
 
     public void executeImportOwner(IndexDocument doc) throws IOException {
