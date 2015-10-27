@@ -5,6 +5,7 @@ import java.util.Set;
 
 import org.backmeup.index.api.SharingPolicyClient;
 import org.backmeup.index.api.SharingPolicyServer;
+import org.backmeup.index.client.config.Configuration;
 import org.backmeup.index.model.User;
 import org.backmeup.index.model.sharing.SharingPolicyEntry;
 import org.backmeup.index.model.sharing.SharingPolicyEntry.SharingPolicyTypeEntry;
@@ -15,11 +16,26 @@ import org.backmeup.index.model.sharing.SharingPolicyEntry.SharingPolicyTypeEntr
  */
 public class RestApiSharingPolicyClient implements SharingPolicyClient {
 
-    private final SharingPolicyServer server = new RestApiSharingPolicyServerStub(RestApiConfig.DEFAULT);
+    private final SharingPolicyServer server;
     private final User currUser;
 
     public RestApiSharingPolicyClient(User user) {
         this.currUser = user;
+        this.server = new RestApiSharingPolicyServerStub(getRESTServerEndpointLocation());
+    }
+
+    private RestApiConfig getRESTServerEndpointLocation() {
+        RestApiConfig config;
+        String host = Configuration.getProperty("backmeup.indexer.rest.host");
+        String port = Configuration.getProperty("backmeup.indexer.rest.port");
+        String baseurl = Configuration.getProperty("backmeup.indexer.rest.baseurl");
+        //check if a configuration was provided or if we're using the default config
+        if ((host != null) && (port != null) && (baseurl != null)) {
+            config = new RestApiConfig(host, Integer.valueOf(port), baseurl);
+        } else {
+            config = RestApiConfig.DEFAULT;
+        }
+        return config;
     }
 
     @Override
@@ -33,15 +49,14 @@ public class RestApiSharingPolicyClient implements SharingPolicyClient {
     }
 
     @Override
-    public SharingPolicyEntry addSharingPolicy(User sharingWith, SharingPolicyTypeEntry policy, String sharedElementID,
-            String name, String description, Date lifespanstart, Date lifespanend) {
-        return this.server.addSharingPolicy(this.currUser, sharingWith, policy, sharedElementID, name, description,
-                lifespanstart, lifespanend);
+    public SharingPolicyEntry addSharingPolicy(User sharingWith, SharingPolicyTypeEntry policy, String sharedElementID, String name,
+            String description, Date lifespanstart, Date lifespanend) {
+        return this.server.addSharingPolicy(this.currUser, sharingWith, policy, sharedElementID, name, description, lifespanstart,
+                lifespanend);
     }
 
     @Override
-    public SharingPolicyEntry updateSharingPolicy(Long policyID, String name, String description, Date lifespanstart,
-            Date lifespanend) {
+    public SharingPolicyEntry updateSharingPolicy(Long policyID, String name, String description, Date lifespanstart, Date lifespanend) {
         return this.server.updateSharingPolicy(this.currUser, policyID, name, description, lifespanstart, lifespanend);
     }
 
@@ -82,15 +97,14 @@ public class RestApiSharingPolicyClient implements SharingPolicyClient {
     }
 
     @Override
-    public SharingPolicyEntry addHeritagePolicy(User sharingWith, SharingPolicyTypeEntry policy,
-            String sharedElementID, String name, String description, Date lifespanstart, Date lifespanend) {
-        return this.server.addHeritagePolicy(this.currUser, sharingWith, policy, sharedElementID, name, description,
-                lifespanstart, lifespanend);
+    public SharingPolicyEntry addHeritagePolicy(User sharingWith, SharingPolicyTypeEntry policy, String sharedElementID, String name,
+            String description, Date lifespanstart, Date lifespanend) {
+        return this.server.addHeritagePolicy(this.currUser, sharingWith, policy, sharedElementID, name, description, lifespanstart,
+                lifespanend);
     }
 
     @Override
-    public SharingPolicyEntry updateHeritagePolicy(Long policyID, String name, String description, Date lifespanstart,
-            Date lifespanend) {
+    public SharingPolicyEntry updateHeritagePolicy(Long policyID, String name, String description, Date lifespanstart, Date lifespanend) {
         return this.server.updateHeritagePolicy(this.currUser, policyID, name, description, lifespanstart, lifespanend);
 
     }

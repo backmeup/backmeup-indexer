@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.backmeup.index.api.IndexClient;
 import org.backmeup.index.api.IndexServer;
+import org.backmeup.index.client.config.Configuration;
 import org.backmeup.index.model.FileInfo;
 import org.backmeup.index.model.FileItem;
 import org.backmeup.index.model.IndexDocument;
@@ -14,17 +15,32 @@ import org.backmeup.index.model.SearchResultAccumulator;
 import org.backmeup.index.model.User;
 
 /**
- * Adapts the local index client to the remote index server.
+ * Connects the local index client to the remote index server.
  * 
  * @author <a href="http://www.code-cop.org/">Peter Kofler</a>
  */
 public class RestApiIndexClient implements IndexClient {
 
-    private final IndexServer server = new RestApiIndexServerStub(RestApiConfig.DEFAULT);
+    private final IndexServer server;
     private final User user;
 
     public RestApiIndexClient(User currUser) {
         this.user = currUser;
+        this.server = new RestApiIndexServerStub(getRESTServerEndpointLocation());
+    }
+
+    private RestApiConfig getRESTServerEndpointLocation() {
+        RestApiConfig config;
+        String host = Configuration.getProperty("backmeup.indexer.rest.host");
+        String port = Configuration.getProperty("backmeup.indexer.rest.port");
+        String baseurl = Configuration.getProperty("backmeup.indexer.rest.baseurl");
+        //check if a configuration was provided or if we're using the default config
+        if ((host != null) && (port != null) && (baseurl != null)) {
+            config = new RestApiConfig(host, Integer.valueOf(port), baseurl);
+        } else {
+            config = RestApiConfig.DEFAULT;
+        }
+        return config;
     }
 
     @Override

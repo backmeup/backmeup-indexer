@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.backmeup.index.api.TaggedCollectionClient;
 import org.backmeup.index.api.TaggedCollectionServer;
+import org.backmeup.index.client.config.Configuration;
 import org.backmeup.index.model.User;
 import org.backmeup.index.model.tagging.TaggedCollectionEntry;
 
@@ -15,11 +16,26 @@ import org.backmeup.index.model.tagging.TaggedCollectionEntry;
  */
 public class RestApiTaggedCollectionClient implements TaggedCollectionClient {
 
-    private final TaggedCollectionServer server = new RestApiTaggedCollectionServerStub(RestApiConfig.DEFAULT);
+    private final TaggedCollectionServer server;
     private final User currUser;
 
     public RestApiTaggedCollectionClient(User user) {
         this.currUser = user;
+        this.server = new RestApiTaggedCollectionServerStub(getRESTServerEndpointLocation());
+    }
+
+    private RestApiConfig getRESTServerEndpointLocation() {
+        RestApiConfig config;
+        String host = Configuration.getProperty("backmeup.indexer.rest.host");
+        String port = Configuration.getProperty("backmeup.indexer.rest.port");
+        String baseurl = Configuration.getProperty("backmeup.indexer.rest.baseurl");
+        //check if a configuration was provided or if we're using the default config
+        if ((host != null) && (port != null) && (baseurl != null)) {
+            config = new RestApiConfig(host, Integer.valueOf(port), baseurl);
+        } else {
+            config = RestApiConfig.DEFAULT;
+        }
+        return config;
     }
 
     @Override
@@ -43,8 +59,7 @@ public class RestApiTaggedCollectionClient implements TaggedCollectionClient {
     }
 
     @Override
-    public TaggedCollectionEntry createAndAddTaggedCollection(String name, String description,
-            List<UUID> containedDocumentIDs) {
+    public TaggedCollectionEntry createAndAddTaggedCollection(String name, String description, List<UUID> containedDocumentIDs) {
         return this.server.createAndAddTaggedCollection(this.currUser, name, description, containedDocumentIDs);
     }
 

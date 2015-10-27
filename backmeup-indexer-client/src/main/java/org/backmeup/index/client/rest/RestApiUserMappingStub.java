@@ -11,12 +11,12 @@ import org.backmeup.index.client.IndexClientException;
  * Remote stub of the RESTful user mapping update server component.
  * 
  */
-public class RestApiUserMappingUpdateStub implements IndexerUserMappingServer {
+public class RestApiUserMappingStub implements IndexerUserMappingServer {
 
     private final HttpMethods http = new HttpMethods();
     private final RestUrlsUserMappingHelper urls;
 
-    public RestApiUserMappingUpdateStub(RestApiConfig config) {
+    public RestApiUserMappingStub(RestApiConfig config) {
         this.urls = new RestUrlsUserMappingHelper(config);
     }
 
@@ -31,7 +31,36 @@ public class RestApiUserMappingUpdateStub implements IndexerUserMappingServer {
         }
     }
 
+    @Override
+    public Long getBMUUserID(String keyserverUserId) {
+        String body;
+        try {
+            URI url = this.urls.forGetBMUUserID(keyserverUserId);
+            body = this.http.get(url, 200);
+        } catch (IOException | URISyntaxException e) {
+            throw failedToContactServer(e);
+        }
+        try {
+            return Long.valueOf(body);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    @Override
+    public String getKeyserverUserID(Long bmuUserID) {
+        String body;
+        try {
+            URI url = this.urls.forGetKeyserverUserID(bmuUserID);
+            body = this.http.get(url, 200);
+            return body;
+        } catch (IOException | URISyntaxException e) {
+            throw failedToContactServer(e);
+        }
+    }
+
     private IndexClientException failedToContactServer(Exception problem) {
         return new IndexClientException("failed to contact user mapping server", problem);
     }
+
 }

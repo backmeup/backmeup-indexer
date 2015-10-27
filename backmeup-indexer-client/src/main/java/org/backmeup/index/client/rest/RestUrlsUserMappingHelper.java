@@ -28,6 +28,18 @@ public class RestUrlsUserMappingHelper {
         return urlBuilder.build();
     }
 
+    public URI forGetBMUUserID(String keyserverUserId) throws URISyntaxException {
+        URIBuilder urlBuilder = startWithBaseUrl("query");
+        addMandatoryParameter(urlBuilder, "ksuserid", keyserverUserId + "");
+        return urlBuilder.build();
+    }
+
+    public URI forGetKeyserverUserID(Long bmuUserID) throws URISyntaxException {
+        URIBuilder urlBuilder = startWithBaseUrl("query");
+        addMandatoryParameter(urlBuilder, "bmuuserid", bmuUserID + "");
+        return urlBuilder.build();
+    }
+
     // private
     private URIBuilder startWithBaseUrl(String path) throws URISyntaxException {
         return new URIBuilder("http://" + this.host + ":" + this.port + this.basePath + "/" + path);
