@@ -27,8 +27,8 @@ public class IndexContentUpdateTask implements Runnable {
 
     public void executeCheckForContentUpdates() {
         List<User> activeUsers = this.activeUsers.getActiveUsers();
-        this.log.debug("started running...checking for active users and IndexDocument import/deletion tasks found: "
-                + activeUsers.size() + " active users");
+        this.log.debug("started running...checking for active users and IndexDocument import/deletion tasks found: " + activeUsers.size()
+                + " active users");
 
         for (User user : activeUsers) {
             this.log.debug("checking for new index documents to import/delete for user: " + user.id());

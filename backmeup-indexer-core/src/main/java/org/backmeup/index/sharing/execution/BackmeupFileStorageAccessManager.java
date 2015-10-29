@@ -49,6 +49,12 @@ public class BackmeupFileStorageAccessManager {
         //check if we're using backmeup storage as sink 
         if (isBackmeupSinkStorage(doc)) {
             String filePath = doc.getFields().get("path").toString();
+            String filePathThumbnail = null;
+            //check if there is a thumbnail attached 
+            if (doc.getFields().get("thumbnail_path") != null) {
+                filePathThumbnail = doc.getFields().get("thumbnail_path").toString();
+            }
+
             //check existing file access rights on storage for user and sharing partner
             boolean bAccessFromUser = fromUserHasStorageFileAccessRight(fromUserId, withUserId, filePath);
             boolean bAccessWithUser = withUserHasStorageFileAccessRight(fromUserId, withUserId, filePath);
@@ -62,6 +68,17 @@ public class BackmeupFileStorageAccessManager {
                         + filePath);
                 //call addPermission on storage client
                 this.callStorageAddFileAccessRights(fromUserId, withUserId, filePath);
+
+                //finally check on access rights for related thumbnail
+                if (filePathThumbnail != null) {
+                    boolean bAccessWithUserThumb = withUserHasStorageFileAccessRight(fromUserId, withUserId, filePathThumbnail);
+                    if (!bAccessWithUserThumb) {
+                        this.log.debug("discovered missing file access rights for sharingpartner: " + withUserId + " on thumbnail"
+                                + fromUserId + "/" + filePathThumbnail);
+                        //call addPermission on storage client
+                        this.callStorageAddFileAccessRights(fromUserId, withUserId, filePathThumbnail);
+                    }
+                }
             }
         }
     }
@@ -139,6 +156,11 @@ public class BackmeupFileStorageAccessManager {
         //check if we're using backmeup storage as sink 
         if (isBackmeupSinkStorage(doc)) {
             String filePath = doc.getFields().get("path").toString();
+            String filePathThumbnail = null;
+            //check if there is a thumbnail attached 
+            if (doc.getFields().get("thumbnail_path") != null) {
+                filePathThumbnail = doc.getFields().get("thumbnail_path").toString();
+            }
             //check existing file access rights on storage for user and sharing partner
             boolean bAccessWithUser = withUserHasStorageFileAccessRight(fromUserId, withUserId, filePath);
 
@@ -148,6 +170,17 @@ public class BackmeupFileStorageAccessManager {
                         + fromUserId + "/" + filePath);
                 //call removePermission on storage client
                 this.callStorageRemoveFileAccessRights(fromUserId, withUserId, filePath);
+
+                //finally check on access rights for related thumbnail
+                if (filePathThumbnail != null) {
+                    boolean bAccessWithUserThumb = withUserHasStorageFileAccessRight(fromUserId, withUserId, filePathThumbnail);
+                    if (!bAccessWithUserThumb) {
+                        this.log.debug("discovered required file access permission right removal for sharingpartner: " + withUserId
+                                + " on thumbnail" + fromUserId + "/" + filePathThumbnail);
+                        //call addPermission on storage client
+                        this.callStorageRemoveFileAccessRights(fromUserId, withUserId, filePathThumbnail);
+                    }
+                }
             }
         }
     }

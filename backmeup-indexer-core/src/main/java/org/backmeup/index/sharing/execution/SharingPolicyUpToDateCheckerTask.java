@@ -94,7 +94,7 @@ public class SharingPolicyUpToDateCheckerTask implements Runnable {
                         //check the different sharing policies and create according import tasks for doc
                         this.policyExecution.distributeIndexFragmentToSharingParnter(policy, doc);
 
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         this.log.debug("failed to distribute item: " + missingUUID + " for policy:" + policy.toString(), e);
                     }
                 }
