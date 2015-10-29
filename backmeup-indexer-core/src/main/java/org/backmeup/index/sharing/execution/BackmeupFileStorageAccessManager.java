@@ -6,6 +6,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.backmeup.index.ActiveUsers;
+import org.backmeup.index.api.IndexFields;
 import org.backmeup.index.dal.UserMappingHelperDao;
 import org.backmeup.index.model.IndexDocument;
 import org.backmeup.index.utils.file.UserMappingHelper;
@@ -48,11 +49,11 @@ public class BackmeupFileStorageAccessManager {
     public void addStorageFileAccessRights(Long fromUserId, Long withUserId, IndexDocument doc) throws IOException {
         //check if we're using backmeup storage as sink 
         if (isBackmeupSinkStorage(doc)) {
-            String filePath = doc.getFields().get("path").toString();
+            String filePath = doc.getFields().get(IndexFields.FIELD_PATH).toString();
             String filePathThumbnail = null;
             //check if there is a thumbnail attached 
-            if (doc.getFields().get("thumbnail_path") != null) {
-                filePathThumbnail = doc.getFields().get("thumbnail_path").toString();
+            if (doc.getLargeFields().get(IndexFields.FIELD_THUMBNAIL_PATH) != null) {
+                filePathThumbnail = doc.getLargeFields().get(IndexFields.FIELD_THUMBNAIL_PATH).toString();
             }
 
             //check existing file access rights on storage for user and sharing partner
@@ -155,11 +156,11 @@ public class BackmeupFileStorageAccessManager {
     public void removeStorageFileAccessRights(Long fromUserId, Long withUserId, IndexDocument doc) throws IOException {
         //check if we're using backmeup storage as sink 
         if (isBackmeupSinkStorage(doc)) {
-            String filePath = doc.getFields().get("path").toString();
+            String filePath = doc.getFields().get(IndexFields.FIELD_PATH).toString();
             String filePathThumbnail = null;
             //check if there is a thumbnail attached 
-            if (doc.getFields().get("thumbnail_path") != null) {
-                filePathThumbnail = doc.getFields().get("thumbnail_path").toString();
+            if (doc.getLargeFields().get(IndexFields.FIELD_THUMBNAIL_PATH) != null) {
+                filePathThumbnail = doc.getLargeFields().get(IndexFields.FIELD_THUMBNAIL_PATH).toString();
             }
             //check existing file access rights on storage for user and sharing partner
             boolean bAccessWithUser = withUserHasStorageFileAccessRight(fromUserId, withUserId, filePath);
